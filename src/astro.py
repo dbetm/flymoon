@@ -1,7 +1,22 @@
+from datetime import datetime
+from functools import lru_cache
+
+from src.constants import ASTRO_EPHEMERIS, EARTH_TIMESCALE
+
 class CelestialObject:
 
-    def __init__(self, name, alt, az):
+    def __init__(self, name: str, observer_position):
         self.name = name
+        self.altitude = None
+        self.azimuthal = None
+        self.observer_position = observer_position
+        self.data_obj = ASTRO_EPHEMERIS[name]
+
+    def update_position(self, ref_datetime: datetime):
+        time_ = EARTH_TIMESCALE.from_datetime(ref_datetime)
+        astrometric = self.observer_position.at(time_).observe(self.data_obj)
+        alt, az, distance = astrometric.apparent().altaz() 
+
         self.altitude = alt
         self.azimuthal = az
 

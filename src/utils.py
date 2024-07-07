@@ -1,6 +1,3 @@
-
-
-
 def get_relevant_fligh_data(flight_data: dict):
     return {
         "name": flight_data["ident"],

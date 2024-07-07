@@ -1,3 +1,5 @@
+import time
+
 from flask import Flask, render_template_string, jsonify
 
 from app import run
@@ -41,7 +43,14 @@ def index():
 
 @app.route('/get_list')
 def get_list():
+    start_time = time.time()
+
     data = run()
+
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"Elapsed time: {elapsed_time} seconds")
+
     return jsonify({'list': data})
 
 
