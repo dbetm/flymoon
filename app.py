@@ -60,32 +60,37 @@ def check_intersection(
         if alt_diff < threshold_alt and az_diff < threshold_az:
 
             if (alt_diff + az_diff) < min_diff_combined:
-                ans = str({
+                ans = {
                     "id": flight['name'],
-                    "t": float(minute),
-                    "orig": flight["origin"],
-                    "dest": flight["destination"],
+                    "origin": flight["origin"],
+                    "destination": flight["destination"],
+                    "time": round(float(minute), 2),
                     # "name_target": target.name,
-                    "target_alt": float(target.altitude.degrees),
-                    "plane_alt": float(future_alt),
-                    "target_az": float(target.azimuthal.degrees),
-                    "plane_az": float(future_az), 
-                    "alt_diff": float(alt_diff),
-                    "az_diff": float(az_diff),
-                })
+                    "target_alt": round(float(target.altitude.degrees), 2),
+                    "plane_alt": round(float(future_alt), 2),
+                    "target_az": round(float(target.azimuthal.degrees), 2),
+                    "plane_az": round(float(future_az), 2), 
+                    "alt_diff": round(float(alt_diff), 3),
+                    "az_diff": round(float(az_diff), 3),
+                }
 
                 min_diff_combined = alt_diff + az_diff
 
     if ans:
         return ans
 
-    return str(
-        {
-            "id": flight['name'],
-            "origin": flight["origin"],
-            "dest": flight["destination"],
-        }
-    )
+    return {
+        "id": flight['name'],
+        "origin": flight["origin"],
+        "destination": flight["destination"],
+        "time": None,
+        "target_alt": None,
+        "plane_alt": None,
+        "target_az": None,
+        "plane_az": None, 
+        "alt_diff": None,
+        "az_diff": None,
+    }
 
 
 
@@ -157,8 +162,8 @@ def run():
                 my_pos,
                 celestial_obj,
                 earth,
-                threshold_alt=15,
-                threshold_az=20,
+                threshold_alt=200,
+                threshold_az=200,
             )
         )
 

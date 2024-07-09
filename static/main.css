@@ -1,0 +1,36 @@
+body {
+    text-align: center;
+    margin: auto 0;
+}
+
+#resultsTable {
+    border-collapse: collapse;
+    border-spacing: 0;
+    width: 100%;
+    border: 1px solid #ddd;
+}
+
+
+#resultsTable th, td {
+    text-align: left;
+    padding: 8px;
+}
+
+#resultsTable tr:nth-child(even) {
+    background-color: #f2f2f2
+}
+
+.primary {
+    font-size: 1.5em;
+    border-radius: 4px;
+    background-color: #039c9c;
+    border: none;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 5px;
+    margin-bottom: 20px;
+    cursor: pointer;
+}

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Flymoon app</title>
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+</head>
+<body>
+    <h1>Flymoon</h1>
+    <button class="primary" onclick="fetchList()">Go!</button>
+
+    <div style="overflow-x:auto;">
+        <table id="resultsTable">
+            <thead>
+                <tr>
+                    <th>id</th>
+                    <th>origin</th>
+                    <th>destination</th>
+                    <th>ETA (min)</th>
+                    <th>alt diff</th>
+                    <th>az diff</th>
+                    <th>target alt</th>
+                    <th>plane alt</th>
+                    <th>target az</th>
+                    <th>plane az</th>
+                </tr>
+            </thead>
+            <tbody id="flightData">
+            </tbody>
+        </table>
+    </div>
+    
+    <script>
+        function fetchList() {
+            const columnNames = [
+                "id",
+                "origin",
+                "destination",
+                "time",
+                "alt_diff",
+                "az_diff",
+                "target_alt",
+                "plane_alt",
+                "target_az",
+                "plane_az",
+            ];
+
+            const bodyTable = document.getElementById('flightData');
+            bodyTable.innerHTML = '';
+
+            fetch('/get_list')
+            .then(response => response.json())
+            .then(data => {
+
+                data.list.forEach(item => {
+                    const row = document.createElement('tr');
+
+                    columnNames.forEach(column => {
+                        const val = document.createElement("td");
+                        val.textContent = item[column];
+
+                        row.appendChild(val);
+                    });
+
+                    bodyTable.appendChild(row);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
