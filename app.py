@@ -98,7 +98,7 @@ def run():
     api_key = os.getenv('AEROAPI_API_KEY')
     personal_latitude = float(os.getenv('PERSONAL_LATITUDE'))
     personal_longitude = float(os.getenv('PERSONAL_LONGITUDE'))
-    target_name = "sun"
+    target_name = "moon"
 
     earth = ASTRO_EPHEMERIS["earth"]
 

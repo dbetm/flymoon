@@ -1,8 +1,12 @@
 def get_relevant_fligh_data(flight_data: dict):
+    has_destination = isinstance(flight_data.get("destination"), dict)
+
     return {
         "name": flight_data["ident"],
         "origin": flight_data["origin"]["city"],
-        "destination": flight_data.get("destination", dict()).get("city"),
+        "destination": (
+            "unknown ⚠️" if not has_destination else flight_data.get("destination", dict()).get("city")
+        ),
         "latitude": flight_data["last_position"]["latitude"],
         "longitude": flight_data["last_position"]["longitude"],
         "direction": flight_data["last_position"]["heading"],

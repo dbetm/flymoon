@@ -32,42 +32,6 @@
         </table>
     </div>
     
-    <script>
-        function fetchList() {
-            const columnNames = [
-                "id",
-                "origin",
-                "destination",
-                "time",
-                "alt_diff",
-                "az_diff",
-                "target_alt",
-                "plane_alt",
-                "target_az",
-                "plane_az",
-            ];
-
-            const bodyTable = document.getElementById('flightData');
-            bodyTable.innerHTML = '';
-
-            fetch('/get_list')
-            .then(response => response.json())
-            .then(data => {
-
-                data.list.forEach(item => {
-                    const row = document.createElement('tr');
-
-                    columnNames.forEach(column => {
-                        const val = document.createElement("td");
-                        val.textContent = item[column];
-
-                        row.appendChild(val);
-                    });
-
-                    bodyTable.appendChild(row);
-                });
-            });
-        }
-    </script>
+    <script src="{{ url_for('static', filename='app.js') }}" charset="utf-8"></script>
 </body>
 </html>

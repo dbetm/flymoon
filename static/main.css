@@ -34,3 +34,16 @@ body {
     margin-bottom: 20px;
     cursor: pointer;
 }
+
+#resultsTable thead > tr {
+    background-color: #4f4f4f;
+    color: white;
+}
+
+.highlight-level-1 {
+    background-color: rgb(231, 244, 163) !important;
+}
+
+.highlight-level-2 {
+    background-color: rgb(146, 254, 184) !important;
+}
