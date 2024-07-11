@@ -65,13 +65,13 @@ def check_intersection(
                     "origin": flight["origin"],
                     "destination": flight["destination"],
                     "time": round(float(minute), 2),
-                    # "name_target": target.name,
                     "target_alt": round(float(target.altitude.degrees), 2),
                     "plane_alt": round(float(future_alt), 2),
                     "target_az": round(float(target.azimuthal.degrees), 2),
                     "plane_az": round(float(future_az), 2), 
                     "alt_diff": round(float(alt_diff), 3),
                     "az_diff": round(float(az_diff), 3),
+                    "is_possible_hit": 1,
                 }
 
                 min_diff_combined = alt_diff + az_diff
@@ -90,6 +90,7 @@ def check_intersection(
         "plane_az": None, 
         "alt_diff": None,
         "az_diff": None,
+        "is_possible_hit": 0,
     }
 
 
@@ -162,8 +163,8 @@ def run():
                 my_pos,
                 celestial_obj,
                 earth,
-                threshold_alt=200,
-                threshold_az=200,
+                threshold_alt=15,
+                threshold_az=20,
             )
         )
 

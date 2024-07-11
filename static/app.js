@@ -2,9 +2,9 @@ var columnNames = [
     "id",
     "origin",
     "destination",
-    "time",
     "alt_diff",
     "az_diff",
+    "time",
     "target_alt",
     "plane_alt",
     "target_az",
@@ -13,11 +13,17 @@ var columnNames = [
 
 function fetchList() {
     const bodyTable = document.getElementById('flightData');
+    let alertMessage = document.getElementById("noResults");
     bodyTable.innerHTML = '';
+    alertMessage.innerHTML = '';
 
     fetch('/check_intersections')
     .then(response => response.json())
     .then(data => {
+
+        if(data.list.length == 0) {
+            alertMessage.innerHTML = "No flights!"
+        }
 
         data.list.forEach(item => {
             const row = document.createElement('tr');
@@ -29,11 +35,13 @@ function fetchList() {
                 row.appendChild(val);
             });
 
-            if(item["alt_diff"] <= 3 && item["az_diff"] <= 3) {
-                row.classList.add('highlight-level-2');
-            }
-            else if(item["alt_diff"] <= 5 && item["az_diff"] <= 5) {
-                row.classList.add('highlight-level-1');
+            if(item["is_possible_hit"] == 1) {
+                if(item["alt_diff"] <= 3 && item["az_diff"] <= 3) {
+                    row.classList.add('highlight-level-2');
+                }
+                else if(item["alt_diff"] <= 7 && item["az_diff"] <= 5) {
+                    row.classList.add('highlight-level-1');
+                }
             }
 
             bodyTable.appendChild(row);

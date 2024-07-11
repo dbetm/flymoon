@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
 </head>
 <body>
-    <h1>Flymoon</h1>
+    <h1>✈️ Flymoon 🌕</h1>
     <button class="primary" onclick="fetchList()">Go!</button>
 
     <div style="overflow-x:auto;">
@@ -18,9 +18,9 @@
                     <th>id</th>
                     <th>origin</th>
                     <th>destination</th>
-                    <th>ETA (min)</th>
                     <th>alt diff</th>
                     <th>az diff</th>
+                    <th>ETA (min)</th>
                     <th>target alt</th>
                     <th>plane alt</th>
                     <th>target az</th>
@@ -31,7 +31,9 @@
             </tbody>
         </table>
     </div>
-    
+
+    <h3 class="alert" id="noResults"></h3>
+
     <script src="{{ url_for('static', filename='app.js') }}" charset="utf-8"></script>
 </body>
 </html>

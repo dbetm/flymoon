@@ -13,7 +13,7 @@ body {
 
 #resultsTable th, td {
     text-align: left;
-    padding: 8px;
+    padding: 6px;
 }
 
 #resultsTable tr:nth-child(even) {
@@ -33,6 +33,12 @@ body {
     margin-top: 5px;
     margin-bottom: 20px;
     cursor: pointer;
+}
+
+.alert {
+    background-color: rgb(234, 67, 101);
+    font-weight: bold;
+    color: rgb(255, 255, 255);
 }
 
 #resultsTable thead > tr {
