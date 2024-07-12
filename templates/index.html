@@ -7,8 +7,9 @@
     <!-- CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
 </head>
-<body>
-    <h1>✈️ Flymoon 🌕</h1>
+<body> 
+    <h1>✈️ Flymoon <span id="targetIcon" onclick="toggleTarget();">🌕</span></h1>
+    <h3 class="light-text">Target: <span id="targetLabel"></span></h3>
     <button class="primary" onclick="fetchList()">Go!</button>
 
     <div style="overflow-x:auto;">
@@ -35,5 +36,9 @@
     <h3 class="alert" id="noResults"></h3>
 
     <script src="{{ url_for('static', filename='app.js') }}" charset="utf-8"></script>
+
+    <script>
+        toggleTarget();
+    </script>
 </body>
 </html>

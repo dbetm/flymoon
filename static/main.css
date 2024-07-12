@@ -46,10 +46,20 @@ body {
     color: white;
 }
 
+#targetIcon {
+    cursor: pointer;
+}
+
 .highlight-level-1 {
     background-color: rgb(231, 244, 163) !important;
 }
 
 .highlight-level-2 {
     background-color: rgb(146, 254, 184) !important;
+}
+
+.light-text {
+    color: rgb(56, 55, 55);
+    font-weight: normal;
+    font-style: oblique;
 }

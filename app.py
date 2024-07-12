@@ -95,11 +95,10 @@ def check_intersection(
 
 
 
-def run():
+def run(target_name: str = "moon"):
     api_key = os.getenv('AEROAPI_API_KEY')
     personal_latitude = float(os.getenv('PERSONAL_LATITUDE'))
     personal_longitude = float(os.getenv('PERSONAL_LONGITUDE'))
-    target_name = "moon"
 
     earth = ASTRO_EPHEMERIS["earth"]
 

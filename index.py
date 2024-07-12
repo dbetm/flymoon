@@ -1,21 +1,23 @@
 import time
 
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, request, jsonify
 
 from app import run
 
 app = Flask(__name__)
 
 
-@app.route('/')
+@app.route("/")
 def index():
     return render_template("index.html")
 
-@app.route('/check_intersections')
+@app.route("/check_intersections")
 def get_list():
     start_time = time.time()
 
-    data = run()
+    target = request.args["target"]
+
+    data = run(target)
 
     end_time = time.time()
     elapsed_time = end_time - start_time

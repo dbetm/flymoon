@@ -11,13 +11,17 @@ var columnNames = [
     "plane_az",
 ];
 
+var target = "sun";
+
 function fetchList() {
     const bodyTable = document.getElementById('flightData');
     let alertMessage = document.getElementById("noResults");
     bodyTable.innerHTML = '';
     alertMessage.innerHTML = '';
 
-    fetch('/check_intersections')
+    const endpoint_url = `/check_intersections?target=${encodeURIComponent(target)}`;
+
+    fetch(endpoint_url)
     .then(response => response.json())
     .then(data => {
 
@@ -47,4 +51,20 @@ function fetchList() {
             bodyTable.appendChild(row);
         });
     });
+}
+
+
+function toggleTarget() {
+    if(target == "moon") {
+        target = "sun";
+
+        document.getElementById("targetIcon").innerHTML = "☀️";
+    }
+    else {
+        target = "moon";
+
+        document.getElementById("targetIcon").innerHTML = "🌙";
+    }
+
+    document.getElementById("targetLabel").innerHTML = target;
 }
