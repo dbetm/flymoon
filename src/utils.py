@@ -1,4 +1,4 @@
-def get_relevant_fligh_data(flight_data: dict):
+def parse_fligh_data(flight_data: dict):
     has_destination = isinstance(flight_data.get("destination"), dict)
 
     return {
