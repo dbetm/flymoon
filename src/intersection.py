@@ -16,6 +16,9 @@ from src.position import (
 from src.utils import load_existing_flight_data, parse_fligh_data
 
 
+EARTH = ASTRO_EPHEMERIS["earth"]
+
+
 
 def check_intersection(
     flight: dict,
@@ -28,6 +31,7 @@ def check_intersection(
     threshold_az: float = 10
 ):
     min_diff_combined = threshold_alt + threshold_az + 1
+    last_diff_combined = 10000
     ans = None
 
     for idx, minute in enumerate(window_time):
@@ -53,15 +57,26 @@ def check_intersection(
 
         alt_diff = abs(future_alt - target.altitude.degrees)
         az_diff = abs(future_az - target.azimuthal.degrees)
+        diff_combined = alt_diff + az_diff
+
+        if idx % 240 == 0:
+            # check if the diff is increasing
+            if last_diff_combined < diff_combined:
+                print(
+                    f"diff is increasing, stop checking intersection, min={round(minute, 2)}"
+                )
+                break
+            else:
+                last_diff_combined = diff_combined
 
         if future_alt > 0 and alt_diff < threshold_alt and az_diff < threshold_az:
 
-            if (alt_diff + az_diff) < min_diff_combined:
+            if diff_combined < min_diff_combined:
                 ans = {
                     "id": flight['name'],
                     "origin": flight["origin"],
                     "destination": flight["destination"],
-                    "time": round(float(minute), 2),
+                    "time": round(float(minute), 3),
                     "target_alt": round(float(target.altitude.degrees), 2),
                     "plane_alt": round(float(future_alt), 2),
                     "target_az": round(float(target.azimuthal.degrees), 2),
@@ -71,7 +86,7 @@ def check_intersection(
                     "is_possible_hit": 1,
                 }
 
-                min_diff_combined = alt_diff + az_diff
+                min_diff_combined = diff_combined
 
     if ans:
         return ans
@@ -93,22 +108,20 @@ def check_intersection(
 
 
 def check_intersections(target_name: str = "moon", test_mode: bool = False):
-    api_key = os.getenv('AEROAPI_API_KEY')
-    personal_latitude = float(os.getenv('PERSONAL_LATITUDE'))
-    personal_longitude = float(os.getenv('PERSONAL_LONGITUDE'))
+    API_KEY = os.getenv('AEROAPI_API_KEY')
+    PERSONA_LATITUDE = float(os.getenv('PERSONAL_LATITUDE'))
+    PERSONAL_LONGITUDE = float(os.getenv('PERSONAL_LONGITUDE'))
 
-    earth = ASTRO_EPHEMERIS["earth"]
-
-    my_pos = get_my_pos(
-        lat=personal_latitude,
-        lon=personal_longitude,
+    MY_POSITION = get_my_pos(
+        lat=PERSONA_LATITUDE,
+        lon=PERSONAL_LONGITUDE,
         elevation=2243,
-        base_ref=earth,
+        base_ref=EARTH,
     )
 
     top_min = 15
     second_interval = 1
-    # 60 * 15 = 900 datapoints
+    # 60 * top_min = 900 datapoints
 
     window_time = np.linspace(0, top_min, top_min * (60 // second_interval)) # each second
     print("number of times to check for each flight:", len(window_time))
@@ -119,7 +132,7 @@ def check_intersections(target_name: str = "moon", test_mode: bool = False):
     ref_datetime = naive_datetime_now.replace(tzinfo=ZoneInfo(local_timezone))
 
     celestial_obj = CelestialObject(
-        name=target_name, observer_position=my_pos
+        name=target_name, observer_position=MY_POSITION
     )
 
     print(celestial_obj.__str__())
@@ -135,7 +148,7 @@ def check_intersections(target_name: str = "moon", test_mode: bool = False):
             24.803, #23.9974,
             -102.194, #-101.9982,
             "https://aeroapi.flightaware.com/aeroapi/flights/search",
-            api_key,
+            API_KEY,
         )
 
     flight_data = list()
@@ -155,9 +168,9 @@ def check_intersections(target_name: str = "moon", test_mode: bool = False):
                 flight,
                 window_time,
                 ref_datetime,
-                my_pos,
+                MY_POSITION,
                 celestial_obj,
-                earth,
+                EARTH,
                 threshold_alt=15,
                 threshold_az=20,
             )

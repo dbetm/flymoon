@@ -44,5 +44,3 @@ def geographic_to_altaz(
 
 def get_my_pos(lat, lon, elevation, base_ref):
     return base_ref + wgs84.latlon(lat, lon, elevation_m=elevation)
-
-

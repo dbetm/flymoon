@@ -6,11 +6,11 @@ from flask import Flask, render_template, request, jsonify
 
 from src.intersection import check_intersections
 
-app = Flask(__name__)
-
 
 # SETUP 
 load_dotenv()
+
+app = Flask(__name__)
 
 
 
