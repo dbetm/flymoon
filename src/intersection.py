@@ -8,12 +8,12 @@ from tzlocal import get_localzone_name
 from skyfield.api import Topos
 
 from src.astro import CelestialObject
-from src.constants import ASTRO_EPHEMERIS
+from src.constants import ASTRO_EPHEMERIS, TEST_DATA_PATH
 from src.flight_data import get_flight_data
 from src.position import (
     geographic_to_altaz, get_my_pos, predict_position
 )
-from src.utils import parse_fligh_data
+from src.utils import load_existing_flight_data, parse_fligh_data
 
 
 
@@ -92,7 +92,7 @@ def check_intersection(
 
 
 
-def check_intersections(target_name: str = "moon"):
+def check_intersections(target_name: str = "moon", test_mode: bool = False):
     api_key = os.getenv('AEROAPI_API_KEY')
     personal_latitude = float(os.getenv('PERSONAL_LATITUDE'))
     personal_longitude = float(os.getenv('PERSONAL_LONGITUDE'))
@@ -124,16 +124,19 @@ def check_intersections(target_name: str = "moon"):
 
     print(celestial_obj.__str__())
 
-    raw_flight_data = get_flight_data(
-        # lower left
-        21.659, #21.8432,
-        -105.22, #-104.4433,
-        # upper right
-        24.803, #23.9974,
-        -102.194, #-101.9982,
-        "https://aeroapi.flightaware.com/aeroapi/flights/search",
-        api_key,
-    )
+    if test_mode:
+        raw_flight_data = load_existing_flight_data(TEST_DATA_PATH)
+    else:
+        raw_flight_data = get_flight_data(
+            # lower left
+            21.659, #21.8432,
+            -105.22, #-104.4433,
+            # upper right
+            24.803, #23.9974,
+            -102.194, #-101.9982,
+            "https://aeroapi.flightaware.com/aeroapi/flights/search",
+            api_key,
+        )
 
     flight_data = list()
 

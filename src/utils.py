@@ -1,3 +1,6 @@
+import json
+
+
 def parse_fligh_data(flight_data: dict):
     has_destination = isinstance(flight_data.get("destination"), dict)
 
@@ -13,3 +16,10 @@ def parse_fligh_data(flight_data: dict):
         "speed": int(flight_data["last_position"]["groundspeed"]) * 1.852,
         "elevation": int(flight_data["last_position"]["altitude"]) * 100 * 0.3048
     }
+
+
+def load_existing_flight_data(path: str) -> dict:
+    print("loading existing flight data")
+
+    with open(path, "r") as file:
+        return json.load(file)
