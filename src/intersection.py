@@ -8,16 +8,30 @@ from tzlocal import get_localzone_name
 from skyfield.api import Topos
 
 from src.astro import CelestialObject
-from src.constants import ASTRO_EPHEMERIS, TEST_DATA_PATH
-from src.flight_data import get_flight_data
-from src.position import (
-    geographic_to_altaz, get_my_pos, predict_position
+from src.constants import (
+    ALTITUDE_THRESHOLD,
+    API_URL,
+    ASTRO_EPHEMERIS,
+    AZIMUTHAL_THRESHOLD,
+    INTERVAL_IN_SECS,
+    NUM_SECONDS_PER_MIN,
+    TEST_DATA_PATH,
+    TOP_MINUTE,
 )
-from src.utils import load_existing_flight_data, parse_fligh_data
+from src.flight_data import get_flight_data, load_existing_flight_data, parse_fligh_data
+from src.position import (
+    AreaBoundingBox, geographic_to_altaz, get_my_pos, predict_position
+)
 
 
 EARTH = ASTRO_EPHEMERIS["earth"]
 
+area_bbox = AreaBoundingBox(
+    lat_lower_left=os.getenv("LAT_LOWER_LEFT"),
+    long_lower_left=os.getenv("LONG_LOWER_LEFT"),
+    lat_upper_right=os.getenv("LAT_UPPER_RIGHT"),
+    long_upper_right=os.getenv("LONG_UPPER_RIGHT"),
+)
 
 
 def check_intersection(
@@ -27,10 +41,10 @@ def check_intersection(
     my_position: Topos,
     target: CelestialObject,
     earth_ref,
-    threshold_alt: float = 10,
-    threshold_az: float = 10
+    alt_threshold: float = 10,
+    az_threshold: float = 10
 ):
-    min_diff_combined = threshold_alt + threshold_az + 1
+    min_diff_combined = alt_threshold + az_threshold + 1
     last_diff_combined = 10000
     ans = None
 
@@ -69,7 +83,7 @@ def check_intersection(
             else:
                 last_diff_combined = diff_combined
 
-        if future_alt > 0 and alt_diff < threshold_alt and az_diff < threshold_az:
+        if future_alt > 0 and alt_diff < alt_threshold and az_diff < az_threshold:
 
             if diff_combined < min_diff_combined:
                 ans = {
@@ -108,22 +122,21 @@ def check_intersection(
 
 
 def check_intersections(target_name: str = "moon", test_mode: bool = False):
-    API_KEY = os.getenv('AEROAPI_API_KEY')
-    PERSONA_LATITUDE = float(os.getenv('PERSONAL_LATITUDE'))
-    PERSONAL_LONGITUDE = float(os.getenv('PERSONAL_LONGITUDE'))
+    API_KEY = os.getenv("AEROAPI_API_KEY")
+    PERSONA_LATITUDE = float(os.getenv("PERSONAL_LATITUDE"))
+    PERSONAL_LONGITUDE = float(os.getenv("PERSONAL_LONGITUDE"))
+    PERSONAL_ELEVATION = float(os.getenv("PERSONAL_ELEVATION"))
 
     MY_POSITION = get_my_pos(
         lat=PERSONA_LATITUDE,
         lon=PERSONAL_LONGITUDE,
-        elevation=2243,
+        elevation=PERSONAL_ELEVATION,
         base_ref=EARTH,
     )
 
-    top_min = 15
-    second_interval = 1
-    # 60 * top_min = 900 datapoints
-
-    window_time = np.linspace(0, top_min, top_min * (60 // second_interval)) # each second
+    window_time = np.linspace(
+        0, TOP_MINUTE, TOP_MINUTE * (NUM_SECONDS_PER_MIN // INTERVAL_IN_SECS)
+    )
     print("number of times to check for each flight:", len(window_time))
     # Get the local timezone using tzlocal
     local_timezone = get_localzone_name()
@@ -140,16 +153,7 @@ def check_intersections(target_name: str = "moon", test_mode: bool = False):
     if test_mode:
         raw_flight_data = load_existing_flight_data(TEST_DATA_PATH)
     else:
-        raw_flight_data = get_flight_data(
-            # lower left
-            21.659, #21.8432,
-            -105.22, #-104.4433,
-            # upper right
-            24.803, #23.9974,
-            -102.194, #-101.9982,
-            "https://aeroapi.flightaware.com/aeroapi/flights/search",
-            API_KEY,
-        )
+        raw_flight_data = get_flight_data(area_bbox, API_URL, API_KEY)
 
     flight_data = list()
 
@@ -171,8 +175,8 @@ def check_intersections(target_name: str = "moon", test_mode: bool = False):
                 MY_POSITION,
                 celestial_obj,
                 EARTH,
-                threshold_alt=15,
-                threshold_az=20,
+                alt_threshold=ALTITUDE_THRESHOLD,
+                az_threshold=AZIMUTHAL_THRESHOLD,
             )
         )
 

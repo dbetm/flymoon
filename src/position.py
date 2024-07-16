@@ -1,9 +1,17 @@
+from dataclasses import dataclass
 from datetime import datetime
 from math import radians, degrees, sin, cos, asin, atan2
 
 from skyfield.api import wgs84
 
 from src.constants import EARTH_TIMESCALE, NUM_MINUTES_PER_HOUR, EARTH_RADIOUS
+
+@dataclass
+class AreaBoundingBox:
+    lat_lower_left: float
+    long_lower_left: float
+    lat_upper_right: float
+    long_upper_right: float
 
 
 def predict_position(lat: float, lon: float, speed: float, direction: float, minutes: float):
