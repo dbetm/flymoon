@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timedelta
+from typing import List
 from zoneinfo import ZoneInfo
 
 import numpy as np
@@ -121,7 +122,9 @@ def check_intersection(
 
 
 
-def check_intersections(target_name: str = "moon", test_mode: bool = False):
+def check_intersections(
+    target_name: str = "moon", test_mode: bool = False
+) -> List[dict]:
     API_KEY = os.getenv("AEROAPI_API_KEY")
     PERSONA_LATITUDE = float(os.getenv("PERSONAL_LATITUDE"))
     PERSONAL_LONGITUDE = float(os.getenv("PERSONAL_LONGITUDE"))

@@ -59,3 +59,10 @@ def load_existing_flight_data(path: str) -> dict:
 
     with open(path, "r") as file:
         return json.load(file)
+
+
+def sort_results(data: List[dict])-> List[dict]:
+    def _custom_sort(a: dict) -> bool:
+        return (a["is_possible_hit"], a["time"], a["id"])
+
+    return sorted(data, key=_custom_sort, reverse=True)
