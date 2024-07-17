@@ -24,7 +24,17 @@ def get_list():
     start_time = time.time()
 
     target = request.args["target"]
-    data = check_intersections(target, test_mode)
+    latitude = float(request.args["latitude"])
+    longitude = float(request.args["longitude"])
+    elevation = float(request.args["elevation"])
+
+    data = check_intersections(
+        latitude,
+        longitude,
+        elevation,
+        target,
+        test_mode
+    )
     data = sort_results(data)
 
     end_time = time.time()
@@ -44,5 +54,5 @@ if __name__ == "__main__":
     global test_mode
     test_mode = args.test
 
-    port = 5000
-    app.run(host="0.0.0.0", port=8000, debug=True)
+    port = 8000
+    app.run(host="0.0.0.0", port=port, debug=test_mode)

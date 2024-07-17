@@ -10,7 +10,19 @@
 <body> 
     <h1>✈️ Flymoon <span id="targetIcon" onclick="toggleTarget();">🌕</span></h1>
     <h3 class="light-text">Target: <span id="targetLabel"></span></h3>
-    <button class="primary" onclick="fetchList()">Go!</button>
+
+    <form action="">
+        <label for="flatitude">Latitude</label>
+        <input type="number" id="latitude" name="flatitude" autocomplete="on"><br><br>
+        <label for="flongitude">Longitude</label>
+        <input type="number" id="longitude" name="flongitude" autocomplete="on"><br><br>
+        <label for="fevelation">Elevation</label>
+        <input type="number" id="elevation" name="fevelation" autocomplete="on"><br><br>
+    </form>
+    <button class="secondary" onclick="savePosition()">Save position</button>
+    <button class="secondary" onclick="clearPosition()">Clear coords</button>
+    <br>
+    <button class="primary" onclick="go()">Go!</button>
 
     <div style="overflow-x:auto;">
         <table id="resultsTable">
@@ -39,6 +51,7 @@
 
     <script>
         toggleTarget();
+        loadPosition();
     </script>
 </body>
 </html>

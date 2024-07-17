@@ -123,17 +123,20 @@ def check_intersection(
 
 
 def check_intersections(
-    target_name: str = "moon", test_mode: bool = False
+    latitude: float,
+    longitude: float,
+    elevation: float,
+    target_name: str = "moon",
+    test_mode: bool = False
 ) -> List[dict]:
     API_KEY = os.getenv("AEROAPI_API_KEY")
-    PERSONA_LATITUDE = float(os.getenv("PERSONAL_LATITUDE"))
-    PERSONAL_LONGITUDE = float(os.getenv("PERSONAL_LONGITUDE"))
-    PERSONAL_ELEVATION = float(os.getenv("PERSONAL_ELEVATION"))
+
+    print(f"{latitude=}, {longitude=}, {elevation=}")
 
     MY_POSITION = get_my_pos(
-        lat=PERSONA_LATITUDE,
-        lon=PERSONAL_LONGITUDE,
-        elevation=PERSONAL_ELEVATION,
+        lat=latitude,
+        lon=longitude,
+        elevation=elevation,
         base_ref=EARTH,
     )
 
