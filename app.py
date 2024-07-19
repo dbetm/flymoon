@@ -4,12 +4,12 @@ import time
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, jsonify
 
+# SETUP 
+load_dotenv()
+
 from src.flight_data import sort_results
 from src.intersection import check_intersections
 
-
-# SETUP 
-load_dotenv()
 
 app = Flask(__name__)
 
@@ -55,4 +55,4 @@ if __name__ == "__main__":
     test_mode = args.test
 
     port = 8000
-    app.run(host="0.0.0.0", port=port, debug=test_mode)
+    app.run(host="0.0.0.0", port=port, debug=True)

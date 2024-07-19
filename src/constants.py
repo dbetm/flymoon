@@ -7,6 +7,11 @@ EARTH_RADIOUS = 6371
 
 # Flight data
 API_URL = "https://aeroapi.flightaware.com/aeroapi/flights/search"
+CHANGE_ELEVATION = {
+    "C": "climbing",
+    "D": "descending",
+    "-": "no change",
+}
 
 # Test data
 TEST_DATA_PATH = "data/raw_flight_data_example.json"
@@ -27,5 +32,5 @@ TOP_MINUTE = 15
 INTERVAL_IN_SECS = 1
 
 # Intersection
-ALTITUDE_THRESHOLD = 60
-AZIMUTHAL_THRESHOLD = 45
+ALTITUDE_THRESHOLD = 15
+AZIMUTHAL_THRESHOLD = 20

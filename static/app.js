@@ -9,6 +9,7 @@ var columnNames = [
     "plane_alt",
     "target_az",
     "plane_az",
+    "change_elev",
 ];
 
 var target = "sun";

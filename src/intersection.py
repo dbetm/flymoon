@@ -14,6 +14,7 @@ from src.constants import (
     API_URL,
     ASTRO_EPHEMERIS,
     AZIMUTHAL_THRESHOLD,
+    CHANGE_ELEVATION,
     INTERVAL_IN_SECS,
     NUM_SECONDS_PER_MIN,
     TEST_DATA_PATH,
@@ -99,6 +100,7 @@ def check_intersection(
                     "alt_diff": round(float(alt_diff), 3),
                     "az_diff": round(float(az_diff), 3),
                     "is_possible_hit": 1,
+                    "change_elev": CHANGE_ELEVATION.get(flight["elevation_change"], None),
                 }
 
                 min_diff_combined = diff_combined
@@ -118,6 +120,7 @@ def check_intersection(
         "alt_diff": None,
         "az_diff": None,
         "is_possible_hit": 0,
+        "change_elev": CHANGE_ELEVATION.get(flight["elevation_change"], None),
     }
 
 

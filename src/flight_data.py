@@ -50,7 +50,8 @@ def parse_fligh_data(flight_data: dict):
         "longitude": flight_data["last_position"]["longitude"],
         "direction": flight_data["last_position"]["heading"],
         "speed": int(flight_data["last_position"]["groundspeed"]) * 1.852,
-        "elevation": int(flight_data["last_position"]["altitude"]) * 100 * 0.3048
+        "elevation": int(flight_data["last_position"]["altitude"]) * 100 * 0.3048,
+        "elevation_change": flight_data["last_position"]["altitude_change"],
     }
 
 
