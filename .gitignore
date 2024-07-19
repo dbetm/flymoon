@@ -167,3 +167,4 @@ notes.txt
 
 # misc
 exp.ipynb
+*.DS_Store
