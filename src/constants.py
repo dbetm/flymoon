@@ -10,7 +10,7 @@ API_URL = "https://aeroapi.flightaware.com/aeroapi/flights/search"
 CHANGE_ELEVATION = {
     "C": "climbing",
     "D": "descending",
-    "-": "no change",
+    "-": "no",
 }
 
 # Test data
