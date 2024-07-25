@@ -12,6 +12,14 @@ class CelestialObject:
         self.data_obj = ASTRO_EPHEMERIS[name]
 
     def update_position(self, ref_datetime: datetime):
+        """Get the position of celestial object given the datetime reference from the
+        current observer position.
+
+        Parameters
+        ----------
+        ref_datetime : datetime
+            Python datetime object to get the future or past position of the celestial object,
+        """
         time_ = EARTH_TIMESCALE.from_datetime(ref_datetime)
         astrometric = self.observer_position.at(time_).observe(self.data_obj)
         alt, az, distance = astrometric.apparent().altaz() 

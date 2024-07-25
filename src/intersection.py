@@ -45,7 +45,39 @@ def check_intersection(
     earth_ref,
     alt_threshold: float = 10,
     az_threshold: float = 10
-):
+) -> dict:
+    """Given the data of a flight, compute a possible intersection with the target. At least the minimum
+    difference in alt-azimuthal coordinates if is under the given thresholds.
+
+    Parameters 
+    ----------
+    flight : dict
+        Dictionary containing the fligh data: latitude, longitude, speed, direction, elevation,
+        name (which is the id of the flight), origin, destination, and coded elevation_change.
+    window_time : array_like
+        Data points of time in minutes to compute ahead from reference datetime.
+    ref_datetime: datetime
+        Reference datetime, deltas from window_time will be add to this reference to compute the future position
+        of plane and target.
+    my_position: Topos
+        Object from skifield library which was instanced with current position of the observer (
+        latitude, longitude and elevation).
+    target: CelestialObject
+        It could be the Moon or Sun, or whatever celestial object to compute a possible hit with the plane.
+    earth_ref: Any
+        Earth data gotten from the de421.bsp database by NASA's JPL.
+    alt_threshold: float
+        Threshold to met for altitude coordinate in order to consider a possible hit.
+    az_threshold: float
+        Threshold to met for azimuthal coordinate in order to consider a possible hit.
+
+    Returns
+    -------
+    ans : dict
+        Dictionary with the results data, completely filled when it's a possible hit. The data includes:
+        id, origin, destination, time, target_alt, plane_alt, target_az, plane_az, alt_diff, az_diff,
+        is_possible_hit, and change_elev.
+    """
     min_diff_combined = alt_threshold + az_threshold + 1
     last_diff_combined = 10000
     ans = None
