@@ -19,7 +19,7 @@ def get_flight_data(
     }
 
     # example
-    # "https://aeroapi.flightaware.com/aeroapi/flights/search?query=-latlong+%2221.305695+-104.458904+23.925834+-101.365481%22&max_pages=1"
+    # https://aeroapi.flightaware.com/aeroapi/flights/search?query=-latlong+%2221.305695+-104.458904+23.925834+-101.365481%22&max_pages=1
     url = (
         f"{url_}?query=-latlong+%22{area_bbox.lat_lower_left}+{area_bbox.long_lower_left}+"
         f"{area_bbox.lat_upper_right}+{area_bbox.long_upper_right}%22&max_pages=1"
@@ -44,7 +44,7 @@ def parse_fligh_data(flight_data: dict):
         "name": flight_data["ident"],
         "origin": flight_data["origin"]["city"],
         "destination": (
-            "unknown ⚠️" if not has_destination else flight_data.get("destination", dict()).get("city")
+            "N/D ⚠️" if not has_destination else flight_data.get("destination", dict()).get("city")
         ),
         "latitude": flight_data["last_position"]["latitude"],
         "longitude": flight_data["last_position"]["longitude"],
