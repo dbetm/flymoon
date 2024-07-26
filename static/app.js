@@ -12,7 +12,8 @@ var columnNames = [
     "change_elev",
 ];
 
-var target = "sun";
+var target = getLocalStorageItem("target", "moon");
+displayTarget();
 
 
 function savePosition() {
@@ -50,6 +51,11 @@ function loadPosition() {
     elev.value = localStorage.getItem("elevation");
 
     console.log("Position loaded from local storage");
+}
+
+function getLocalStorageItem(key, defaultValue) {
+    const value = localStorage.getItem(key);
+    return value !== null ? value : defaultValue;
 }
 
 function clearPosition() {
@@ -123,16 +129,21 @@ function fetchList() {
 
 
 function toggleTarget() {
+    if(target == "moon") target = "sun";
+    else target = "moon";
+
+    displayTarget();
+}
+
+
+function displayTarget() {
     if(target == "moon") {
-        target = "sun";
-
-        document.getElementById("targetIcon").innerHTML = "☀️";
-    }
-    else {
-        target = "moon";
-
         document.getElementById("targetIcon").innerHTML = "🌙";
     }
+    else {
+        document.getElementById("targetIcon").innerHTML = "☀️";
+    }
 
+    localStorage.setItem("target", target);
     document.getElementById("targetLabel").innerHTML = target;
 }

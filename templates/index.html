@@ -9,8 +9,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
 </head>
 <body> 
-    <h1>✈️ Flymoon <span id="targetIcon" onclick="toggleTarget();">🌕</span></h1>
-    <h3 class="light-text">Target: <span id="targetLabel"></span></h3>
+    <h1>✈️ Flymoon <span id="targetIcon" onclick="toggleTarget();">-</span></h1>
+    <h3 class="light-text">Target: <span id="targetLabel">-</span></h3>
 
     <form action="">
         <label for="flatitude">Latitude</label>
@@ -53,7 +53,6 @@
     <script src="{{ url_for('static', filename='app.js') }}" charset="utf-8"></script>
 
     <script>
-        toggleTarget();
         loadPosition();
     </script>
 </body>
