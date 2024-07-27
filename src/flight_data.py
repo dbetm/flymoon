@@ -8,9 +8,7 @@ from src.position import AreaBoundingBox
 
 
 def get_flight_data(
-    area_bbox: AreaBoundingBox,
-    url_: str,
-    api_key: str = ""
+    area_bbox: AreaBoundingBox, url_: str, api_key: str = ""
 ) -> List[dict]:
 
     headers = {
@@ -25,9 +23,7 @@ def get_flight_data(
         f"{area_bbox.lat_upper_right}+{area_bbox.long_upper_right}%22&max_pages=1"
     )
 
-    response = requests.get(
-        url=url, headers=headers
-    )
+    response = requests.get(url=url, headers=headers)
 
     if response.status_code == HTTPStatus.OK:
         return response.json()
@@ -44,7 +40,9 @@ def parse_fligh_data(flight_data: dict):
         "name": flight_data["ident"],
         "origin": flight_data["origin"]["city"],
         "destination": (
-            "N/D ⚠️" if not has_destination else flight_data.get("destination", dict()).get("city")
+            "N/D ⚠️"
+            if not has_destination
+            else flight_data.get("destination", dict()).get("city")
         ),
         "latitude": flight_data["last_position"]["latitude"],
         "longitude": flight_data["last_position"]["longitude"],
@@ -62,7 +60,7 @@ def load_existing_flight_data(path: str) -> dict:
         return json.load(file)
 
 
-def sort_results(data: List[dict])-> List[dict]:
+def sort_results(data: List[dict]) -> List[dict]:
     def _custom_sort(a: dict) -> bool:
         return (a["is_possible_hit"], a["time"], a["id"])
 

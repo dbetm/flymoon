@@ -2,22 +2,21 @@ import argparse
 import time
 
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, jsonify, render_template, request
 
-# SETUP 
+# SETUP
 load_dotenv()
 
 from src.flight_data import sort_results
 from src.intersection import check_intersections
 
-
 app = Flask(__name__)
-
 
 
 @app.route("/")
 def index():
     return render_template("index.html")
+
 
 @app.route("/check_intersections")
 def get_list():
@@ -28,13 +27,7 @@ def get_list():
     longitude = float(request.args["longitude"])
     elevation = float(request.args["elevation"])
 
-    data = check_intersections(
-        latitude,
-        longitude,
-        elevation,
-        target,
-        test_mode
-    )
+    data = check_intersections(latitude, longitude, elevation, target, test_mode)
     data = sort_results(data)
 
     end_time = time.time()
@@ -46,9 +39,7 @@ def get_list():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--test", action="store_true", help="load existing flight data"
-    )
+    parser.add_argument("--test", action="store_true", help="load existing flight data")
     args = parser.parse_args()
 
     global test_mode

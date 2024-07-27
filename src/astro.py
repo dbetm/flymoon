@@ -2,6 +2,7 @@ from datetime import datetime
 
 from src.constants import ASTRO_EPHEMERIS, EARTH_TIMESCALE
 
+
 class CelestialObject:
 
     def __init__(self, name: str, observer_position):
@@ -22,7 +23,7 @@ class CelestialObject:
         """
         time_ = EARTH_TIMESCALE.from_datetime(ref_datetime)
         astrometric = self.observer_position.at(time_).observe(self.data_obj)
-        alt, az, distance = astrometric.apparent().altaz() 
+        alt, az, distance = astrometric.apparent().altaz()
 
         self.altitude = alt
         self.azimuthal = az

@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 from datetime import datetime
-from math import radians, degrees, sin, cos, asin, atan2
+from math import asin, atan2, cos, degrees, radians, sin
 
 from skyfield.api import wgs84
 
-from src.constants import EARTH_TIMESCALE, NUM_MINUTES_PER_HOUR, EARTH_RADIOUS
+from src.constants import EARTH_RADIOUS, EARTH_TIMESCALE, NUM_MINUTES_PER_HOUR
+
 
 @dataclass
 class AreaBoundingBox:
@@ -14,7 +15,9 @@ class AreaBoundingBox:
     long_upper_right: float
 
 
-def predict_position(lat: float, lon: float, speed: float, direction: float, minutes: float) -> tuple:
+def predict_position(
+    lat: float, lon: float, speed: float, direction: float, minutes: float
+) -> tuple:
     """Compute the future latitude and longitude of a plane given its current coordinates,
     speed, direction, and the time ahead to know the position.
 
@@ -72,19 +75,20 @@ def predict_position(lat: float, lon: float, speed: float, direction: float, min
 
     lat_rads = radians(lat)
     ratio_d_r = distance / EARTH_RADIOUS
-    
+
     # Calculate new latitude
     new_lat = degrees(
         asin(
-            sin(lat_rads)*cos(ratio_d_r) + cos(lat_rads)*sin(ratio_d_r)*cos(bearing)
+            sin(lat_rads) * cos(ratio_d_r)
+            + cos(lat_rads) * sin(ratio_d_r) * cos(bearing)
         )
     )
     # Calculate new longitude
     new_lon = degrees(
-        radians(lon) 
+        radians(lon)
         + atan2(
-            sin(bearing)*sin(ratio_d_r)*cos(lat_rads), 
-            cos(ratio_d_r) - sin(lat_rads)*sin(radians(new_lat))
+            sin(bearing) * sin(ratio_d_r) * cos(lat_rads),
+            cos(ratio_d_r) - sin(lat_rads) * sin(radians(new_lat)),
         )
     )
 
@@ -99,7 +103,6 @@ def geographic_to_altaz(
     plane_alt, plane_az, _ = (plane_location - your_location).at(time_).altaz()
 
     return plane_alt.degrees, plane_az.degrees
-
 
 
 def get_my_pos(lat, lon, elevation, base_ref):

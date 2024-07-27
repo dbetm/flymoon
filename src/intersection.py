@@ -4,9 +4,8 @@ from typing import List
 from zoneinfo import ZoneInfo
 
 import numpy as np
-
-from tzlocal import get_localzone_name
 from skyfield.api import Topos
+from tzlocal import get_localzone_name
 
 from src.astro import CelestialObject
 from src.constants import (
@@ -22,9 +21,11 @@ from src.constants import (
 )
 from src.flight_data import get_flight_data, load_existing_flight_data, parse_fligh_data
 from src.position import (
-    AreaBoundingBox, geographic_to_altaz, get_my_pos, predict_position
+    AreaBoundingBox,
+    geographic_to_altaz,
+    get_my_pos,
+    predict_position,
 )
-
 
 EARTH = ASTRO_EPHEMERIS["earth"]
 
@@ -44,12 +45,12 @@ def check_intersection(
     target: CelestialObject,
     earth_ref,
     alt_threshold: float = 10,
-    az_threshold: float = 10
+    az_threshold: float = 10,
 ) -> dict:
     """Given the data of a flight, compute a possible intersection with the target. At least the minimum
     difference in alt-azimuthal coordinates if is under the given thresholds.
 
-    Parameters 
+    Parameters
     ----------
     flight : dict
         Dictionary containing the fligh data: latitude, longitude, speed, direction, elevation,
@@ -96,7 +97,12 @@ def check_intersection(
 
         # Convert future position of plane to alt-azimuthal coordinates
         future_alt, future_az = geographic_to_altaz(
-            future_lat, future_lon, flight["elevation"], earth_ref, my_position, future_time
+            future_lat,
+            future_lon,
+            flight["elevation"],
+            earth_ref,
+            my_position,
+            future_time,
         )
 
         if idx > 0 and idx % 180 == 0:
@@ -121,18 +127,20 @@ def check_intersection(
 
             if diff_combined < min_diff_combined:
                 ans = {
-                    "id": flight['name'],
+                    "id": flight["name"],
                     "origin": flight["origin"],
                     "destination": flight["destination"],
                     "time": round(float(minute), 3),
                     "target_alt": round(float(target.altitude.degrees), 2),
                     "plane_alt": round(float(future_alt), 2),
                     "target_az": round(float(target.azimuthal.degrees), 2),
-                    "plane_az": round(float(future_az), 2), 
+                    "plane_az": round(float(future_az), 2),
                     "alt_diff": round(float(alt_diff), 3),
                     "az_diff": round(float(az_diff), 3),
                     "is_possible_hit": 1,
-                    "change_elev": CHANGE_ELEVATION.get(flight["elevation_change"], None),
+                    "change_elev": CHANGE_ELEVATION.get(
+                        flight["elevation_change"], None
+                    ),
                 }
 
                 min_diff_combined = diff_combined
@@ -141,14 +149,14 @@ def check_intersection(
         return ans
 
     return {
-        "id": flight['name'],
+        "id": flight["name"],
         "origin": flight["origin"],
         "destination": flight["destination"],
         "time": None,
         "target_alt": None,
         "plane_alt": None,
         "target_az": None,
-        "plane_az": None, 
+        "plane_az": None,
         "alt_diff": None,
         "az_diff": None,
         "is_possible_hit": 0,
@@ -156,13 +164,12 @@ def check_intersection(
     }
 
 
-
 def check_intersections(
     latitude: float,
     longitude: float,
     elevation: float,
     target_name: str = "moon",
-    test_mode: bool = False
+    test_mode: bool = False,
 ) -> List[dict]:
     API_KEY = os.getenv("AEROAPI_API_KEY")
 
@@ -185,9 +192,7 @@ def check_intersections(
     # Make the datetime object timezone-aware
     ref_datetime = naive_datetime_now.replace(tzinfo=ZoneInfo(local_timezone))
 
-    celestial_obj = CelestialObject(
-        name=target_name, observer_position=MY_POSITION
-    )
+    celestial_obj = CelestialObject(name=target_name, observer_position=MY_POSITION)
 
     print(celestial_obj.__str__())
 
