@@ -1,6 +1,6 @@
 # Flymoon
 
-A web app to run locally on a LAN network that checks for possible transits over the Moon or the Sun.
+A web app to run locally on a LAN network that checks for possible transits over the Moon or the Sun (up to 15 minutes ahead).
 
 Get flight data from an existing API.
 
@@ -86,7 +86,7 @@ Click on Go! button to display results. Each row will include differences in alt
 
 1) Computing the moment when there is a minimum difference between a plane and the target in alt-azimuthal coordinates is a numerical approach. Perhaps there could be an analytical way to optimize it.
 
-2) Currently, the ETA is not very exact since we are not taking into account air resistance, changes in elevation, and the direction of the plane. It is assumed that the plane will have a constant speed and direction.
+2) Currently, the ETA is not very exact since we are not taking into account air resistance, changes in elevation, and the direction changes of the plane. It is assumed that the plane will have a constant speed and direction.
 
 3) At the moment, there is no notification module, but one could be implemented to further automate the process.
 
