@@ -193,6 +193,8 @@ def check_transits(
     ref_datetime = naive_datetime_now.replace(tzinfo=ZoneInfo(local_timezone))
 
     celestial_obj = CelestialObject(name=target_name, observer_position=MY_POSITION)
+    celestial_obj.update_position(ref_datetime=ref_datetime)
+    current_target_coordinates = celestial_obj.get_coordinates()
 
     print(celestial_obj.__str__())
 
@@ -208,12 +210,12 @@ def check_transits(
 
     print(f"theres is {len(flight_data)} flights near")
 
-    response = list()
+    data = list()
 
     for flight in flight_data:
         celestial_obj.update_position(ref_datetime=ref_datetime)
 
-        response.append(
+        data.append(
             check_intersection(
                 flight,
                 window_time,
@@ -226,6 +228,6 @@ def check_transits(
             )
         )
 
-        print(response[-1])
+        print(data[-1])
 
-    return response
+    return {"transits": data, "targetCoordinates": current_target_coordinates}

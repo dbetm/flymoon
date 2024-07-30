@@ -30,3 +30,9 @@ class CelestialObject:
 
     def __str__(self):
         return f"{self.name=}, {self.altitude=}, {self.azimuthal=}"
+
+    def get_coordinates(self, precision: int = 2) -> dict:
+        return {
+            "altitude": round(self.altitude.degrees, precision),
+            "azimuthal": round(self.azimuthal.degrees, precision),
+        }

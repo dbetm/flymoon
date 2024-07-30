@@ -11,9 +11,8 @@
 </head>
 <body> 
     <h1>✈️ Flymoon <span id="targetIcon" onclick="toggleTarget();">-</span></h1>
-    <h3 class="light-text">
-        Target: <span id="targetLabel">-</span><span id="targetCoordinates"></span>
-    </h3>
+    <p id="targetCoordinates"></p>
+    <h3 class="light-text">Target: <span id="targetLabel">-</span></h3>
 
     <div class="center-div">
         <form class="form-container" action="">
@@ -33,7 +32,7 @@
     </div>
 
     <button class="secondary" onclick="savePosition()">Save position</button>
-    <button class="secondary" onclick="clearPosition()">Clear coords</button>
+    <button class="secondary" onclick="clearPosition()">Clear</button>
     <br>
     <button class="primary" onclick="go()">Go!</button>
 

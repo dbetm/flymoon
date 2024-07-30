@@ -99,11 +99,11 @@ function fetchTransits() {
     .then(response => response.json())
     .then(data => {
 
-        if(data.list.length == 0) {
+        if(data.transits.length == 0) {
             alertMessage.innerHTML = "No flights!"
         }
 
-        data.list.forEach(item => {
+        data.transits.forEach(item => {
             const row = document.createElement('tr');
 
             columnNames.forEach(column => {
@@ -124,6 +124,8 @@ function fetchTransits() {
 
             bodyTable.appendChild(row);
         });
+
+        renderTargetCoordinates(data.targetCoordinates);
     });
 }
 
@@ -132,9 +134,19 @@ function toggleTarget() {
     if(target == "moon") target = "sun";
     else target = "moon";
 
+    document.getElementById("targetCoordinates").innerHTML = "";
     displayTarget();
+
+    resetResultsTable();
 }
 
+function renderTargetCoordinates(coordinates) {
+    let alt = coordinates.altitude;
+    let az = coordinates.azimuthal;
+    const coordinates_str = "altitude: " + alt + " azimuthal: " + az;
+
+    document.getElementById("targetCoordinates").innerHTML = coordinates_str;
+}
 
 function displayTarget() {
     if(target == "moon") {
@@ -146,4 +158,8 @@ function displayTarget() {
 
     localStorage.setItem("target", target);
     document.getElementById("targetLabel").innerHTML = target;
+}
+
+function resetResultsTable() {
+    document.getElementById("flightData").innerHTML = "";
 }

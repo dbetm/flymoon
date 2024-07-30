@@ -27,14 +27,14 @@ def get_transits():
     longitude = float(request.args["longitude"])
     elevation = float(request.args["elevation"])
 
-    data = check_transits(latitude, longitude, elevation, target, test_mode)
-    data = sort_results(data)
+    data: dict = check_transits(latitude, longitude, elevation, target, test_mode)
+    data["transits"] = sort_results(data["transits"])
 
     end_time = time.time()
     elapsed_time = end_time - start_time
     print(f"Elapsed time: {elapsed_time} seconds")
 
-    return jsonify({"list": data})
+    return jsonify(data)
 
 
 if __name__ == "__main__":
