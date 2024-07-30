@@ -8,7 +8,7 @@ from flask import Flask, jsonify, render_template, request
 load_dotenv()
 
 from src.flight_data import sort_results
-from src.intersection import check_intersections
+from src.transit import check_transits
 
 app = Flask(__name__)
 
@@ -18,8 +18,8 @@ def index():
     return render_template("index.html")
 
 
-@app.route("/check_intersections")
-def get_list():
+@app.route("/transits")
+def get_transits():
     start_time = time.time()
 
     target = request.args["target"]
@@ -27,7 +27,7 @@ def get_list():
     longitude = float(request.args["longitude"])
     elevation = float(request.args["elevation"])
 
-    data = check_intersections(latitude, longitude, elevation, target, test_mode)
+    data = check_transits(latitude, longitude, elevation, target, test_mode)
     data = sort_results(data)
 
     end_time = time.time()

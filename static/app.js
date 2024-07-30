@@ -75,10 +75,10 @@ function go() {
         return;
     }
 
-    fetchList();
+    fetchTransits();
 }
 
-function fetchList() {
+function fetchTransits() {
     let latitude = document.getElementById("latitude").value;
     let longitude = document.getElementById("longitude").value;
     let elevation = document.getElementById("elevation").value;
@@ -89,7 +89,7 @@ function fetchList() {
     alertMessage.innerHTML = '';
 
     const endpoint_url = (
-        `/check_intersections?target=${encodeURIComponent(target)}`
+        `/transits?target=${encodeURIComponent(target)}`
         + `&latitude=${encodeURIComponent(latitude)}`
         + `&longitude=${encodeURIComponent(longitude)}`
         + `&elevation=${encodeURIComponent(elevation)}`

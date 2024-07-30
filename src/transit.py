@@ -164,7 +164,7 @@ def check_intersection(
     }
 
 
-def check_intersections(
+def check_transits(
     latitude: float,
     longitude: float,
     elevation: float,
