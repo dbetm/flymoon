@@ -78,6 +78,10 @@ I suggest using [MAPS.ie](https://www.maps.ie/coordinates.html#google_vignette) 
 
 Click on Go! button to display results. Each row will include differences in alt-azimuthal coordinates only if it’s a possible hit. If the difference is very small, the row will be highlighted in yellow or green color.
 
+**Change target**
+
+Tap into the target icon and it'll toggle between Sun and Moon.
+
 
 --------
 
@@ -97,3 +101,10 @@ Click on Go! button to display results. Each row will include differences in alt
 ## Contribute
 
 This web app is still under active testing. If you want to fix something, improve it, or make a suggestion, feel free to open a Pull Request or an issue.
+
+
+**Share your epic picture!**
+
+I'd love to watch some transit picture taken with the help of this tool. So, post it on this [issue](https://github.com/dbetm/flymoon/issues/21).
+
+Pro-tip: You can use the Fightradar24 app to complement this web app.
