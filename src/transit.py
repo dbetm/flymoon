@@ -141,6 +141,7 @@ def check_intersection(
                     "change_elev": CHANGE_ELEVATION.get(
                         flight["elevation_change"], None
                     ),
+                    "direction": flight["direction"],
                 }
 
                 min_diff_combined = diff_combined
@@ -161,6 +162,7 @@ def check_intersection(
         "az_diff": None,
         "is_possible_hit": 0,
         "change_elev": CHANGE_ELEVATION.get(flight["elevation_change"], None),
+        "direction": flight["direction"],
     }
 
 

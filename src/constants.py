@@ -15,14 +15,16 @@ CHANGE_ELEVATION = {
 
 # Test data
 TEST_DATA_PATH = "data/raw_flight_data_example.json"
+POSSIBLE_HITS_DIR = "data/possible-hits/log.txt"
 
+
+ASTRO_EPHEMERIS = load("de421.bsp")
 """
 The load function is used to load astronomical data, such as planetary ephemerides, 
 which are needed to calculate positions of celestial bodies.
 
 This code loads the DE421 planetary ephemeris data from the Jet Propulsion Laboratory.
 """
-ASTRO_EPHEMERIS = load("de421.bsp")
 EARTH_TIMESCALE = load.timescale()
 
 
@@ -33,4 +35,4 @@ INTERVAL_IN_SECS = 1
 
 # Intersection
 ALTITUDE_THRESHOLD = 15
-AZIMUTHAL_THRESHOLD = 20
+AZIMUTHAL_THRESHOLD = 25

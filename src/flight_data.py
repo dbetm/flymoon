@@ -1,9 +1,11 @@
 import json
+from datetime import datetime
 from http import HTTPStatus
 from typing import List
 
 import requests
 
+from src.constants import POSSIBLE_HITS_DIR
 from src.position import AreaBoundingBox
 
 
@@ -65,3 +67,18 @@ def sort_results(data: List[dict]) -> List[dict]:
         return (a["is_possible_hit"], a["time"], a["id"])
 
     return sorted(data, key=_custom_sort, reverse=True)
+
+
+def save_possible_hits(data: List[dict], dest_path: str = POSSIBLE_HITS_DIR) -> None:
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_message = list()
+
+    for flight in data:
+        if flight["is_possible_hit"] == 1:
+            line = f"{timestamp},"
+            line += ",".join(map(str, flight.values()))
+            log_message.append(line)
+
+    if len(log_message) > 0:
+        with open(dest_path, "a") as f:
+            f.write("\n".join(log_message))

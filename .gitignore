@@ -164,6 +164,7 @@ cython_debug/
 # data
 de421.bsp
 notes.txt
+data/possible-hits/*.txt
 
 # misc
 exp.ipynb

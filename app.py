@@ -7,7 +7,7 @@ from flask import Flask, jsonify, render_template, request
 # SETUP
 load_dotenv()
 
-from src.flight_data import sort_results
+from src.flight_data import save_possible_hits, sort_results
 from src.transit import check_transits
 
 app = Flask(__name__)
@@ -29,6 +29,8 @@ def get_transits():
 
     data: dict = check_transits(latitude, longitude, elevation, target, test_mode)
     data["transits"] = sort_results(data["transits"])
+    if not test_mode:
+        save_possible_hits(data["transits"])
 
     end_time = time.time()
     elapsed_time = end_time - start_time

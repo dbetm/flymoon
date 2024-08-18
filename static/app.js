@@ -10,6 +10,7 @@ var columnNames = [
     "target_az",
     "plane_az",
     "change_elev",
+    "direction",
 ];
 
 var target = getLocalStorageItem("target", "moon");
@@ -108,7 +109,9 @@ function fetchTransits() {
 
             columnNames.forEach(column => {
                 const val = document.createElement("td");
-                val.textContent = item[column];
+
+                if(column == "direction") val.textContent = item[column] + "°";
+                else val.textContent = item[column];
 
                 row.appendChild(val);
             });
@@ -117,7 +120,7 @@ function fetchTransits() {
                 if(item["alt_diff"] <= 3 && item["az_diff"] <= 3) {
                     row.classList.add('highlight-level-2');
                 }
-                else if(item["alt_diff"] <= 7 && item["az_diff"] <= 5) {
+                else if(item["alt_diff"] <= 5 && item["az_diff"] <= 5) {
                     row.classList.add('highlight-level-1');
                 }
             }
