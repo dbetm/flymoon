@@ -143,7 +143,8 @@ function toggleTarget() {
 function renderTargetCoordinates(coordinates) {
     let alt = coordinates.altitude;
     let az = coordinates.azimuthal;
-    const coordinates_str = "altitude: " + alt + " azimuthal: " + az;
+    let time_ = (new Date()).toLocaleTimeString();
+    const coordinates_str = "altitude: " + alt + "° azimuthal: " + az + "° (" + time_ + ")";
 
     document.getElementById("targetCoordinates").innerHTML = coordinates_str;
 }
