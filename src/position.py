@@ -28,7 +28,7 @@ def predict_position(
     lon : float
         Current longitude of the plane in decimal degrees.
     speed : float
-        Speed of the plane in meters per second (m/s).
+        Speed of the plane in kilometers per hour (km/h).
     direction : float
         Direction of the plane in degrees from North (0° to 360°).
     minutes : float
@@ -46,19 +46,16 @@ def predict_position(
     This function uses the Haversine formula to calculate the new position of the plane.
     The following mathematical steps are involved:
 
-    1. Convert speed from meters per second (m/s) to kilometers per hour (km/h).
-       Speed (km/h) = Speed (m/s) * 3.6
-
-    2. Calculate the distance traveled in kilometers.
+    1. Calculate the distance traveled in kilometers.
        Distance (km) = (Speed (km/h) / 60) * Minutes
 
-    3. Convert the direction (bearing) from degrees to radians.
+    2. Convert the direction (bearing) from degrees to radians.
        Bearing (radians) = Direction (degrees) * π / 180
 
-    4. Compute the new latitude using the formula:
+    3. Compute the new latitude using the formula:
        new_lat = asin(sin(lat) * cos(d/R) + cos(lat) * sin(d/R) * cos(bearing))
 
-    5. Compute the new longitude using the formula:
+    4. Compute the new longitude using the formula:
        new_lon = lon + atan2(sin(bearing) * sin(d/R) * cos(lat), cos(d/R) - sin(lat) * sin(new_lat))
 
     where:
@@ -66,9 +63,7 @@ def predict_position(
     - d is the distance traveled.
     - R is the Earth's radius (mean radius = 6,371 km).
     """
-    # Convert speed from m/s to km/h and calculate distance in km
-    speed_kmh = speed * 3.6
-    distance = (speed_kmh / NUM_MINUTES_PER_HOUR) * minutes
+    distance = (speed / NUM_MINUTES_PER_HOUR) * minutes
 
     # Convert direction to radians
     bearing = radians(direction)
