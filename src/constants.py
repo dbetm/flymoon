@@ -1,3 +1,5 @@
+from enum import Enum
+
 from skyfield.api import load
 
 # General
@@ -34,5 +36,10 @@ TOP_MINUTE = 15
 INTERVAL_IN_SECS = 1
 
 # Intersection
-ALTITUDE_THRESHOLD = 15
-AZIMUTHAL_THRESHOLD = 25
+
+
+class Altitude(Enum):
+    LOW = lambda x: x <= 13  # less or equal
+    MEDIUM = lambda x: x <= 30  # less or equal
+    MEDIUM_HIGH = lambda x: x <= 55  # less or equal
+    HIGH = lambda x: x > 55

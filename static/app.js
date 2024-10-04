@@ -117,12 +117,7 @@ function fetchTransits() {
             });
 
             if(item["is_possible_hit"] == 1) {
-                if(item["alt_diff"] <= 3 && item["az_diff"] <= 3) {
-                    row.classList.add('highlight-level-2');
-                }
-                else if(item["alt_diff"] <= 5 && item["az_diff"] <= 5) {
-                    row.classList.add('highlight-level-1');
-                }
+                highlightPossibleTransit(item, row);
             }
 
             bodyTable.appendChild(row);
@@ -130,6 +125,23 @@ function fetchTransits() {
 
         renderTargetCoordinates(data.targetCoordinates);
     });
+}
+
+function highlightPossibleTransit(data, row) {
+    let hitType = data["hit_type"];
+
+    if(hitType == "low" && data["alt_diff"] <= 1 && data["az_diff"] <= 3) {
+        row.classList.add("possibleTransitHighlight");
+    }
+    else if(hitType == "medium" && data["alt_diff"] <= 2 && data["az_diff"] <= 2) {
+        row.classList.add("possibleTransitHighlight");
+    }
+    else if(hitType == "medium_high" && data["alt_diff"] <= 3 && data["az_diff"] <= 3) {
+        row.classList.add("possibleTransitHighlight");
+    }
+    else if(hitType == "high" && data["alt_diff"] <= 5 && data["az_diff"] <= 10) {
+        row.classList.add("possibleTransitHighlight");
+    }
 }
 
 

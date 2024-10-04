@@ -28,7 +28,7 @@ def predict_position(
     lon : float
         Current longitude of the plane in decimal degrees.
     speed : float
-        Speed of the plane in kilometers per hour (km/h).
+        Ground speed of the plane in kilometers per hour (km/h).
     direction : float
         Direction of the plane in degrees from North (0° to 360°).
     minutes : float

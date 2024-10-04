@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Tuple
 from zoneinfo import ZoneInfo
 
 import numpy as np
@@ -9,15 +9,14 @@ from tzlocal import get_localzone_name
 
 from src.astro import CelestialObject
 from src.constants import (
-    ALTITUDE_THRESHOLD,
     API_URL,
     ASTRO_EPHEMERIS,
-    AZIMUTHAL_THRESHOLD,
     CHANGE_ELEVATION,
     INTERVAL_IN_SECS,
     NUM_SECONDS_PER_MIN,
     TEST_DATA_PATH,
     TOP_MINUTE,
+    Altitude,
 )
 from src.flight_data import get_flight_data, load_existing_flight_data, parse_fligh_data
 from src.position import (
@@ -37,6 +36,35 @@ area_bbox = AreaBoundingBox(
 )
 
 
+def get_thresholds(altitude: float) -> Tuple[float, float]:
+    """Receives target altitude and return the suggested threshold for both coordinates:
+    altitude and azimuthal.
+    """
+    if Altitude.LOW(altitude):
+        return (5.0, 10.0)
+    elif Altitude.MEDIUM(altitude):
+        return (15.0, 25.0)
+    elif Altitude.MEDIUM_HIGH(altitude):
+        return (10.0, 20.0)
+    elif Altitude.HIGH(altitude):
+        return (8.0, 180.0)
+
+    raise Exception(f"Given altitude is not valid!")
+
+
+def get_hit_type(altitude: float) -> str:
+    if Altitude.LOW(altitude):
+        return "low"
+    elif Altitude.MEDIUM(altitude):
+        return "medium"
+    elif Altitude.MEDIUM_HIGH(altitude):
+        return "medium_high"
+    elif Altitude.HIGH(altitude):
+        return "high"
+
+    raise Exception(f"Given altitude is not valid!")
+
+
 def check_intersection(
     flight: dict,
     window_time: list,
@@ -44,8 +72,8 @@ def check_intersection(
     my_position: Topos,
     target: CelestialObject,
     earth_ref,
-    alt_threshold: float = 10,
-    az_threshold: float = 10,
+    # alt_threshold: float = 10,
+    # az_threshold: float = 10,
 ) -> dict:
     """Given the data of a flight, compute a possible intersection with the target. At least the minimum
     difference in alt-azimuthal coordinates if is under the given thresholds.
@@ -79,12 +107,12 @@ def check_intersection(
         id, origin, destination, time, target_alt, plane_alt, target_az, plane_az, alt_diff, az_diff,
         is_possible_hit, and change_elev.
     """
-    min_diff_combined = alt_threshold + az_threshold + 1
-    last_diff_combined = 10000
-    ans = None
+    min_diff_combined = float("inf")
+    response = None
+    no_decreasing_count = 0
 
     for idx, minute in enumerate(window_time):
-        # get future position of plane
+        # Get future position of plane
         future_lat, future_lon = predict_position(
             lat=flight["latitude"],
             lon=flight["longitude"],
@@ -105,28 +133,32 @@ def check_intersection(
             future_time,
         )
 
-        if idx > 0 and idx % 180 == 0:
-            # update target position every 180 data points (3 min)
+        if idx > 0 and idx % 60 == 0:
+            # Update target position every 60 data points (1 min)
             target.update_position(future_time)
 
         alt_diff = abs(future_alt - target.altitude.degrees)
         az_diff = abs(future_az - target.azimuthal.degrees)
         diff_combined = alt_diff + az_diff
 
-        if idx % 240 == 0:
-            # check if the diff is increasing
-            if last_diff_combined < diff_combined:
-                print(
-                    f"diff is increasing, stop checking intersection, min={round(minute, 2)}"
-                )
-                break
-            else:
-                last_diff_combined = diff_combined
+        if no_decreasing_count >= 180:
+            print(
+                f"diff is increasing, stop checking intersection, min={round(minute, 2)}"
+            )
+            break
+
+        if diff_combined < min_diff_combined:
+            no_decreasing_count = 0
+            min_diff_combined = diff_combined
+        else:
+            no_decreasing_count += 1
+
+        alt_threshold, az_threshold = get_thresholds(target.altitude.degrees)
 
         if future_alt > 0 and alt_diff < alt_threshold and az_diff < az_threshold:
 
             if diff_combined < min_diff_combined:
-                ans = {
+                response = {
                     "id": flight["name"],
                     "origin": flight["origin"],
                     "destination": flight["destination"],
@@ -138,16 +170,15 @@ def check_intersection(
                     "alt_diff": round(float(alt_diff), 3),
                     "az_diff": round(float(az_diff), 3),
                     "is_possible_hit": 1,
+                    "hit_type": get_hit_type(target.altitude.degrees),
                     "change_elev": CHANGE_ELEVATION.get(
                         flight["elevation_change"], None
                     ),
                     "direction": flight["direction"],
                 }
 
-                min_diff_combined = diff_combined
-
-    if ans:
-        return ans
+    if response:
+        return response
 
     return {
         "id": flight["name"],
@@ -160,7 +191,8 @@ def check_intersection(
         "plane_az": None,
         "alt_diff": None,
         "az_diff": None,
-        "is_possible_hit": 0,
+        "is_possible_hit": 1,
+        "hit_type": None,
         "change_elev": CHANGE_ELEVATION.get(flight["elevation_change"], None),
         "direction": flight["direction"],
     }
@@ -225,8 +257,6 @@ def check_transits(
                 MY_POSITION,
                 celestial_obj,
                 EARTH,
-                alt_threshold=ALTITUDE_THRESHOLD,
-                az_threshold=AZIMUTHAL_THRESHOLD,
             )
         )
 
