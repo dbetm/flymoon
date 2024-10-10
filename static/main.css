@@ -79,8 +79,12 @@ body {
     cursor: pointer;
 }
 
-.possibleTransitHighlight {
+.possibleTransitHighlight1 {
     background-color: rgb(146, 254, 184) !important;
+}
+
+.possibleTransitHighlight2 {
+    background-color: rgb(236, 224, 113) !important;
 }
 
 .light-text {

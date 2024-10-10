@@ -110,6 +110,7 @@ def check_intersection(
     min_diff_combined = float("inf")
     response = None
     no_decreasing_count = 0
+    update_response = False
 
     for idx, minute in enumerate(window_time):
         # Get future position of plane
@@ -150,6 +151,7 @@ def check_intersection(
         if diff_combined < min_diff_combined:
             no_decreasing_count = 0
             min_diff_combined = diff_combined
+            update_response = True
         else:
             no_decreasing_count += 1
 
@@ -157,7 +159,7 @@ def check_intersection(
 
         if future_alt > 0 and alt_diff < alt_threshold and az_diff < az_threshold:
 
-            if diff_combined < min_diff_combined:
+            if update_response:
                 response = {
                     "id": flight["name"],
                     "origin": flight["origin"],
@@ -176,6 +178,7 @@ def check_intersection(
                     ),
                     "direction": flight["direction"],
                 }
+        update_response = False
 
     if response:
         return response
@@ -191,7 +194,7 @@ def check_intersection(
         "plane_az": None,
         "alt_diff": None,
         "az_diff": None,
-        "is_possible_hit": 1,
+        "is_possible_hit": 0,
         "hit_type": None,
         "change_elev": CHANGE_ELEVATION.get(flight["elevation_change"], None),
         "direction": flight["direction"],
