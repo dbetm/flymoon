@@ -5,7 +5,7 @@ from typing import List
 
 import requests
 
-from src.constants import POSSIBLE_HITS_DIR
+from src.constants import POSSIBLE_TRANSITS_DIR
 from src.position import AreaBoundingBox
 
 
@@ -64,17 +64,19 @@ def load_existing_flight_data(path: str) -> dict:
 
 def sort_results(data: List[dict]) -> List[dict]:
     def _custom_sort(a: dict) -> bool:
-        return (a["is_possible_hit"], a["time"], a["id"])
+        return (a["is_possible_transit"], a["time"], a["id"])
 
     return sorted(data, key=_custom_sort, reverse=True)
 
 
-def save_possible_hits(data: List[dict], dest_path: str = POSSIBLE_HITS_DIR) -> None:
+def save_possible_transits(
+    data: List[dict], dest_path: str = POSSIBLE_TRANSITS_DIR
+) -> None:
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_message = list()
 
     for flight in data:
-        if flight["is_possible_hit"] == 1:
+        if flight["is_possible_transit"] == 1:
             line = f"{timestamp},"
             line += ",".join(map(str, flight.values()))
             log_message.append(line)

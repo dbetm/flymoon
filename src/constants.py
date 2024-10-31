@@ -17,7 +17,7 @@ CHANGE_ELEVATION = {
 
 # Test data
 TEST_DATA_PATH = "data/raw_flight_data_example.json"
-POSSIBLE_HITS_DIR = "data/possible-hits/log.txt"
+POSSIBLE_TRANSITS_DIR = "data/possible-transits/log.txt"
 
 
 ASTRO_EPHEMERIS = load("de421.bsp")
@@ -35,11 +35,9 @@ EARTH_TIMESCALE = load.timescale()
 TOP_MINUTE = 15
 INTERVAL_IN_SECS = 1
 
-# Intersection
-
 
 class Altitude(Enum):
-    LOW = lambda x: x <= 13  # less or equal
+    LOW = lambda x: x <= 15  # less or equal
     MEDIUM = lambda x: x <= 30  # less or equal
-    MEDIUM_HIGH = lambda x: x <= 55  # less or equal
-    HIGH = lambda x: x > 55
+    MEDIUM_HIGH = lambda x: x <= 60  # less or equal
+    HIGH = lambda x: x > 60  # greater than

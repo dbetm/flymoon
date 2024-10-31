@@ -52,7 +52,7 @@ def get_thresholds(altitude: float) -> Tuple[float, float]:
     raise Exception(f"Given altitude is not valid!")
 
 
-def get_hit_type(altitude: float) -> str:
+def get_altitude_class(altitude: float) -> str:
     if Altitude.LOW(altitude):
         return "low"
     elif Altitude.MEDIUM(altitude):
@@ -65,18 +65,15 @@ def get_hit_type(altitude: float) -> str:
     raise Exception(f"Given altitude is not valid!")
 
 
-def check_intersection(
+def check_transit(
     flight: dict,
     window_time: list,
     ref_datetime: datetime,
     my_position: Topos,
     target: CelestialObject,
     earth_ref,
-    # alt_threshold: float = 10,
-    # az_threshold: float = 10,
 ) -> dict:
-    """Given the data of a flight, compute a possible intersection with the target. At least the minimum
-    difference in alt-azimuthal coordinates if is under the given thresholds.
+    """Given the data of a flight, compute a possible transit with the target.
 
     Parameters
     ----------
@@ -92,20 +89,16 @@ def check_intersection(
         Object from skifield library which was instanced with current position of the observer (
         latitude, longitude and elevation).
     target: CelestialObject
-        It could be the Moon or Sun, or whatever celestial object to compute a possible hit with the plane.
+        It could be the Moon or Sun, or whatever celestial object to compute a possible transit.
     earth_ref: Any
         Earth data gotten from the de421.bsp database by NASA's JPL.
-    alt_threshold: float
-        Threshold to met for altitude coordinate in order to consider a possible hit.
-    az_threshold: float
-        Threshold to met for azimuthal coordinate in order to consider a possible hit.
 
     Returns
     -------
     ans : dict
-        Dictionary with the results data, completely filled when it's a possible hit. The data includes:
+        Dictionary with the results data, completely filled when it's a possible transit. The data includes:
         id, origin, destination, time, target_alt, plane_alt, target_az, plane_az, alt_diff, az_diff,
-        is_possible_hit, and change_elev.
+        is_possible_transit, and change_elev.
     """
     min_diff_combined = float("inf")
     response = None
@@ -143,9 +136,7 @@ def check_intersection(
         diff_combined = alt_diff + az_diff
 
         if no_decreasing_count >= 180:
-            print(
-                f"diff is increasing, stop checking intersection, min={round(minute, 2)}"
-            )
+            print(f"diff is increasing, stop checking, min={round(minute, 2)}")
             break
 
         if diff_combined < min_diff_combined:
@@ -171,8 +162,8 @@ def check_intersection(
                     "plane_az": round(float(future_az), 2),
                     "alt_diff": round(float(alt_diff), 3),
                     "az_diff": round(float(az_diff), 3),
-                    "is_possible_hit": 1,
-                    "hit_type": get_hit_type(target.altitude.degrees),
+                    "is_possible_transit": 1,
+                    "altitude_class": get_altitude_class(target.altitude.degrees),
                     "change_elev": CHANGE_ELEVATION.get(
                         flight["elevation_change"], None
                     ),
@@ -194,14 +185,14 @@ def check_intersection(
         "plane_az": None,
         "alt_diff": None,
         "az_diff": None,
-        "is_possible_hit": 0,
-        "hit_type": None,
+        "is_possible_transit": 0,
+        "altitude_class": None,
         "change_elev": CHANGE_ELEVATION.get(flight["elevation_change"], None),
         "direction": flight["direction"],
     }
 
 
-def check_transits(
+def get_transits(
     latitude: float,
     longitude: float,
     elevation: float,
@@ -253,7 +244,7 @@ def check_transits(
         celestial_obj.update_position(ref_datetime=ref_datetime)
 
         data.append(
-            check_intersection(
+            check_transit(
                 flight,
                 window_time,
                 ref_datetime,
@@ -265,4 +256,4 @@ def check_transits(
 
         print(data[-1])
 
-    return {"transits": data, "targetCoordinates": current_target_coordinates}
+    return {"flights": data, "targetCoordinates": current_target_coordinates}

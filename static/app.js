@@ -76,10 +76,10 @@ function go() {
         return;
     }
 
-    fetchTransits();
+    fetchFlights();
 }
 
-function fetchTransits() {
+function fetchFlights() {
     let latitude = document.getElementById("latitude").value;
     let longitude = document.getElementById("longitude").value;
     let elevation = document.getElementById("elevation").value;
@@ -90,7 +90,7 @@ function fetchTransits() {
     alertMessage.innerHTML = '';
 
     const endpoint_url = (
-        `/transits?target=${encodeURIComponent(target)}`
+        `/flights?target=${encodeURIComponent(target)}`
         + `&latitude=${encodeURIComponent(latitude)}`
         + `&longitude=${encodeURIComponent(longitude)}`
         + `&elevation=${encodeURIComponent(elevation)}`
@@ -100,11 +100,11 @@ function fetchTransits() {
     .then(response => response.json())
     .then(data => {
 
-        if(data.transits.length == 0) {
+        if(data.flights.length == 0) {
             alertMessage.innerHTML = "No flights!"
         }
 
-        data.transits.forEach(item => {
+        data.flights.forEach(item => {
             const row = document.createElement('tr');
 
             columnNames.forEach(column => {
@@ -116,7 +116,7 @@ function fetchTransits() {
                 row.appendChild(val);
             });
 
-            if(item["is_possible_hit"] == 1) {
+            if(item["is_possible_transit"] == 1) {
                 highlightPossibleTransit(item, row);
             }
 
@@ -128,23 +128,23 @@ function fetchTransits() {
 }
 
 function highlightPossibleTransit(data, row) {
-    let hitType = data["hit_type"];
+    let altitudeClass = data["altitude_class"];
 
     // low possibility
     if(data["alt_diff"] <= 10 && data["az_diff"] <= 10) {
         row.classList.add("possibleTransitHighlight2");
     }
 
-    if(hitType == "low" && data["alt_diff"] <= 1 && data["az_diff"] <= 3) {
+    if(altitudeClass == "low" && data["alt_diff"] <= 1 && data["az_diff"] <= 3) {
         row.classList.add("possibleTransitHighlight1");
     }
-    else if(hitType == "medium" && data["alt_diff"] <= 2 && data["az_diff"] <= 2) {
+    else if(altitudeClass == "medium" && data["alt_diff"] <= 2 && data["az_diff"] <= 2) {
         row.classList.add("possibleTransitHighlight1");
     }
-    else if(hitType == "medium_high" && data["alt_diff"] <= 3 && data["az_diff"] <= 3) {
+    else if(altitudeClass == "medium_high" && data["alt_diff"] <= 3 && data["az_diff"] <= 3) {
         row.classList.add("possibleTransitHighlight1");
     }
-    else if(hitType == "high" && data["alt_diff"] <= 5 && data["az_diff"] <= 10) {
+    else if(altitudeClass == "high" && data["alt_diff"] <= 5 && data["az_diff"] <= 10) {
         row.classList.add("possibleTransitHighlight1");
     }
 }
