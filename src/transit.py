@@ -237,7 +237,7 @@ def get_transits(
     for flight in raw_flight_data["flights"]:
         flight_data.append(parse_fligh_data(flight))
 
-    print(f"theres is {len(flight_data)} flights near")
+    print(f"there are {len(flight_data)} flights near")
 
     data = list()
 

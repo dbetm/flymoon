@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import time
 
 from dotenv import load_dotenv
@@ -8,6 +9,7 @@ from flask import Flask, jsonify, render_template, request
 load_dotenv()
 
 from src.flight_data import save_possible_transits, sort_results
+from src.notify import send_notifications
 from src.transit import get_transits
 
 app = Flask(__name__)
@@ -26,6 +28,7 @@ def get_all_flights():
     latitude = float(request.args["latitude"])
     longitude = float(request.args["longitude"])
     elevation = float(request.args["elevation"])
+    has_send_notification = request.args["send-notification"] == "true"
 
     data: dict = get_transits(latitude, longitude, elevation, target, test_mode)
     data["flights"] = sort_results(data["flights"])
@@ -35,6 +38,13 @@ def get_all_flights():
     end_time = time.time()
     elapsed_time = end_time - start_time
     print(f"Elapsed time: {elapsed_time} seconds")
+
+    if has_send_notification:
+        try:
+            asyncio.run(send_notifications(data["flights"], target))
+        except Exception as e:
+            print("Error while trying to send notification")
+            print(str(e))
 
     return jsonify(data)
 

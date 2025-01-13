@@ -153,6 +153,7 @@ function fetchFlights() {
         + `&latitude=${encodeURIComponent(latitude)}`
         + `&longitude=${encodeURIComponent(longitude)}`
         + `&elevation=${encodeURIComponent(elevation)}`
+        + `&send-notification=${autoMode}`
     );
 
     fetch(endpoint_url)

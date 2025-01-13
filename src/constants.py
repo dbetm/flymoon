@@ -7,6 +7,10 @@ NUM_MINUTES_PER_HOUR = 60
 NUM_SECONDS_PER_MIN = 60
 EARTH_RADIOUS = 6371
 
+# Notifications
+TARGET_TO_EMOJI = {"moon": "🌙", "sun": "☀️"}
+MAX_NUM_ITEMS_TO_NOTIFY = 5
+
 # Flight data
 API_URL = "https://aeroapi.flightaware.com/aeroapi/flights/search"
 CHANGE_ELEVATION = {
