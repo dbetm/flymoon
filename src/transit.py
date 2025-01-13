@@ -228,6 +228,7 @@ def get_transits(
 
     if test_mode:
         raw_flight_data = load_existing_flight_data(TEST_DATA_PATH)
+        print("Loading existing flight data since is using TEST mode")
     else:
         raw_flight_data = get_flight_data(area_bbox, API_URL, API_KEY)
 

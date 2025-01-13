@@ -56,8 +56,6 @@ def parse_fligh_data(flight_data: dict):
 
 
 def load_existing_flight_data(path: str) -> dict:
-    print("loading existing flight data")
-
     with open(path, "r") as file:
         return json.load(file)
 

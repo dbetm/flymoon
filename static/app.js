@@ -13,7 +13,14 @@ var columnNames = [
     "direction",
 ];
 
+const MS_IN_A_MIN = 60000;
+var autoMode = false;
 var target = getLocalStorageItem("target", "moon");
+var autoGoInterval = setInterval(go, 86400000);
+var refreshTimerLabelInterval = setInterval(refreshTimer, MS_IN_A_MIN);
+// By default disable auto go and refresh timer label
+clearInterval(autoGoInterval);
+clearInterval(refreshTimerLabelInterval);
 displayTarget();
 
 
@@ -79,10 +86,62 @@ function go() {
     fetchFlights();
 }
 
+function auto() {
+    if(autoMode == true) {
+        document.getElementById("goBtn").style.display = 'inline-block';
+        document.getElementById("autoBtn").innerHTML = 'Auto';
+        document.getElementById("autoGoNote").innerHTML = "";
+
+        autoMode = false;
+        clearInterval(autoGoInterval);
+        clearInterval(refreshTimerLabelInterval);
+    }
+    else {
+        document.getElementById("goBtn").style.display = 'none';
+
+        let freq = prompt("Enter a frequency in minutes, recommended 15");
+
+        try {
+            freq = parseInt(freq);
+
+            if(isNaN(freq) || freq <= 0) {
+                throw new Error("");
+            }
+        }
+        catch (error) {
+            alert("Invalid frequency. Please try again!");
+            return auto();
+        }
+
+        localStorage.setItem("frequency", freq);
+        document.getElementById("autoBtn").innerHTML = "Auto " + freq  + " min ⴵ";
+        document.getElementById("autoGoNote").innerHTML = `Auto check every ${freq} minute(s).`;
+
+        autoMode = true;
+        autoGoInterval = setInterval(go, MS_IN_A_MIN * freq);
+        refreshTimerLabelInterval = setInterval(refreshTimer, MS_IN_A_MIN);
+    }
+}
+
+
+function refreshTimer() {
+    let autoBtn = document.getElementById("autoBtn");
+    const currentLabel = autoBtn.innerHTML;
+    let currentTime = parseInt(currentLabel.match(/\d+/)[0], 10);
+    const currentFreq = localStorage.getItem("frequency");
+
+    let newTime = (currentTime - 1) > 0 ? currentTime - 1: currentFreq;
+
+    autoBtn.innerHTML = "Auto " + newTime + " min ⴵ";
+}
+
+
 function fetchFlights() {
     let latitude = document.getElementById("latitude").value;
     let longitude = document.getElementById("longitude").value;
     let elevation = document.getElementById("elevation").value;
+
+    let hasVeryPossibleTransits = false;
 
     const bodyTable = document.getElementById('flightData');
     let alertMessage = document.getElementById("noResults");
@@ -117,36 +176,47 @@ function fetchFlights() {
             });
 
             if(item["is_possible_transit"] == 1) {
-                highlightPossibleTransit(item, row);
+                const possibilityLevel = highlightPossibleTransit(item, row);
+                if (possibilityLevel == "medium") {
+                    hasVeryPossibleTransits = true;
+                }
             }
 
             bodyTable.appendChild(row);
         });
 
         renderTargetCoordinates(data.targetCoordinates);
+        if(autoMode == true && hasVeryPossibleTransits) soundAlert();
     });
 }
 
 function highlightPossibleTransit(data, row) {
     let altitudeClass = data["altitude_class"];
+    let possibilityLevel = "low";
 
     // low possibility
     if(data["alt_diff"] <= 10 && data["az_diff"] <= 10) {
         row.classList.add("possibleTransitHighlight2");
+        possibilityLevel = "low";
     }
 
     if(altitudeClass == "low" && data["alt_diff"] <= 1 && data["az_diff"] <= 3) {
         row.classList.add("possibleTransitHighlight1");
+        possibilityLevel = "medium";
     }
     else if(altitudeClass == "medium" && data["alt_diff"] <= 2 && data["az_diff"] <= 2) {
         row.classList.add("possibleTransitHighlight1");
+        possibilityLevel = "medium";
     }
     else if(altitudeClass == "medium_high" && data["alt_diff"] <= 3 && data["az_diff"] <= 3) {
         row.classList.add("possibleTransitHighlight1");
+        possibilityLevel = "medium";
     }
     else if(altitudeClass == "high" && data["alt_diff"] <= 5 && data["az_diff"] <= 10) {
         row.classList.add("possibleTransitHighlight1");
+        possibilityLevel = "medium";
     }
+    return possibilityLevel;
 }
 
 
@@ -183,4 +253,9 @@ function displayTarget() {
 
 function resetResultsTable() {
     document.getElementById("flightData").innerHTML = "";
+}
+
+function soundAlert() {
+    const audio = document.getElementById('alertSound');
+    audio.play();
 }

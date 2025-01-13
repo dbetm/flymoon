@@ -93,6 +93,11 @@ body {
     font-style: oblique;
 }
 
+.light-text-2 {
+    color: rgb(213, 213, 213);
+    font-weight: normal;
+}
+
 .center-div {
     display: flex;
     justify-content: center;

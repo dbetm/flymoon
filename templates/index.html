@@ -35,7 +35,8 @@
     <button class="secondary" onclick="savePosition()">Save position</button>
     <button class="secondary" onclick="clearPosition()">Clear</button>
     <br>
-    <button class="primary" onclick="go()">Go!</button>
+    <button id="goBtn" class="primary" onclick="go();">Go!</button>
+    <button id="autoBtn" class="primary" onclick="auto();">Auto</button>
 
     <div id="results">
         <table id="resultsTable">
@@ -44,9 +45,9 @@
                     <th>id</th>
                     <th>origin</th>
                     <th>destination</th>
-                    <th>alt diff</th>
-                    <th>az diff</th>
-                    <th>ETA (min)</th>
+                    <th>△alt</th>
+                    <th>△az</th>
+                    <th>ETA</th>
                     <th>target alt</th>
                     <th>plane alt</th>
                     <th>target az</th>
@@ -60,9 +61,12 @@
         </table>
     </div>
     <br>
-    <h5>Possible transits appear in the rows highlighted in color</h5>
-
+    <h5 class="light-text-2">Possible transits appear in the rows highlighted in color. The most probable will be green. ETA is in minutes.</h5>
+    <h5 id="autoGoNote"></h5>
     <h3 class="alert" id="noResults"></h3>
+
+    <audio id="alertSound" src="{{ url_for('static', filename='sounds/tissman-alert1-maximum-distortion.mp3') }}" preload="auto">
+    </audio>
 
     <script src="{{ url_for('static', filename='app.js') }}" charset="utf-8"></script>
 
