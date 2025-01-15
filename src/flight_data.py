@@ -13,13 +13,9 @@ def get_flight_data(
     area_bbox: AreaBoundingBox, url_: str, api_key: str = ""
 ) -> List[dict]:
 
-    headers = {
-        "Accept": "application/json; charset=UTF-8",
-        "x-apikey": api_key,
-    }
+    headers = {"Accept": "application/json; charset=UTF-8", "x-apikey": api_key}
 
-    # example
-    # https://aeroapi.flightaware.com/aeroapi/flights/search?query=-latlong+%2221.305695+-104.458904+23.925834+-101.365481%22&max_pages=1
+    # example: https://aeroapi.flightaware.com/aeroapi/flights/search?query=-latlong+%2221.305695+-104.458904+23.925834+-101.365481%22&max_pages=1
     url = (
         f"{url_}?query=-latlong+%22{area_bbox.lat_lower_left}+{area_bbox.long_lower_left}+"
         f"{area_bbox.lat_upper_right}+{area_bbox.long_upper_right}%22&max_pages=1"
@@ -30,9 +26,8 @@ def get_flight_data(
     if response.status_code == HTTPStatus.OK:
         return response.json()
     else:
-        # If not successful, print the status code and response text
-        print(f"Error: {response.status_code}")
-        print(response.text)
+        # If not successful, raise exception with the status code and response text
+        raise Exception(f"Error: {response.status_code}, {response.text}")
 
 
 def parse_fligh_data(flight_data: dict):
@@ -42,7 +37,7 @@ def parse_fligh_data(flight_data: dict):
         "name": flight_data["ident"],
         "origin": flight_data["origin"]["city"],
         "destination": (
-            "N/D ⚠️"
+            "N/D"
             if not has_destination
             else flight_data.get("destination", dict()).get("city")
         ),
@@ -61,6 +56,8 @@ def load_existing_flight_data(path: str) -> dict:
 
 
 def sort_results(data: List[dict]) -> List[dict]:
+    """Sort data flight results considering if it's possible transit, ETA and time."""
+
     def _custom_sort(a: dict) -> bool:
         return (a["is_possible_transit"], a["time"], a["id"])
 

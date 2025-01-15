@@ -9,7 +9,7 @@ var columnNames = [
     "plane_alt",
     "target_az",
     "plane_az",
-    "change_elev",
+    "elevation_change",
     "direction",
 ];
 
@@ -171,6 +171,7 @@ function fetchFlights() {
                 const val = document.createElement("td");
 
                 if(column == "direction") val.textContent = item[column] + "°";
+                else if(item[column] == "N/D") val.textContent = item[column] + " ⚠️";
                 else val.textContent = item[column];
 
                 row.appendChild(val);

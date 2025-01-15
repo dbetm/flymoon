@@ -3,6 +3,7 @@ from typing import List
 
 from pushbullet import Pushbullet
 
+from src import logger
 from src.constants import MAX_NUM_ITEMS_TO_NOTIFY, TARGET_TO_EMOJI
 
 
@@ -11,7 +12,7 @@ async def send_notifications(flight_data: List[dict], target: str) -> None:
     API_TOKEN = os.getenv("PUSH_BULLET_API_KEY")
 
     if not API_TOKEN:
-        print("No API token to send notifications, skipping...")
+        logger.warning("No API token to send notifications, skipping...")
 
     possible_transits_data = list()
 
@@ -26,7 +27,7 @@ async def send_notifications(flight_data: List[dict], target: str) -> None:
             break
 
     if len(possible_transits_data) == 0:
-        print("No transits to notify, skipping...")
+        logger.warning("No transits to notify, skipping...")
         return
 
     pb = Pushbullet(API_TOKEN)
@@ -41,4 +42,4 @@ async def send_notifications(flight_data: List[dict], target: str) -> None:
         body=body_message,
     )
 
-    print("notification sent!")
+    logger.info("notification sent!")

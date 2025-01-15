@@ -7,6 +7,7 @@ import numpy as np
 from skyfield.api import Topos
 from tzlocal import get_localzone_name
 
+from src import logger
 from src.astro import CelestialObject
 from src.constants import (
     API_URL,
@@ -136,7 +137,7 @@ def check_transit(
         diff_combined = alt_diff + az_diff
 
         if no_decreasing_count >= 180:
-            print(f"diff is increasing, stop checking, min={round(minute, 2)}")
+            logger.info(f"diff is increasing, stop checking, min={round(minute, 2)}")
             break
 
         if diff_combined < min_diff_combined:
@@ -164,7 +165,7 @@ def check_transit(
                     "az_diff": round(float(az_diff), 3),
                     "is_possible_transit": 1,
                     "altitude_class": get_altitude_class(target.altitude.degrees),
-                    "change_elev": CHANGE_ELEVATION.get(
+                    "elevation_change": CHANGE_ELEVATION.get(
                         flight["elevation_change"], None
                     ),
                     "direction": flight["direction"],
@@ -187,7 +188,7 @@ def check_transit(
         "az_diff": None,
         "is_possible_transit": 0,
         "altitude_class": None,
-        "change_elev": CHANGE_ELEVATION.get(flight["elevation_change"], None),
+        "elevation_change": CHANGE_ELEVATION.get(flight["elevation_change"], None),
         "direction": flight["direction"],
     }
 
@@ -201,7 +202,7 @@ def get_transits(
 ) -> List[dict]:
     API_KEY = os.getenv("AEROAPI_API_KEY")
 
-    print(f"{latitude=}, {longitude=}, {elevation=}")
+    logger.info(f"{latitude=}, {longitude=}, {elevation=}")
 
     MY_POSITION = get_my_pos(
         lat=latitude,
@@ -213,7 +214,7 @@ def get_transits(
     window_time = np.linspace(
         0, TOP_MINUTE, TOP_MINUTE * (NUM_SECONDS_PER_MIN // INTERVAL_IN_SECS)
     )
-    print("number of times to check for each flight:", len(window_time))
+    logger.info(f"number of times to check for each flight: {len(window_time)}")
     # Get the local timezone using tzlocal
     local_timezone = get_localzone_name()
     naive_datetime_now = datetime.now()
@@ -224,11 +225,11 @@ def get_transits(
     celestial_obj.update_position(ref_datetime=ref_datetime)
     current_target_coordinates = celestial_obj.get_coordinates()
 
-    print(celestial_obj.__str__())
+    logger.info(celestial_obj.__str__())
 
     if test_mode:
         raw_flight_data = load_existing_flight_data(TEST_DATA_PATH)
-        print("Loading existing flight data since is using TEST mode")
+        logger.info("Loading existing flight data since is using TEST mode")
     else:
         raw_flight_data = get_flight_data(area_bbox, API_URL, API_KEY)
 
@@ -237,7 +238,7 @@ def get_transits(
     for flight in raw_flight_data["flights"]:
         flight_data.append(parse_fligh_data(flight))
 
-    print(f"there are {len(flight_data)} flights near")
+    logger.info(f"there are {len(flight_data)} flights near")
 
     data = list()
 
@@ -255,6 +256,6 @@ def get_transits(
             )
         )
 
-        print(data[-1])
+        logger.info(data[-1])
 
     return {"flights": data, "targetCoordinates": current_target_coordinates}

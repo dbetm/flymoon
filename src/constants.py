@@ -23,7 +23,7 @@ CHANGE_ELEVATION = {
 TEST_DATA_PATH = "data/raw_flight_data_example.json"
 POSSIBLE_TRANSITS_DIR = "data/possible-transits/log.txt"
 
-
+# Astro data
 ASTRO_EPHEMERIS = load("de421.bsp")
 """
 The load function is used to load astronomical data, such as planetary ephemerides, 
@@ -40,6 +40,7 @@ TOP_MINUTE = 15
 INTERVAL_IN_SECS = 1
 
 
+# Transit
 class Altitude(Enum):
     LOW = lambda x: x <= 15  # less or equal
     MEDIUM = lambda x: x <= 30  # less or equal
