@@ -23,7 +23,7 @@ async def send_notifications(flight_data: List[dict], target: str) -> None:
                 f" {flight['origin']} to {flight['destination']}"
             )
 
-        if len(possible_transits_data) > MAX_NUM_ITEMS_TO_NOTIFY:
+        if len(possible_transits_data) >= MAX_NUM_ITEMS_TO_NOTIFY:
             break
 
     if len(possible_transits_data) == 0:

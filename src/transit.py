@@ -44,9 +44,9 @@ def get_thresholds(altitude: float) -> Tuple[float, float]:
     if Altitude.LOW(altitude):
         return (5.0, 10.0)
     elif Altitude.MEDIUM(altitude):
-        return (15.0, 25.0)
+        return (15.0, 20.0)
     elif Altitude.MEDIUM_HIGH(altitude):
-        return (10.0, 20.0)
+        return (10.0, 15.0)
     elif Altitude.HIGH(altitude):
         return (8.0, 180.0)
 
@@ -156,13 +156,13 @@ def check_transit(
                     "id": flight["name"],
                     "origin": flight["origin"],
                     "destination": flight["destination"],
+                    "alt_diff": round(float(alt_diff), 3),
+                    "az_diff": round(float(az_diff), 3),
                     "time": round(float(minute), 3),
                     "target_alt": round(float(target.altitude.degrees), 2),
                     "plane_alt": round(float(future_alt), 2),
                     "target_az": round(float(target.azimuthal.degrees), 2),
                     "plane_az": round(float(future_az), 2),
-                    "alt_diff": round(float(alt_diff), 3),
-                    "az_diff": round(float(az_diff), 3),
                     "is_possible_transit": 1,
                     "altitude_class": get_altitude_class(target.altitude.degrees),
                     "elevation_change": CHANGE_ELEVATION.get(
@@ -179,13 +179,13 @@ def check_transit(
         "id": flight["name"],
         "origin": flight["origin"],
         "destination": flight["destination"],
+        "alt_diff": None,
+        "az_diff": None,
         "time": None,
         "target_alt": None,
         "plane_alt": None,
         "target_az": None,
         "plane_az": None,
-        "alt_diff": None,
-        "az_diff": None,
         "is_possible_transit": 0,
         "altitude_class": None,
         "elevation_change": CHANGE_ELEVATION.get(flight["elevation_change"], None),

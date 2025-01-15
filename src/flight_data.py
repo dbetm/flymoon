@@ -59,7 +59,8 @@ def sort_results(data: List[dict]) -> List[dict]:
     """Sort data flight results considering if it's possible transit, ETA and time."""
 
     def _custom_sort(a: dict) -> bool:
-        return (a["is_possible_transit"], a["time"], a["id"])
+        total_diff = a["alt_diff"] + a["az_diff"] if a["is_possible_transit"] else 100
+        return (a["is_possible_transit"], -1 * total_diff, a["time"], a["id"])
 
     return sorted(data, key=_custom_sort, reverse=True)
 
