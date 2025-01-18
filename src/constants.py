@@ -10,6 +10,8 @@ EARTH_RADIOUS = 6371
 # Notifications
 TARGET_TO_EMOJI = {"moon": "🌙", "sun": "☀️"}
 MAX_NUM_ITEMS_TO_NOTIFY = 5
+ALT_DIFF_THRESHOLD_TO_NOTIFY = 5.0
+AZ_DIFF_THRESHOLD_TO_NOTIFY = 10.0
 
 # Flight data
 API_URL = "https://aeroapi.flightaware.com/aeroapi/flights/search"

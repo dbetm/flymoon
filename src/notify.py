@@ -7,7 +7,12 @@ from src import logger
 from src.constants import MAX_NUM_ITEMS_TO_NOTIFY, TARGET_TO_EMOJI
 
 
-async def send_notifications(flight_data: List[dict], target: str) -> None:
+async def send_notifications(
+    flight_data: List[dict],
+    target: str,
+    alt_diff_threshold: float,
+    az_diff_threshold: float,
+) -> None:
     """Send a notification with the possible transits. Send a maximum of 5 transits."""
     API_TOKEN = os.getenv("PUSH_BULLET_API_KEY")
 
@@ -17,10 +22,16 @@ async def send_notifications(flight_data: List[dict], target: str) -> None:
     possible_transits_data = list()
 
     for flight in flight_data:
-        if flight["is_possible_transit"] == 1:
+        if (
+            flight["is_possible_transit"] == 1
+            and flight["alt_diff"] <= alt_diff_threshold
+            and flight["az_diff"] <= az_diff_threshold
+        ):
+            diff_sum = flight["alt_diff"] + flight["az_diff"]
             possible_transits_data.append(
-                f"{flight['id']} in {flight['time']} min."
-                f" {flight['origin']} to {flight['destination']}"
+                f"{flight['id']} in {flight['time']} m."
+                f" {flight['origin']}->{flight['destination']}"
+                f" △{diff_sum}"
             )
 
         if len(possible_transits_data) >= MAX_NUM_ITEMS_TO_NOTIFY:

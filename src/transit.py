@@ -44,7 +44,7 @@ def get_thresholds(altitude: float) -> Tuple[float, float]:
     if Altitude.LOW(altitude):
         return (5.0, 10.0)
     elif Altitude.MEDIUM(altitude):
-        return (15.0, 20.0)
+        return (10.0, 20.0)
     elif Altitude.MEDIUM_HIGH(altitude):
         return (10.0, 15.0)
     elif Altitude.HIGH(altitude):
@@ -187,7 +187,7 @@ def check_transit(
         "target_az": None,
         "plane_az": None,
         "is_possible_transit": 0,
-        "altitude_class": None,
+        "altitude_class": get_altitude_class(target.altitude.degrees),
         "elevation_change": CHANGE_ELEVATION.get(flight["elevation_change"], None),
         "direction": flight["direction"],
     }

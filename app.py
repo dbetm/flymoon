@@ -5,6 +5,8 @@ import time
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
 
+from src.constants import ALT_DIFF_THRESHOLD_TO_NOTIFY, AZ_DIFF_THRESHOLD_TO_NOTIFY
+
 # SETUP
 load_dotenv()
 
@@ -42,7 +44,14 @@ def get_all_flights():
 
     if has_send_notification:
         try:
-            asyncio.run(send_notifications(data["flights"], target))
+            asyncio.run(
+                send_notifications(
+                    data["flights"],
+                    target,
+                    ALT_DIFF_THRESHOLD_TO_NOTIFY,
+                    AZ_DIFF_THRESHOLD_TO_NOTIFY,
+                )
+            )
         except Exception as e:
             logger.error("Error while trying to send notification")
             logger.error(str(e))

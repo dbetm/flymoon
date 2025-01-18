@@ -164,6 +164,8 @@ function fetchFlights() {
             alertMessage.innerHTML = "No flights!"
         }
 
+        console.log(data);
+
         data.flights.forEach(item => {
             const row = document.createElement('tr');
 
@@ -188,13 +190,15 @@ function fetchFlights() {
         });
 
         renderTargetCoordinates(data.targetCoordinates);
-        if(autoMode == true && hasVeryPossibleTransits) soundAlert();
+        if(autoMode == true && hasVeryPossibleTransits == true) soundAlert();
     });
 }
 
 function highlightPossibleTransit(data, row) {
     let altitudeClass = data["altitude_class"];
     let possibilityLevel = "low";
+
+    console.log(data);
 
     // low possibility
     if(data["alt_diff"] <= 10 && data["az_diff"] <= 10) {
