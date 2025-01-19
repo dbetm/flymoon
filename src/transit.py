@@ -18,6 +18,7 @@ from src.constants import (
     TEST_DATA_PATH,
     TOP_MINUTE,
     Altitude,
+    PossibilityLevel,
 )
 from src.flight_data import get_flight_data, load_existing_flight_data, parse_fligh_data
 from src.position import (
@@ -53,17 +54,29 @@ def get_thresholds(altitude: float) -> Tuple[float, float]:
     raise Exception(f"Given altitude is not valid!")
 
 
-def get_altitude_class(altitude: float) -> str:
-    if Altitude.LOW(altitude):
-        return "low"
-    elif Altitude.MEDIUM(altitude):
-        return "medium"
-    elif Altitude.MEDIUM_HIGH(altitude):
-        return "medium_high"
-    elif Altitude.HIGH(altitude):
-        return "high"
+def get_possibility_level(
+    altitude: float, alt_diff: float, az_diff: float, eta: float = None
+) -> str:
+    possibility_level = PossibilityLevel.IMPOSSIBLE
 
-    raise Exception(f"Given altitude is not valid!")
+    if alt_diff <= 10 and az_diff <= 10 or (Altitude.HIGH(altitude) and alt_diff <= 5):
+        possibility_level = PossibilityLevel.LOW
+
+    if Altitude.LOW(altitude) and (alt_diff <= 1 and az_diff <= 2):
+        possibility_level = PossibilityLevel.MEDIUM
+    elif Altitude.MEDIUM(altitude) and (alt_diff <= 2 and az_diff <= 2):
+        possibility_level = PossibilityLevel.MEDIUM
+    elif Altitude.MEDIUM_HIGH(altitude) and (alt_diff <= 3 and az_diff <= 3):
+        possibility_level = PossibilityLevel.MEDIUM
+    elif Altitude.HIGH(altitude) and (alt_diff <= 5 and az_diff <= 10):
+        possibility_level = PossibilityLevel.MEDIUM
+    else:
+        raise Exception(f"Given altitude is not valid!")
+
+    if eta is not None and (alt_diff <= 1 and az_diff <= 1):
+        possibility_level = PossibilityLevel.HIGH
+
+    return possibility_level.value
 
 
 def check_transit(
@@ -164,7 +177,9 @@ def check_transit(
                     "target_az": round(float(target.azimuthal.degrees), 2),
                     "plane_az": round(float(future_az), 2),
                     "is_possible_transit": 1,
-                    "altitude_class": get_altitude_class(target.altitude.degrees),
+                    "possibility_level": get_possibility_level(
+                        target.altitude.degrees, alt_diff, az_diff, minute
+                    ),
                     "elevation_change": CHANGE_ELEVATION.get(
                         flight["elevation_change"], None
                     ),
@@ -187,7 +202,7 @@ def check_transit(
         "target_az": None,
         "plane_az": None,
         "is_possible_transit": 0,
-        "altitude_class": get_altitude_class(target.altitude.degrees),
+        "possibility_level": PossibilityLevel.IMPOSSIBLE.value,
         "elevation_change": CHANGE_ELEVATION.get(flight["elevation_change"], None),
         "direction": flight["direction"],
     }

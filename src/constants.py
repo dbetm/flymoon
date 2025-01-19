@@ -48,3 +48,10 @@ class Altitude(Enum):
     MEDIUM = lambda x: x <= 30  # less or equal
     MEDIUM_HIGH = lambda x: x <= 60  # less or equal
     HIGH = lambda x: x > 60  # greater than
+
+
+class PossibilityLevel(Enum):
+    IMPOSSIBLE = 0
+    LOW = 1
+    MEDIUM = 2
+    HIGH = 3

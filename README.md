@@ -9,7 +9,7 @@ You need to set coordinates for an area to check flights as a bounding box, inpu
 ![](data/assets/flymoon2.png)
 
 
-The results show the difference in alt-azimuthal coordinates. Typically, you can expect a likely transit when there's no change in elevation and the difference in altitude (alt diff) and azimuth (az diff) is less than 3° for both. In such cases, the row of results will be highlighted. Yellow 🟡: Medium possibility. Green 🟢: High possibility.
+The results show the difference in alt-azimuthal coordinates. Typically, you can expect a likely transit when there's no change in elevation and the difference in altitude (alt diff) and azimuth (az diff) is less than a few grades for both. In such cases, the row of results will be highlighted. Yellow 🟡: Low possibility; Orange 🟠: Medium possibility; Green 🟢: High possibility.
 
 
 --------
@@ -78,11 +78,11 @@ I suggest using [MAPS.ie](https://www.maps.ie/coordinates.html#google_vignette) 
 
 **Compute possible transits**
 
-Click on Go! button to display results. Each row will include differences in alt-azimuthal coordinates only if it’s a possible transit. If the difference is very small, the row will be highlighted in yellow or green color.
+Click on Go! button to display results. Each row will include differences in alt-azimuthal coordinates only if it’s a possible transit. If the difference is enough small, the row will be highlighted in yellow, orange or green color (less probable to more probable).
 
 **Compute possible transits every X minutes**
 
-Click on Auto button, which will require a time in minutes, then the web app will check for transits every X minutes, it there's at leat one possible transit then a sound alert will be played along the sending of a push notification if it was configured.
+Click on Auto button, which will require a time in minutes, then the web app will check for transits every X minutes, it there's at leat one possible transit then a sound alert will be played along the sending of a push notification if it was configured (only medium to high probable flighs are notified).
 
 **Change target**
 

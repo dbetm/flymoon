@@ -4,16 +4,13 @@ from typing import List
 from pushbullet import Pushbullet
 
 from src import logger
-from src.constants import MAX_NUM_ITEMS_TO_NOTIFY, TARGET_TO_EMOJI
+from src.constants import MAX_NUM_ITEMS_TO_NOTIFY, TARGET_TO_EMOJI, PossibilityLevel
 
 
-async def send_notifications(
-    flight_data: List[dict],
-    target: str,
-    alt_diff_threshold: float,
-    az_diff_threshold: float,
-) -> None:
-    """Send a notification with the possible transits. Send a maximum of 5 transits."""
+async def send_notifications(flight_data: List[dict], target: str) -> None:
+    """Send a notification with the possible transits. Send a maximum of 5 medium-high
+    possible transits.
+    """
     API_TOKEN = os.getenv("PUSH_BULLET_API_KEY")
 
     if not API_TOKEN:
@@ -22,16 +19,15 @@ async def send_notifications(
     possible_transits_data = list()
 
     for flight in flight_data:
-        if (
-            flight["is_possible_transit"] == 1
-            and flight["alt_diff"] <= alt_diff_threshold
-            and flight["az_diff"] <= az_diff_threshold
+        if flight["possibility_level"] in (
+            PossibilityLevel.MEDIUM.value,
+            PossibilityLevel.HIGH.value,
         ):
             diff_sum = flight["alt_diff"] + flight["az_diff"]
             possible_transits_data.append(
-                f"{flight['id']} in {flight['time']} m."
+                f"{flight['id']} in {flight['time']} min."
                 f" {flight['origin']}->{flight['destination']}"
-                f" △{diff_sum}"
+                f" ∑△{diff_sum}"
             )
 
         if len(possible_transits_data) >= MAX_NUM_ITEMS_TO_NOTIFY:

@@ -1,4 +1,4 @@
-var columnNames = [
+const COLUMN_NAMES = [
     "id",
     "origin",
     "destination",
@@ -12,8 +12,9 @@ var columnNames = [
     "elevation_change",
     "direction",
 ];
-
 const MS_IN_A_MIN = 60000;
+// Possibility levels
+const LOW_LEVEL = 1, MEDIUM_LEVEL = 2, HIGH_LEVEL = 3;
 var autoMode = false;
 var target = getLocalStorageItem("target", "moon");
 var autoGoInterval = setInterval(go, 86400000);
@@ -123,7 +124,6 @@ function auto() {
     }
 }
 
-
 function refreshTimer() {
     let autoBtn = document.getElementById("autoBtn");
     const currentLabel = autoBtn.innerHTML;
@@ -134,7 +134,6 @@ function refreshTimer() {
 
     autoBtn.innerHTML = "Auto " + newTime + " min ⴵ";
 }
-
 
 function fetchFlights() {
     let latitude = document.getElementById("latitude").value;
@@ -164,12 +163,10 @@ function fetchFlights() {
             alertMessage.innerHTML = "No flights!"
         }
 
-        console.log(data);
-
         data.flights.forEach(item => {
             const row = document.createElement('tr');
 
-            columnNames.forEach(column => {
+            COLUMN_NAMES.forEach(column => {
                 const val = document.createElement("td");
 
                 if(column == "direction") val.textContent = item[column] + "°";
@@ -180,8 +177,10 @@ function fetchFlights() {
             });
 
             if(item["is_possible_transit"] == 1) {
-                const possibilityLevel = highlightPossibleTransit(item, row);
-                if (possibilityLevel == "medium") {
+                const possibilityLevel = parseInt(item["possibility_level"]);
+                highlightPossibleTransit(possibilityLevel, row);
+
+                if(possibilityLevel == MEDIUM_LEVEL || possibilityLevel == HIGH_LEVEL) {
                     hasVeryPossibleTransits = true;
                 }
             }
@@ -194,37 +193,11 @@ function fetchFlights() {
     });
 }
 
-function highlightPossibleTransit(data, row) {
-    let altitudeClass = data["altitude_class"];
-    let possibilityLevel = "low";
-
-    console.log(data);
-
-    // low possibility
-    if(data["alt_diff"] <= 10 && data["az_diff"] <= 10) {
-        row.classList.add("possibleTransitHighlight2");
-        possibilityLevel = "low";
-    }
-
-    if(altitudeClass == "low" && data["alt_diff"] <= 1 && data["az_diff"] <= 3) {
-        row.classList.add("possibleTransitHighlight1");
-        possibilityLevel = "medium";
-    }
-    else if(altitudeClass == "medium" && data["alt_diff"] <= 2 && data["az_diff"] <= 2) {
-        row.classList.add("possibleTransitHighlight1");
-        possibilityLevel = "medium";
-    }
-    else if(altitudeClass == "medium_high" && data["alt_diff"] <= 3 && data["az_diff"] <= 3) {
-        row.classList.add("possibleTransitHighlight1");
-        possibilityLevel = "medium";
-    }
-    else if(altitudeClass == "high" && data["alt_diff"] <= 5 && data["az_diff"] <= 10) {
-        row.classList.add("possibleTransitHighlight1");
-        possibilityLevel = "medium";
-    }
-    return possibilityLevel;
+function highlightPossibleTransit(possibilityLevel, row) {
+    if(possibilityLevel == LOW_LEVEL) row.classList.add("possibleTransitHighlightLow");
+    else if(possibilityLevel == MEDIUM_LEVEL) row.classList.add("possibleTransitHighlightMedium");
+    else if(possibilityLevel == HIGH_LEVEL) row.classList.add("possibleTransitHighlightHigh");
 }
-
 
 function toggleTarget() {
     if(target == "moon") target = "sun";
