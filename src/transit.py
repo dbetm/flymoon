@@ -51,6 +51,7 @@ def get_thresholds(altitude: float) -> Tuple[float, float]:
     elif Altitude.HIGH(altitude):
         return (8.0, 180.0)
 
+    logger.warning(f"{altitude=}")
     raise Exception(f"Given altitude is not valid!")
 
 
@@ -70,8 +71,6 @@ def get_possibility_level(
         possibility_level = PossibilityLevel.MEDIUM
     elif Altitude.HIGH(altitude) and (alt_diff <= 5 and az_diff <= 10):
         possibility_level = PossibilityLevel.MEDIUM
-    else:
-        raise Exception(f"Given altitude is not valid!")
 
     if eta is not None and (alt_diff <= 1 and az_diff <= 1):
         possibility_level = PossibilityLevel.HIGH
