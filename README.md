@@ -35,6 +35,11 @@ make setup
 source .venv/bin/activate
 ```
 
+For Windows you can use:
+```shell
+.venv\Scripts\activate
+```
+
 **Configuration**
 
 Open the `.env` file. You may need to display the hidden files.
@@ -59,6 +64,11 @@ Open the `.env` file. You may need to display the hidden files.
 
 ```shell
 source .venv/bin/activate
+```
+
+For Windows you can use:
+```shell
+.venv\Scripts\activate
 ```
 
 Launch the web server from a terminal.

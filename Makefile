@@ -1,17 +1,30 @@
 SHELL=/bin/bash
 
 
+OS := $(shell uname 2>/dev/null || echo Windows)
+
+ifeq ($(OS), Windows_NT)
+	CMD_ACTIVATE_VENV = .venv\Scripts\activate
+	CMD_CHECK_ENV = if not exist .env copy .env.mock .env
+	PYTHON = python
+else
+	CMD_ACTIVATE_VENV = source .venv/bin/activate
+	CMD_CHECK_ENV = [ ! -f .env ] && cp .env.mock .env || :
+	PYTHON = python3.9
+endif
+
+
 install:
-	@[ ! -d .venv ] && python3.9 -m venv .venv ||:;
+	@[ ! -d .venv ] && $(PYTHON) -m venv .venv ||:;
 	@( \
-		source .venv/bin/activate || exit 1; \
+		$(CMD_ACTIVATE_VENV) || exit 1; \
 		pip install -r requirements.txt; \
 	)
 
 
 dev-install:
 	@( \
-		source .venv/bin/activate || exit 1; \
+		$(CMD_ACTIVATE_VENV) || exit 1; \
 		pip install -r requirements-dev.txt; \
 	)
 
@@ -33,7 +46,7 @@ lint-apply:
 
 
 create-env:
-	@[ ! -f .env ] && cp .env.mock .env ||:;
+	@$(CMD_CHECK_ENV)
 
 
 setup: create-env install
