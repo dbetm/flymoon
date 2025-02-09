@@ -23,7 +23,7 @@ CHANGE_ELEVATION = {
 
 # Test data
 TEST_DATA_PATH = "data/raw_flight_data_example.json"
-POSSIBLE_TRANSITS_DIR = "data/possible-transits/log.txt"
+POSSIBLE_TRANSITS_LOGFILENAME = "data/possible-transits/log_{date_}.csv"
 
 # Astro data
 ASTRO_EPHEMERIS = load("de421.bsp")

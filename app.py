@@ -1,9 +1,12 @@
 import argparse
 import asyncio
 import time
+from datetime import date
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
+
+from src.constants import POSSIBLE_TRANSITS_LOGFILENAME
 
 # SETUP
 load_dotenv()
@@ -33,19 +36,29 @@ def get_all_flights():
 
     data: dict = get_transits(latitude, longitude, elevation, target, test_mode)
     data["flights"] = sort_results(data["flights"])
-    if not test_mode:
-        save_possible_transits(data["flights"])
 
     end_time = time.time()
     elapsed_time = end_time - start_time
     logger.info(f"Elapsed time: {elapsed_time} seconds")
 
+    if not test_mode:
+        try:
+            date_ = date.today().strftime("%Y%m%d")
+            asyncio.run(
+                save_possible_transits(
+                    data["flights"], POSSIBLE_TRANSITS_LOGFILENAME.format(date_=date_)
+                )
+            )
+        except Exception as e:
+            logger.error(
+                f"Error while trying to save possible transits. Details:\n{str(e)}"
+            )
+
     if has_send_notification:
         try:
             asyncio.run(send_notifications(data["flights"], target))
         except Exception as e:
-            logger.error("Error while trying to send notification")
-            logger.error(str(e))
+            logger.error(f"Error while trying to send notification. Details:\n{str(e)}")
 
     return jsonify(data)
 

@@ -1,11 +1,11 @@
 import json
+import os
 from datetime import datetime
 from http import HTTPStatus
 from typing import List
 
 import requests
 
-from src.constants import POSSIBLE_TRANSITS_DIR
 from src.position import AreaBoundingBox
 
 
@@ -65,9 +65,7 @@ def sort_results(data: List[dict]) -> List[dict]:
     return sorted(data, key=_custom_sort, reverse=True)
 
 
-def save_possible_transits(
-    data: List[dict], dest_path: str = POSSIBLE_TRANSITS_DIR
-) -> None:
+async def save_possible_transits(data: List[dict], dest_path: str) -> None:
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_message = list()
 
@@ -78,5 +76,10 @@ def save_possible_transits(
             log_message.append(line)
 
     if len(log_message) > 0:
+        has_log_file = os.path.exists(dest_path)
         with open(dest_path, "a") as f:
+            if not has_log_file:
+                headers = "timestamp," + ",".join(flight.keys())
+                f.write(headers + "\n")
             f.write("\n".join(log_message))
+            f.write("\n")
