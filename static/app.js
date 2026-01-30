@@ -24,6 +24,68 @@ clearInterval(autoGoInterval);
 clearInterval(refreshTimerLabelInterval);
 displayTarget();
 
+// Track mode state
+var trackingFlightId = null;
+var trackingInterval = null;
+var trackingTimeout = null;
+const TRACK_INTERVAL_MS = 6000;  // 6 seconds (max 10 queries/min on Personal tier)
+const TRACK_TIMEOUT_MS = 180000; // 3 minutes
+
+function startTracking(flightId) {
+    // Stop any existing tracking
+    stopTracking();
+
+    trackingFlightId = flightId;
+    console.log(`Track mode: started for ${flightId}`);
+
+    // Visual indicator
+    updateTrackingIndicator();
+
+    // Start polling
+    trackingInterval = setInterval(fetchFlights, TRACK_INTERVAL_MS);
+
+    // Auto-stop after 3 minutes
+    trackingTimeout = setTimeout(() => {
+        console.log('Track mode: 3 minute timeout');
+        stopTracking();
+    }, TRACK_TIMEOUT_MS);
+
+    // Immediate fetch
+    fetchFlights();
+}
+
+function stopTracking() {
+    if (trackingInterval) {
+        clearInterval(trackingInterval);
+        trackingInterval = null;
+    }
+    if (trackingTimeout) {
+        clearTimeout(trackingTimeout);
+        trackingTimeout = null;
+    }
+    if (trackingFlightId) {
+        console.log(`Track mode: stopped for ${trackingFlightId}`);
+        trackingFlightId = null;
+    }
+    updateTrackingIndicator();
+}
+
+function updateTrackingIndicator() {
+    // Remove previous tracking highlight
+    document.querySelectorAll('.tracking-row').forEach(row => {
+        row.classList.remove('tracking-row');
+    });
+
+    // Add highlight to tracked row
+    if (trackingFlightId) {
+        const row = document.querySelector(`tr[data-flight-id="${trackingFlightId}"]`);
+        if (row) {
+            row.classList.add('tracking-row');
+        }
+        document.getElementById("trackingStatus").innerHTML += ` | 🎯 Tracking ${trackingFlightId}`;
+    }
+}
+
 
 function savePosition() {
     let lat = document.getElementById("latitude");
@@ -223,10 +285,20 @@ function fetchFlights() {
             const normalizedId = String(item.id).trim().toUpperCase();
             row.setAttribute('data-flight-id', normalizedId);
 
-            // Click handler to flash corresponding aircraft on map
-            row.addEventListener('click', function() {
-                if (typeof flashAircraftMarker === 'function') {
-                    flashAircraftMarker(normalizedId);
+            // Click handler: normal click flashes, Cmd/Ctrl+click toggles tracking
+            row.addEventListener('click', function(e) {
+                if (e.metaKey || e.ctrlKey) {
+                    // Cmd/Ctrl+click: toggle track mode
+                    if (trackingFlightId === normalizedId) {
+                        stopTracking();
+                    } else {
+                        startTracking(normalizedId);
+                    }
+                } else {
+                    // Normal click: flash aircraft on map
+                    if (typeof flashAircraftMarker === 'function') {
+                        flashAircraftMarker(normalizedId);
+                    }
                 }
             });
 
