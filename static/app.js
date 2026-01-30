@@ -179,14 +179,12 @@ function fetchFlights() {
 
         // Display tracking status
         if(data.trackingTargets && data.targetCoordinates) {
-            let statusParts = [];
-            for(let [targetName, coords] of Object.entries(data.targetCoordinates)) {
-                let icon = targetName === "moon" ? "🌙" : "☀️";
-                let isTracking = data.trackingTargets.includes(targetName);
-                let status = isTracking ? "✓" : "✗";
-                statusParts.push(`${icon} ${targetName}: ${coords.altitude}° ${status}`);
+            if (data.trackingTargets.length > 0) {
+                let tracking = data.trackingTargets.map(t => t === "moon" ? "🌙" : "☀️").join(" ");
+                document.getElementById("trackingStatus").innerHTML = "Tracking " + tracking;
+            } else {
+                document.getElementById("trackingStatus").innerHTML = "No Tracking";
             }
-            document.getElementById("trackingStatus").innerHTML = "Tracking: " + statusParts.join(" | ");
         }
 
         // Check if any targets are trackable
