@@ -281,9 +281,11 @@ function fetchFlights() {
         uniqueFlights.forEach(item => {
             const row = document.createElement('tr');
 
-            // Store normalized flight ID for cross-referencing with map
+            // Store normalized flight ID and possibility level for cross-referencing
             const normalizedId = String(item.id).trim().toUpperCase();
+            const possibilityLevel = item.is_possible_transit === 1 ? parseInt(item.possibility_level) : 0;
             row.setAttribute('data-flight-id', normalizedId);
+            row.setAttribute('data-possibility', possibilityLevel);
 
             // Click handler: normal click flashes, Cmd/Ctrl+click toggles tracking
             row.addEventListener('click', function(e) {
@@ -292,6 +294,13 @@ function fetchFlights() {
                     if (trackingFlightId === normalizedId) {
                         stopTracking();
                     } else {
+                        // Safety check: only track medium or high probability
+                        if (possibilityLevel < MEDIUM_LEVEL) {
+                            alert('Track Mode requires medium or high probability transit.\n\nThis flight has ' +
+                                (possibilityLevel === LOW_LEVEL ? 'low' : 'no') +
+                                ' probability of transit.');
+                            return;
+                        }
                         startTracking(normalizedId);
                     }
                 } else {
