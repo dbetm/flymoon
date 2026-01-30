@@ -2,13 +2,13 @@ const COLUMN_NAMES = [
     "id",
     "origin",
     "destination",
-    "alt_diff",
-    "az_diff",
     "time",
     "target_alt",
     "plane_alt",
+    "alt_diff",
     "target_az",
     "plane_az",
+    "az_diff",
     "elevation_change",
     "direction",
 ];
@@ -226,10 +226,27 @@ function fetchFlights() {
 
             COLUMN_NAMES.forEach(column => {
                 const val = document.createElement("td");
+                const value = item[column];
 
-                if(column == "direction") val.textContent = item[column] + "°";
-                else if(item[column] == "N/D") val.textContent = item[column] + " ⚠️";
-                else val.textContent = item[column];
+                if (value === null || value === undefined) {
+                    val.textContent = "";
+                } else if (column === "time") {
+                    // Format ETA as mm:ss
+                    const totalSeconds = Math.round(value * 60);
+                    const mins = Math.floor(totalSeconds / 60);
+                    const secs = totalSeconds % 60;
+                    val.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+                } else if (column === "direction") {
+                    val.textContent = Math.round(value) + "°";
+                } else if (column === "alt_diff" || column === "az_diff") {
+                    val.textContent = Math.round(value) + "º";
+                } else if (column === "target_alt" || column === "plane_alt" || column === "target_az" || column === "plane_az") {
+                    val.textContent = Math.round(value) + "º";
+                } else if (value === "N/D") {
+                    val.textContent = value + " ⚠️";
+                } else {
+                    val.textContent = value;
+                }
 
                 row.appendChild(val);
             });

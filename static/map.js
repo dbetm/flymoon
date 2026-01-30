@@ -166,11 +166,13 @@ function updateAircraftMarkers(flights, observerLat, observerLon) {
         }
 
         // Use diamond for transit aircraft (NTDS style), airplane emoji for others
+        // Airplane emoji points right (90°), so subtract 90 to align with compass heading
         const isTransit = flight.is_possible_transit === 1;
+        const rotation = (flight.direction - 90);
         const aircraftIcon = L.divIcon({
             html: isTransit
                 ? `<div style="font-size: 32px; color: ${color};">◆</div>`
-                : `<div style="transform: rotate(${flight.direction}deg); font-size: 20px;">✈️</div>`,
+                : `<div style="transform: rotate(${rotation}deg); font-size: 20px;">✈️</div>`,
             iconSize: [32, 32],
             className: 'aircraft-icon'
         });
