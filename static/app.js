@@ -177,14 +177,16 @@ function fetchFlights() {
             document.getElementById("weatherInfo").innerHTML = weatherText;
         }
 
-        // Display tracking status
-        if(data.trackingTargets && data.targetCoordinates) {
-            if (data.trackingTargets.length > 0) {
-                let tracking = data.trackingTargets.map(t => t === "moon" ? "🌙" : "☀️").join(" ");
-                document.getElementById("trackingStatus").innerHTML = "Tracking " + tracking;
-            } else {
-                document.getElementById("trackingStatus").innerHTML = "No Tracking";
+        // Display tracking status for each target
+        if(data.targetCoordinates) {
+            let statusParts = [];
+            for(let [targetName, coords] of Object.entries(data.targetCoordinates)) {
+                let icon = targetName === "moon" ? "🌙" : "☀️";
+                let isTracking = data.trackingTargets && data.trackingTargets.includes(targetName);
+                let status = isTracking ? "Tracking" : "Not tracking";
+                statusParts.push(`${status} ${icon}`);
             }
+            document.getElementById("trackingStatus").innerHTML = statusParts.join(" | ");
         }
 
         // Check if any targets are trackable
