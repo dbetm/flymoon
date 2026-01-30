@@ -168,3 +168,34 @@ body {
     background: transparent;
     border: none;
 }
+
+/* Flash animation for table rows */
+@keyframes flash-row {
+    0%, 100% { background-color: inherit; }
+    25%, 75% { background-color: #00ffff !important; }
+    50% { background-color: inherit; }
+}
+
+.flash-row {
+    animation: flash-row 1s ease-in-out;
+}
+
+/* Flash animation for map markers */
+@keyframes flash-marker {
+    0%, 100% { transform: scale(1); filter: brightness(1); }
+    25%, 75% { transform: scale(1.5); filter: brightness(2); }
+    50% { transform: scale(1); filter: brightness(1); }
+}
+
+.flash-marker {
+    animation: flash-marker 1s ease-in-out;
+}
+
+/* Clickable table rows */
+#resultsTable tbody tr {
+    cursor: pointer;
+}
+
+#resultsTable tbody tr:hover {
+    filter: brightness(0.9);
+}

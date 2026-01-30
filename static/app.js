@@ -219,6 +219,17 @@ function fetchFlights() {
         uniqueFlights.forEach(item => {
             const row = document.createElement('tr');
 
+            // Store normalized flight ID for cross-referencing with map
+            const normalizedId = String(item.id).trim().toUpperCase();
+            row.setAttribute('data-flight-id', normalizedId);
+
+            // Click handler to flash corresponding aircraft on map
+            row.addEventListener('click', function() {
+                if (typeof flashAircraftMarker === 'function') {
+                    flashAircraftMarker(normalizedId);
+                }
+            });
+
             // Add target emoji as first column
             const targetCell = document.createElement("td");
             if (item.target === "moon") targetCell.textContent = "🌙";
