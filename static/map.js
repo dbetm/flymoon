@@ -113,19 +113,6 @@ function updateAzimuthArrow(observerLat, observerLon, azimuth, targetName) {
         weight: 6,
         opacity: 0.9
     }).addTo(map).bindPopup(`<b>Azimuth to ${targetIcon} ${targetName}</b><br>${azimuth.toFixed(1)}°`);
-
-    // Add arrowhead using a marker at the endpoint
-    const arrowheadIcon = L.divIcon({
-        html: '<span style="font-size: 24px; color: #FF4500;">▶</span>',
-        iconSize: [30, 30],
-        className: 'arrowhead-icon',
-        iconAnchor: [5, 15]
-    });
-
-    L.marker([endPoint.lat, endPoint.lon], { 
-        icon: arrowheadIcon,
-        rotationAngle: azimuth 
-    }).addTo(map);
 }
 
 function updateAircraftMarkers(flights, observerLat, observerLon) {
@@ -152,10 +139,10 @@ function updateAircraftMarkers(flights, observerLat, observerLon) {
             else if (level === 3) color = COLORS.HIGH;
         }
 
-        // Create rotating aircraft icon
+        // Create diamond icon for transit aircraft (NTDS style)
         const aircraftIcon = L.divIcon({
-            html: `<div style="transform: rotate(${flight.direction}deg); font-size: 20px;">✈️</div>`,
-            iconSize: [30, 30],
+            html: `<div style="font-size: 32px; color: ${color};">◆</div>`,
+            iconSize: [32, 32],
             className: 'aircraft-icon'
         });
 

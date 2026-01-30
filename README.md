@@ -125,7 +125,7 @@ Tap into the target icon and it'll toggle between Sun, Moon, and Auto mode (🌙
 
 **Map visualization**
 
-Click the Map button to see an interactive map showing your observer position, the flight search bounding box, and the azimuth direction to the target. Aircraft positions are shown when available.
+Click the Map button to see an interactive map showing your observer position, the flight search bounding box, and the azimuth direction to the target. Aircraft with predicted transits are shown as colored diamonds (NTDS-style): green for high probability, orange for medium, yellow for low. The bounding box is draggable for easy adjustment.
 
 **Weather filtering**
 
