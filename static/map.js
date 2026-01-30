@@ -139,9 +139,12 @@ function updateAircraftMarkers(flights, observerLat, observerLon) {
             else if (level === 3) color = COLORS.HIGH;
         }
 
-        // Create diamond icon for transit aircraft (NTDS style)
+        // Use diamond for transit aircraft (NTDS style), airplane emoji for others
+        const isTransit = flight.is_possible_transit === 1;
         const aircraftIcon = L.divIcon({
-            html: `<div style="font-size: 32px; color: ${color};">◆</div>`,
+            html: isTransit
+                ? `<div style="font-size: 32px; color: ${color};">◆</div>`
+                : `<div style="transform: rotate(${flight.direction}deg); font-size: 20px;">✈️</div>`,
             iconSize: [32, 32],
             className: 'aircraft-icon'
         });
