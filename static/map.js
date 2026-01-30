@@ -113,7 +113,7 @@ function clearAzimuthArrows() {
     azimuthArrows = {};
 }
 
-function updateAzimuthArrow(observerLat, observerLon, azimuth, targetName) {
+function updateAzimuthArrow(observerLat, observerLon, azimuth, altitude, targetName) {
     if (!map) return;
 
     // Remove existing arrow for this target
@@ -138,7 +138,7 @@ function updateAzimuthArrow(observerLat, observerLon, azimuth, targetName) {
         color: color,
         weight: 6,
         opacity: 0.9
-    }).addTo(map).bindPopup(`<b>Azimuth to ${targetIcon} ${targetName}</b><br>${azimuth.toFixed(1)}°`);
+    }).addTo(map).bindPopup(`<b>${targetIcon} ${targetName}</b><br>Altitude: ${altitude.toFixed(1)}°<br>Azimuth: ${azimuth.toFixed(1)}°`);
 }
 
 function updateAircraftMarkers(flights, observerLat, observerLon) {
@@ -290,13 +290,13 @@ function updateMapVisualization(data, observerLat, observerLon, observerElev) {
         // Show arrow for each target that is currently being tracked (above horizon)
         data.trackingTargets.forEach(targetName => {
             const coords = data.targetCoordinates[targetName];
-            if (coords && coords.azimuthal !== undefined) {
-                updateAzimuthArrow(observerLat, observerLon, coords.azimuthal, targetName);
+            if (coords && coords.azimuthal !== undefined && coords.altitude !== undefined) {
+                updateAzimuthArrow(observerLat, observerLon, coords.azimuthal, coords.altitude, targetName);
             }
         });
     } else if (data.targetCoordinates && data.targetCoordinates.azimuthal !== undefined) {
         // Single target mode (legacy)
-        updateAzimuthArrow(observerLat, observerLon, data.targetCoordinates.azimuthal, target);
+        updateAzimuthArrow(observerLat, observerLon, data.targetCoordinates.azimuthal, data.targetCoordinates.altitude || 0, target);
     }
 
     // Update aircraft markers
