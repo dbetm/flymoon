@@ -224,3 +224,15 @@ body {
 #resultsTable tbody tr:hover {
     filter: brightness(0.9);
 }
+
+/* Tracking mode indicator */
+.tracking-row {
+    outline: 3px solid cyan;
+    outline-offset: -3px;
+    animation: tracking-pulse 1s infinite;
+}
+
+@keyframes tracking-pulse {
+    0%, 100% { outline-color: cyan; }
+    50% { outline-color: transparent; }
+}
