@@ -23,6 +23,32 @@ const COLORS = {
     DEFAULT: '#808080'   // Gray
 };
 
+// Flash a table row by flight ID
+function flashTableRow(flightId) {
+    const row = document.querySelector(`tr[data-flight-id="${flightId}"]`);
+    if (row) {
+        row.classList.remove('flash-row');
+        void row.offsetWidth; // Trigger reflow
+        row.classList.add('flash-row');
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+// Flash an aircraft marker by flight ID
+function flashAircraftMarker(flightId) {
+    const marker = aircraftMarkers[flightId];
+    if (marker) {
+        const element = marker.getElement();
+        if (element) {
+            element.classList.remove('flash-marker');
+            void element.offsetWidth; // Trigger reflow
+            element.classList.add('flash-marker');
+        }
+        // Pan to marker
+        map.panTo(marker.getLatLng());
+    }
+}
+
 function initializeMap(centerLat, centerLon) {
     if (mapInitialized) {
         return;
@@ -198,11 +224,20 @@ function updateAircraftMarkers(flights, observerLat, observerLon) {
             const marker = L.marker([flight.latitude, flight.longitude], { icon: aircraftIcon })
                 .addTo(map)
                 .bindPopup(popupContent);
-            
+
             // Color the marker based on possibility
             marker.getElement()?.style.setProperty('filter', `drop-shadow(0 0 5px ${color})`);
-            
-            aircraftMarkers[flightId] = marker;
+
+            // Store normalized ID for cross-referencing
+            const normalizedId = String(flightId).trim().toUpperCase();
+            marker.flightId = normalizedId;
+
+            // Click handler to flash corresponding table row
+            marker.on('click', function() {
+                flashTableRow(normalizedId);
+            });
+
+            aircraftMarkers[normalizedId] = marker;
         }
     });
 }
