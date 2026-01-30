@@ -93,6 +93,11 @@ body {
     background: #04b5b5;
 }
 
+.separator {
+    color: #444;
+    margin: 0 4px;
+}
+
 /* Results table */
 #results {
     overflow-x: auto;

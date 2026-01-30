@@ -16,23 +16,25 @@
     <div class="header-row">
         <span class="title">✈️ Flymoon</span>
         <span id="targetIcon" class="target-icon" onclick="toggleTarget();">-</span>
-        <span id="targetLabel" class="target-label">-</span>
         <span id="weatherInfo" class="status-text"></span>
-        <span id="trackingStatus" class="status-text"></span>
     </div>
-    <p id="targetCoordinates" class="coords-text"></p>
 
     <div class="controls-row">
+        <button id="goBtn" class="btn-primary" onclick="go();">Go</button>
+        <button id="autoBtn" class="btn-primary" onclick="auto();">Auto</button>
+        <span class="separator">|</span>
         <input type="number" id="latitude" placeholder="Lat" autocomplete="on" title="Latitude">
         <input type="number" id="longitude" placeholder="Lon" autocomplete="on" title="Longitude">
         <input type="number" id="elevation" placeholder="Elev" autocomplete="on" title="Elevation (m)">
         <button class="btn-sm" onclick="savePosition()" title="Save position">💾</button>
         <button class="btn-sm" onclick="clearPosition()" title="Clear">✕</button>
-        <button class="btn-sm" onclick="requestNotificationPermission()" title="Enable alerts">🔔</button>
+        <span class="separator">|</span>
         <button class="btn-sm" onclick="toggleMap()" title="Toggle map">🗺️</button>
-        <button id="goBtn" class="btn-primary" onclick="go();">Go</button>
-        <button id="autoBtn" class="btn-primary" onclick="auto();">Auto</button>
+        <button class="btn-sm" onclick="requestNotificationPermission()" title="Enable alerts">🔔</button>
     </div>
+
+    <p id="targetCoordinates" class="coords-text"></p>
+    <p id="trackingStatus" class="status-text"></p>
 
     <div id="mapContainer" style="display: none;">
         <div id="map" style="height: 500px; width: 100%; margin: 20px 0;"></div>
