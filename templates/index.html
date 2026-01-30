@@ -42,22 +42,23 @@
     <button class="secondary" onclick="requestNotificationPermission()" title="Enable desktop notifications">🔔 Enable Alerts</button>
     <button class="secondary" onclick="toggleMap()" title="Show/hide map visualization">🗺️ Map</button>
     <br>
-    
+
+    <button id="goBtn" class="primary" onclick="go();">Go</button>
+    <button id="autoBtn" class="primary" onclick="auto();">Auto</button>
+
     <div id="mapContainer" style="display: none;">
         <div id="map" style="height: 500px; width: 100%; margin: 20px 0;"></div>
         <div id="mapLegend" style="padding: 10px; background: #f0f0f0; margin-bottom: 10px;">
             <strong>Legend:</strong>
             <span style="margin-left: 10px;">📍 Observer</span>
-            <span style="margin-left: 10px;">✈️ Aircraft</span>
-            <span style="margin-left: 10px;">🟢 High probability</span>
+            <span style="margin-left: 10px;">◆ Transit aircraft</span>
+            <span style="margin-left: 10px;">🟢 High</span>
             <span style="margin-left: 10px;">🟠 Medium</span>
             <span style="margin-left: 10px;">🟡 Low</span>
             <span style="margin-left: 10px;"><span style="display: inline-block; width: 16px; height: 12px; border: 2px dashed red; vertical-align: middle;"></span> Bounding box</span>
-            <span style="margin-left: 10px;"><span style="display: inline-block; width: 20px; height: 4px; background: #FF4500; vertical-align: middle;"></span>➤ Azimuth</span>
+            <span style="margin-left: 10px;"><span style="display: inline-block; width: 20px; height: 4px; background: #FF4500; vertical-align: middle;"></span> Azimuth</span>
         </div>
     </div>
-    <button id="goBtn" class="primary" onclick="go();">Go</button>
-    <button id="autoBtn" class="primary" onclick="auto();">Auto</button>
 
     <div id="results">
         <table id="resultsTable">
