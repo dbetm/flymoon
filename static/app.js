@@ -156,20 +156,20 @@ function savePosition() {
 }
 
 function loadPosition() {
-    if(isNaN(localStorage.getItem("latitude"))) {
-        console.log("not position saved in local storage");
+    const savedLat = localStorage.getItem("latitude");
+    const savedLon = localStorage.getItem("longitude");
+    const savedElev = localStorage.getItem("elevation");
+
+    if (savedLat === null || savedLat === "" || savedLat === "null") {
+        console.log("No position saved in local storage");
         return;
     }
 
-    let lat = document.getElementById("latitude");
-    let long = document.getElementById("longitude");
-    let elev = document.getElementById("elevation");
+    document.getElementById("latitude").value = savedLat;
+    document.getElementById("longitude").value = savedLon;
+    document.getElementById("elevation").value = savedElev;
 
-    lat.value = localStorage.getItem("latitude");
-    long.value = localStorage.getItem("longitude");
-    elev.value = localStorage.getItem("elevation");
-
-    console.log("Position loaded from local storage");
+    console.log("Position loaded from local storage:", savedLat, savedLon, savedElev);
 }
 
 function getLocalStorageItem(key, defaultValue) {
