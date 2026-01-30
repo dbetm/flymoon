@@ -7,6 +7,7 @@ let boundingBoxLayer = null;
 let azimuthArrow = null;
 let aircraftMarkers = {};
 let mapInitialized = false;
+let boundingBoxUserEdited = false;
 
 // Color scheme for possibility levels
 const COLORS = {
@@ -60,6 +61,11 @@ function updateObserverMarker(lat, lon, elevation) {
 function updateBoundingBox(latLowerLeft, lonLowerLeft, latUpperRight, lonUpperRight) {
     if (!map) return;
 
+    // Skip if user has manually edited the bounding box
+    if (boundingBoxUserEdited && boundingBoxLayer) {
+        return;
+    }
+
     // Remove existing bounding box
     if (boundingBoxLayer) {
         map.removeLayer(boundingBoxLayer);
@@ -81,6 +87,11 @@ function updateBoundingBox(latLowerLeft, lonLowerLeft, latUpperRight, lonUpperRi
     // Enable editing (draggable corners)
     if (boundingBoxLayer.enableEdit) {
         boundingBoxLayer.enableEdit();
+
+        // Track when user edits the bounding box
+        boundingBoxLayer.on('editable:vertex:dragend', function() {
+            boundingBoxUserEdited = true;
+        });
     }
 
     // Fit map to show both observer and bounding box
