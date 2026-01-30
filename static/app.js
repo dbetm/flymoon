@@ -338,9 +338,7 @@ function displayTarget() {
     else {
         document.getElementById("targetIcon").innerHTML = "🌙☀️";
     }
-
     localStorage.setItem("target", target);
-    document.getElementById("targetLabel").innerHTML = target;
 }
 
 function resetResultsTable() {
