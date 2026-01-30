@@ -195,7 +195,27 @@ function fetchFlights() {
             alertNoResults.innerHTML = "No targets available for tracking (below horizon or weather)";
         }
 
-        data.flights.forEach(item => {
+        // Deduplicate flights by ID for display (keep highest possibility level)
+        const seenFlights = {};
+        data.flights.forEach(flight => {
+            const id = flight.id;
+            if (!seenFlights[id]) {
+                seenFlights[id] = flight;
+            } else {
+                // Keep the one with higher possibility (transit > non-transit, higher level wins)
+                const existing = seenFlights[id];
+                if (flight.is_possible_transit > existing.is_possible_transit) {
+                    seenFlights[id] = flight;
+                } else if (flight.is_possible_transit === existing.is_possible_transit) {
+                    if (parseInt(flight.possibility_level || 0) > parseInt(existing.possibility_level || 0)) {
+                        seenFlights[id] = flight;
+                    }
+                }
+            }
+        });
+        const uniqueFlights = Object.values(seenFlights);
+
+        uniqueFlights.forEach(item => {
             const row = document.createElement('tr');
 
             COLUMN_NAMES.forEach(column => {
@@ -223,10 +243,11 @@ function fetchFlights() {
         renderTargetCoordinates(data.targetCoordinates);
         if(autoMode == true && hasVeryPossibleTransits == true) soundAlert();
         
-        // Update map visualization if map is visible
+        // Update map visualization if map is visible (use deduplicated flights)
         const mapContainer = document.getElementById('mapContainer');
         if(mapContainer && mapContainer.style.display !== 'none') {
-            updateMapVisualization(data, parseFloat(latitude), parseFloat(longitude), parseFloat(elevation));
+            const mapData = {...data, flights: uniqueFlights};
+            updateMapVisualization(mapData, parseFloat(latitude), parseFloat(longitude), parseFloat(elevation));
         }
     });
 }

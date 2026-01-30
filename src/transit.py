@@ -325,23 +325,6 @@ def get_transits(
     # Filter out flights with no destination (N/D)
     data = [f for f in data if f.get("destination") != "N/D"]
 
-    # Deduplicate flights by ID, keeping the one with highest possibility level
-    seen = {}
-    for flight in data:
-        flight_id = flight["id"]
-        if flight_id not in seen:
-            seen[flight_id] = flight
-        else:
-            # Keep the one with higher possibility level (or transit over non-transit)
-            existing = seen[flight_id]
-            if flight["is_possible_transit"] > existing["is_possible_transit"]:
-                seen[flight_id] = flight
-            elif flight["is_possible_transit"] == existing["is_possible_transit"]:
-                # Both are transits or both are not - keep higher possibility level
-                if int(flight.get("possibility_level", 0)) > int(existing.get("possibility_level", 0)):
-                    seen[flight_id] = flight
-    data = list(seen.values())
-
     return {
         "flights": data,
         "targetCoordinates": target_coordinates,
