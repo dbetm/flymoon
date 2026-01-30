@@ -12,39 +12,27 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css?v=2"
         crossorigin=""/>
 </head>
-<body> 
-    <h1>✈️ Flymoon <span id="targetIcon" onclick="toggleTarget();">-</span></h1>
-    <h3 class="light-text">Target: <span id="targetLabel">-</span></h3>
-    <p id="targetCoordinates"></p>
-    <p id="weatherInfo" class="light-text-2"></p>
-    <p id="trackingStatus" class="light-text-2"></p>
-
-    <h4>My current position</h4>
-    <div class="center-div">
-        <form class="form-container" action="">
-            <div class="form-group">
-                <label for="flatitude">Latitude</label>
-                <input type="number" id="latitude" name="flatitude" autocomplete="on">
-            </div>
-            <div class="form-group">
-                <label for="flongitude">Longitude</label>
-                <input type="number" id="longitude" name="flongitude" autocomplete="on">
-            </div>
-            <div class="form-group">
-                <label for="fevelation">Elevation</label>
-                <input type="number" id="elevation" name="fevelation" autocomplete="on">
-            </div>
-        </form>
+<body>
+    <div class="header-row">
+        <span class="title">✈️ Flymoon</span>
+        <span id="targetIcon" class="target-icon" onclick="toggleTarget();">-</span>
+        <span id="targetLabel" class="target-label">-</span>
+        <span id="weatherInfo" class="status-text"></span>
+        <span id="trackingStatus" class="status-text"></span>
     </div>
+    <p id="targetCoordinates" class="coords-text"></p>
 
-    <button class="secondary" onclick="savePosition()">Save position</button>
-    <button class="secondary" onclick="clearPosition()">Clear</button>
-    <button class="secondary" onclick="requestNotificationPermission()" title="Enable desktop notifications">🔔 Enable Alerts</button>
-    <button class="secondary" onclick="toggleMap()" title="Show/hide map visualization">🗺️ Map</button>
-    <br>
-
-    <button id="goBtn" class="primary" onclick="go();">Go</button>
-    <button id="autoBtn" class="primary" onclick="auto();">Auto</button>
+    <div class="controls-row">
+        <input type="number" id="latitude" placeholder="Lat" autocomplete="on" title="Latitude">
+        <input type="number" id="longitude" placeholder="Lon" autocomplete="on" title="Longitude">
+        <input type="number" id="elevation" placeholder="Elev" autocomplete="on" title="Elevation (m)">
+        <button class="btn-sm" onclick="savePosition()" title="Save position">💾</button>
+        <button class="btn-sm" onclick="clearPosition()" title="Clear">✕</button>
+        <button class="btn-sm" onclick="requestNotificationPermission()" title="Enable alerts">🔔</button>
+        <button class="btn-sm" onclick="toggleMap()" title="Toggle map">🗺️</button>
+        <button id="goBtn" class="btn-primary" onclick="go();">Go</button>
+        <button id="autoBtn" class="btn-primary" onclick="auto();">Auto</button>
+    </div>
 
     <div id="mapContainer" style="display: none;">
         <div id="map" style="height: 500px; width: 100%; margin: 20px 0;"></div>
@@ -84,10 +72,7 @@
             </tbody>
         </table>
     </div>
-    <br>
-    <h5 class="light-text-2">ETA is in minutes.</h5>
-    <h5 class="light-text-2">Possible transits are highlighted by color: green for high probability, orange for medium, and yellow for low.</h5>
-    <h5 id="autoGoNote"></h5>
+    <p id="autoGoNote" class="status-text"></p>
     <h3 class="alert" id="noResults"></h3>
     <h3 class="alert" id="targetUnderHorizon"></h3>
 
