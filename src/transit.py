@@ -27,6 +27,7 @@ from src.position import (
     get_my_pos,
     predict_position,
 )
+from src.weather import get_weather_condition
 
 EARTH = ASTRO_EPHEMERIS["earth"]
 
@@ -183,6 +184,9 @@ def check_transit(
                         flight["elevation_change"], None
                     ),
                     "direction": flight["direction"],
+                    "target": target.name,
+                    "latitude": flight["latitude"],
+                    "longitude": flight["longitude"],
                 }
         update_response = False
 
@@ -204,6 +208,9 @@ def check_transit(
         "possibility_level": PossibilityLevel.IMPOSSIBLE.value,
         "elevation_change": CHANGE_ELEVATION.get(flight["elevation_change"], None),
         "direction": flight["direction"],
+        "target": target.name,
+        "latitude": flight["latitude"],
+        "longitude": flight["longitude"],
     }
 
 
@@ -211,13 +218,26 @@ def get_transits(
     latitude: float,
     longitude: float,
     elevation: float,
-    target_name: str = "moon",
+    target_name: str = "auto",
     test_mode: bool = False,
-) -> List[dict]:
+) -> dict:
+    """Get transit predictions for celestial targets.
+    
+    Parameters
+    ----------
+    target_name : str
+        'moon', 'sun', or 'auto' (checks both if conditions permit)
+    """
     API_KEY = os.getenv("AEROAPI_API_KEY")
+    WEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
+    MIN_ALTITUDE = float(os.getenv("MIN_TARGET_ALTITUDE", 15))
 
-    logger.info(f"{latitude=}, {longitude=}, {elevation=}")
+    logger.info(f"{latitude=}, {longitude=}, {elevation=}, {target_name=}")
 
+    # Check weather conditions
+    is_clear, weather_info = get_weather_condition(latitude, longitude, WEATHER_API_KEY)
+    logger.info(f"Weather check: clear={is_clear}, {weather_info}")
+    
     MY_POSITION = get_my_pos(
         lat=latitude,
         lon=longitude,
@@ -229,21 +249,48 @@ def get_transits(
         0, TOP_MINUTE, TOP_MINUTE * (NUM_SECONDS_PER_MIN // INTERVAL_IN_SECS)
     )
     logger.info(f"number of times to check for each flight: {len(window_time)}")
+    
     # Get the local timezone using tzlocal
     local_timezone = get_localzone_name()
     naive_datetime_now = datetime.now()
-    # Make the datetime object timezone-aware
     ref_datetime = naive_datetime_now.replace(tzinfo=ZoneInfo(local_timezone))
 
-    celestial_obj = CelestialObject(name=target_name, observer_position=MY_POSITION)
-    celestial_obj.update_position(ref_datetime=ref_datetime)
-    current_target_coordinates = celestial_obj.get_coordinates()
-
-    logger.info(celestial_obj.__str__())
+    # Determine which targets to check
+    targets_to_check = []
+    target_coordinates = {}
+    
+    if target_name == "auto":
+        # Check both moon and sun if conditions permit
+        for target in ["moon", "sun"]:
+            obj = CelestialObject(name=target, observer_position=MY_POSITION)
+            obj.update_position(ref_datetime=ref_datetime)
+            coords = obj.get_coordinates()
+            target_coordinates[target] = coords
+            
+            if coords["altitude"] >= MIN_ALTITUDE and is_clear:
+                targets_to_check.append(target)
+                logger.info(f"{target} at {coords['altitude']}° - tracking enabled")
+            else:
+                reason = "below horizon" if coords["altitude"] < MIN_ALTITUDE else "weather"
+                logger.info(f"{target} at {coords['altitude']}° - skipped ({reason})")
+    else:
+        # Single target mode
+        obj = CelestialObject(name=target_name, observer_position=MY_POSITION)
+        obj.update_position(ref_datetime=ref_datetime)
+        coords = obj.get_coordinates()
+        target_coordinates[target_name] = coords
+        
+        if coords["altitude"] >= MIN_ALTITUDE and is_clear:
+            targets_to_check.append(target_name)
+        else:
+            reason = "below horizon" if coords["altitude"] < MIN_ALTITUDE else "weather"
+            logger.warning(f"{target_name} not trackable ({reason})")
 
     data = list()
+    tracking_targets = targets_to_check.copy()  # For response
 
-    if current_target_coordinates["altitude"] > 0:
+    if targets_to_check:
+        # Fetch flight data once
         if test_mode:
             raw_flight_data = load_existing_flight_data(TEST_DATA_PATH)
             logger.info("Loading existing flight data since is using TEST mode")
@@ -251,17 +298,20 @@ def get_transits(
             raw_flight_data = get_flight_data(area_bbox, API_URL, API_KEY)
 
         flight_data = list()
-
         for flight in raw_flight_data["flights"]:
             flight_data.append(parse_fligh_data(flight))
 
         logger.info(f"there are {len(flight_data)} flights near")
 
-        for flight in flight_data:
+        # Check transits for each target
+        for target in targets_to_check:
+            celestial_obj = CelestialObject(name=target, observer_position=MY_POSITION)
             celestial_obj.update_position(ref_datetime=ref_datetime)
-
-            data.append(
-                check_transit(
+            
+            for flight in flight_data:
+                celestial_obj.update_position(ref_datetime=ref_datetime)
+                
+                transit_result = check_transit(
                     flight,
                     window_time,
                     ref_datetime,
@@ -269,12 +319,26 @@ def get_transits(
                     celestial_obj,
                     EARTH,
                 )
-            )
+                data.append(transit_result)
+                logger.info(transit_result)
 
-            logger.info(data[-1])
-    else:
-        logger.warning(
-            f"{target_name} target is under horizon, skipping checking for transits..."
-        )
+    # Filter out flights with no destination (N/D)
+    data = [f for f in data if f.get("destination") != "N/D"]
 
-    return {"flights": data, "targetCoordinates": current_target_coordinates}
+    return {
+        "flights": data,
+        "targetCoordinates": target_coordinates,
+        "trackingTargets": tracking_targets,
+        "weather": weather_info,
+        "boundingBox": {
+            "latLowerLeft": float(area_bbox.lat_lower_left),
+            "lonLowerLeft": float(area_bbox.long_lower_left),
+            "latUpperRight": float(area_bbox.lat_upper_right),
+            "lonUpperRight": float(area_bbox.long_upper_right),
+        },
+        "observerPosition": {
+            "latitude": latitude,
+            "longitude": longitude,
+            "elevation": elevation,
+        },
+    }

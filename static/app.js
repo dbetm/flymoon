@@ -11,12 +11,13 @@ const COLUMN_NAMES = [
     "plane_az",
     "elevation_change",
     "direction",
+    "target",
 ];
 const MS_IN_A_MIN = 60000;
 // Possibility levels
 const LOW_LEVEL = 1, MEDIUM_LEVEL = 2, HIGH_LEVEL = 3;
 var autoMode = false;
-var target = getLocalStorageItem("target", "moon");
+var target = getLocalStorageItem("target", "auto");
 var autoGoInterval = setInterval(go, 86400000);
 var refreshTimerLabelInterval = setInterval(refreshTimer, MS_IN_A_MIN);
 // By default disable auto go and refresh timer label
@@ -165,8 +166,33 @@ function fetchFlights() {
             alertNoResults.innerHTML = "No flights!"
         }
 
-        if(data.targetCoordinates.altitude < 0) {
-            alertNoResults.innerHTML = "The " + target + " is under horizon! No flights to check..."
+        // Display weather info
+        if(data.weather) {
+            let weatherText = `${data.weather.icon} ${data.weather.description}`;
+            if(data.weather.cloud_cover !== null) {
+                weatherText += ` (${data.weather.cloud_cover}% clouds)`;
+            }
+            if(!data.weather.api_success) {
+                weatherText += " ⚠️";
+            }
+            document.getElementById("weatherInfo").innerHTML = weatherText;
+        }
+
+        // Display tracking status
+        if(data.trackingTargets && data.targetCoordinates) {
+            let statusParts = [];
+            for(let [targetName, coords] of Object.entries(data.targetCoordinates)) {
+                let icon = targetName === "moon" ? "🌙" : "☀️";
+                let isTracking = data.trackingTargets.includes(targetName);
+                let status = isTracking ? "✓" : "✗";
+                statusParts.push(`${icon} ${targetName}: ${coords.altitude}° ${status}`);
+            }
+            document.getElementById("trackingStatus").innerHTML = "Tracking: " + statusParts.join(" | ");
+        }
+
+        // Check if any targets are trackable
+        if(data.trackingTargets && data.trackingTargets.length === 0) {
+            alertNoResults.innerHTML = "No targets available for tracking (below horizon or weather)";
         }
 
         data.flights.forEach(item => {
@@ -196,6 +222,12 @@ function fetchFlights() {
 
         renderTargetCoordinates(data.targetCoordinates);
         if(autoMode == true && hasVeryPossibleTransits == true) soundAlert();
+        
+        // Update map visualization if map is visible
+        const mapContainer = document.getElementById('mapContainer');
+        if(mapContainer && mapContainer.style.display !== 'none') {
+            updateMapVisualization(data, parseFloat(latitude), parseFloat(longitude), parseFloat(elevation));
+        }
     });
 }
 
@@ -207,19 +239,34 @@ function highlightPossibleTransit(possibilityLevel, row) {
 
 function toggleTarget() {
     if(target == "moon") target = "sun";
+    else if(target == "sun") target = "auto";
     else target = "moon";
 
     document.getElementById("targetCoordinates").innerHTML = "";
+    document.getElementById("weatherInfo").innerHTML = "";
+    document.getElementById("trackingStatus").innerHTML = "";
     displayTarget();
 
     resetResultsTable();
 }
 
 function renderTargetCoordinates(coordinates) {
-    let alt = coordinates.altitude;
-    let az = coordinates.azimuthal;
     let time_ = (new Date()).toLocaleTimeString();
-    const coordinates_str = "altitude: " + alt + "° azimuthal: " + az + "° (" + time_ + ")";
+    let coordinates_str;
+
+    // Check if coordinates is nested (auto mode) or direct (single target mode)
+    if (coordinates.altitude !== undefined && coordinates.azimuthal !== undefined) {
+        // Single target mode
+        coordinates_str = "altitude: " + coordinates.altitude + "° azimuthal: " + coordinates.azimuthal + "° (" + time_ + ")";
+    } else {
+        // Auto mode - coordinates is an object with target names as keys
+        let parts = [];
+        for (let [targetName, coords] of Object.entries(coordinates)) {
+            let icon = targetName === "moon" ? "🌙" : "☀️";
+            parts.push(`${icon} alt: ${coords.altitude}° az: ${coords.azimuthal}°`);
+        }
+        coordinates_str = parts.join(" | ") + " (" + time_ + ")";
+    }
 
     document.getElementById("targetCoordinates").innerHTML = coordinates_str;
 }
@@ -228,8 +275,11 @@ function displayTarget() {
     if(target == "moon") {
         document.getElementById("targetIcon").innerHTML = "🌙";
     }
-    else {
+    else if(target == "sun") {
         document.getElementById("targetIcon").innerHTML = "☀️";
+    }
+    else {
+        document.getElementById("targetIcon").innerHTML = "🌙☀️";
     }
 
     localStorage.setItem("target", target);
@@ -243,4 +293,74 @@ function resetResultsTable() {
 function soundAlert() {
     const audio = document.getElementById('alertSound');
     audio.play();
+    
+    // Also show desktop notification if permitted
+    showDesktopNotification();
+}
+
+function showDesktopNotification() {
+    // Check if browser supports notifications
+    if (!('Notification' in window)) {
+        console.log('Browser does not support desktop notifications');
+        return;
+    }
+    
+    // Check permission
+    if (Notification.permission === 'granted') {
+        createNotification();
+    } else if (Notification.permission !== 'denied') {
+        // Request permission
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                createNotification();
+            }
+        });
+    }
+}
+
+function createNotification() {
+    const targetIcon = target === 'auto' ? '🌙☀️' : (target === 'moon' ? '🌙' : '☀️');
+    const title = `Transit Alert! ${targetIcon}`;
+    const body = 'Possible aircraft transit detected. Check the results table for details.';
+    
+    const notification = new Notification(title, {
+        body: body,
+        icon: '/static/images/favicon.ico',
+        badge: '/static/images/favicon.ico',
+        tag: 'flymoon-transit',
+        requireInteraction: false
+    });
+    
+    notification.onclick = function() {
+        window.focus();
+        this.close();
+    };
+    
+    // Auto-close after 10 seconds
+    setTimeout(() => notification.close(), 10000);
+}
+
+function requestNotificationPermission() {
+    if (!('Notification' in window)) {
+        alert('Your browser does not support desktop notifications');
+        return;
+    }
+
+    if (Notification.permission === 'granted') {
+        alert('Alerts are already enabled!');
+        return;
+    }
+
+    if (Notification.permission === 'denied') {
+        alert('Alerts were previously denied. Please enable them in your browser settings.');
+        return;
+    }
+
+    Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+            alert('Alerts enabled successfully!');
+        } else {
+            alert('Alerts were not enabled.');
+        }
+    });
 }
