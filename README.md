@@ -66,7 +66,9 @@ In Windows, if you don't have a text editor to open the `.env` file, you can dow
 
 2) Set the area of flights to check. I strong suggest to cover a 15 min area. This must be a bounding box, using latitudes and longitudes. Set `LAT_LOWER_LEFT`, `LONG_LOWER_LEFT`, `LAT_UPPER_RIGHT`, and `LONG_UPPER_RIGHT` appropriately.
 
-3) (Optional) When using the auto mode If you want to receive notifications in your smartphone, you can get an API KEY from [Pushbucket platform](https://www.pushbullet.com/) and then set `PUSH_BULLET_API_KEY`. To get it, create an account, install the app in your phone and go to *Settings* > *Create Access Token*.
+3) Set your observer position. Set `OBSERVER_LATITUDE`, `OBSERVER_LONGITUDE`, and `OBSERVER_ELEVATION` (in meters). This is where you'll be observing from.
+
+4) (Optional) When using the auto mode If you want to receive notifications in your smartphone, you can get an API KEY from [Pushbucket platform](https://www.pushbullet.com/) and then set `PUSH_BULLET_API_KEY`. To get it, create an account, install the app in your phone and go to *Settings* > *Create Access Token*.
 
 
 ![](data/assets/bounding-box-example.png)
@@ -119,7 +121,43 @@ Click on Auto button, which will require a time in minutes, then the web app wil
 
 **Change target**
 
-Tap into the target icon and it'll toggle between Sun and Moon.
+Tap into the target icon and it'll toggle between Sun, Moon, and Auto mode (🌙☀️). Auto mode tracks both targets simultaneously and only shows flights that could transit whichever target is currently above the horizon.
+
+**Map visualization**
+
+Click the Map button to see an interactive map showing your observer position, the flight search bounding box, and the azimuth direction to the target. Aircraft positions are shown when available.
+
+**Weather filtering**
+
+If you configure an OpenWeatherMap API key, the app will check cloud cover and skip checking for transits when conditions are poor. Set `OPENWEATHER_API_KEY` in your `.env` file and adjust `CLOUD_COVER_THRESHOLD` (default 30%).
+
+
+--------
+
+
+## Background Monitors
+
+For continuous monitoring without keeping a browser open, use the standalone monitors:
+
+**macOS Menu Bar App**
+```shell
+python3 menubar_monitor.py
+```
+Shows a moon/sun icon in your menu bar. Click to see status, start/stop monitoring, and view logs.
+
+**Windows System Tray App**
+```shell
+python windows_monitor.py
+```
+Shows an icon in your system tray with similar functionality.
+
+**Command Line Monitor**
+```shell
+python3 monitor.py --latitude 33.0 --longitude -117.3 --elevation 0 --target auto --interval 15
+```
+Runs in terminal, sends macOS notifications when transits are detected.
+
+All monitors support auto mode (moon+sun), weather filtering, and log transits to CSV files in `data/possible-transits/`.
 
 
 --------

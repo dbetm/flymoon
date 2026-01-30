@@ -8,10 +8,23 @@ NUM_SECONDS_PER_MIN = 60
 EARTH_RADIOUS = 6371
 
 # Notifications
-TARGET_TO_EMOJI = {"moon": "🌙", "sun": "☀️"}
+TARGET_TO_EMOJI = {"moon": "🌙", "sun": "☀️", "both": "🌙☀️"}
 MAX_NUM_ITEMS_TO_NOTIFY = 5
 ALT_DIFF_THRESHOLD_TO_NOTIFY = 5.0
 AZ_DIFF_THRESHOLD_TO_NOTIFY = 10.0
+
+# Weather
+WEATHER_CACHE_DURATION_MINUTES = 60
+WEATHER_API_URL = "https://api.openweathermap.org/data/2.5/weather"
+WEATHER_ICONS = {
+    "clear": "☀️",
+    "clouds": "☁️",
+    "partly_cloudy": "⛅",
+    "rain": "🌧️",
+    "snow": "🌨️",
+    "thunderstorm": "⛈️",
+    "unknown": "❓",
+}
 
 # Flight data
 API_URL = "https://aeroapi.flightaware.com/aeroapi/flights/search"

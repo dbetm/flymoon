@@ -130,3 +130,41 @@ body {
 .form-group input {
     flex: 2;
 }
+
+/* Map styles */
+#map {
+    position: relative;
+    z-index: 1;
+    height: 500px;
+    width: 100%;
+    background: #ddd;
+}
+
+#mapContainer {
+    margin: 20px auto;
+    max-width: 1200px;
+}
+
+#mapLegend {
+    border-radius: 4px;
+    color: #333;
+}
+
+/* Ensure Leaflet container renders properly */
+.leaflet-container {
+    height: 100%;
+    width: 100%;
+}
+
+/* Leaflet icon overrides for dark theme */
+.leaflet-div-icon {
+    background: transparent;
+    border: none;
+}
+
+.observer-icon,
+.aircraft-icon,
+.arrowhead-icon {
+    background: transparent;
+    border: none;
+}

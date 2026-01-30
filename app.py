@@ -12,9 +12,17 @@ from src.constants import POSSIBLE_TRANSITS_LOGFILENAME
 load_dotenv()
 
 from src import logger
+from src.config_wizard import ConfigWizard
 from src.flight_data import save_possible_transits, sort_results
 from src.notify import send_notifications
 from src.transit import get_transits
+
+# Validate configuration on startup
+wizard = ConfigWizard()
+if not wizard.validate(interactive=False):
+    print("\n⚠️  Configuration issues detected:")
+    print(wizard.get_status_report())
+    print("\n💡 Run 'python3 src/config_wizard.py --setup' to configure\n")
 
 app = Flask(__name__)
 
