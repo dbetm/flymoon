@@ -4,10 +4,16 @@
 let map = null;
 let observerMarker = null;
 let boundingBoxLayer = null;
-let azimuthArrow = null;
+let azimuthArrows = {};  // Store arrows by target name
 let aircraftMarkers = {};
 let mapInitialized = false;
 let boundingBoxUserEdited = false;
+
+// Arrow colors for each target
+const ARROW_COLORS = {
+    sun: '#FF4500',   // Orange-red
+    moon: '#4169E1'   // Royal blue
+};
 
 // Color scheme for possibility levels
 const COLORS = {
@@ -99,12 +105,20 @@ function updateBoundingBox(latLowerLeft, lonLowerLeft, latUpperRight, lonUpperRi
     map.fitBounds(extendedBounds, { padding: [50, 50] });
 }
 
+function clearAzimuthArrows() {
+    // Remove all existing arrows
+    Object.values(azimuthArrows).forEach(arrow => {
+        if (arrow) map.removeLayer(arrow);
+    });
+    azimuthArrows = {};
+}
+
 function updateAzimuthArrow(observerLat, observerLon, azimuth, targetName) {
     if (!map) return;
 
-    // Remove existing arrow
-    if (azimuthArrow) {
-        map.removeLayer(azimuthArrow);
+    // Remove existing arrow for this target
+    if (azimuthArrows[targetName]) {
+        map.removeLayer(azimuthArrows[targetName]);
     }
 
     // Calculate endpoint for arrow (15km in azimuth direction)
@@ -117,10 +131,11 @@ function updateAzimuthArrow(observerLat, observerLon, azimuth, targetName) {
         [endPoint.lat, endPoint.lon]
     ];
 
-    const targetIcon = targetName === 'moon' ? '🌙' : (targetName === 'sun' ? '☀️' : '🌙☀️');
-    
-    azimuthArrow = L.polyline(arrowPoints, {
-        color: '#FF4500',
+    const targetIcon = targetName === 'moon' ? '🌙' : '☀️';
+    const color = ARROW_COLORS[targetName] || '#FF4500';
+
+    azimuthArrows[targetName] = L.polyline(arrowPoints, {
+        color: color,
         weight: 6,
         opacity: 0.9
     }).addTo(map).bindPopup(`<b>Azimuth to ${targetIcon} ${targetName}</b><br>${azimuth.toFixed(1)}°`);
@@ -269,19 +284,19 @@ function updateMapVisualization(data, observerLat, observerLon, observerElev) {
         );
     }
 
-    // Update azimuth arrow(s)
-    if (data.targetCoordinates) {
-        // For auto mode, show arrow to the primary tracking target
-        if (data.trackingTargets && data.trackingTargets.length > 0) {
-            const primaryTarget = data.trackingTargets[0];
-            const targetCoords = data.targetCoordinates[primaryTarget] || data.targetCoordinates;
-            if (targetCoords.azimuthal !== undefined) {
-                updateAzimuthArrow(observerLat, observerLon, targetCoords.azimuthal, primaryTarget || target);
+    // Update azimuth arrows - one for each trackable target
+    clearAzimuthArrows();
+    if (data.targetCoordinates && data.trackingTargets) {
+        // Show arrow for each target that is currently being tracked (above horizon)
+        data.trackingTargets.forEach(targetName => {
+            const coords = data.targetCoordinates[targetName];
+            if (coords && coords.azimuthal !== undefined) {
+                updateAzimuthArrow(observerLat, observerLon, coords.azimuthal, targetName);
             }
-        } else if (data.targetCoordinates.azimuthal !== undefined) {
-            // Single target mode
-            updateAzimuthArrow(observerLat, observerLon, data.targetCoordinates.azimuthal, target);
-        }
+        });
+    } else if (data.targetCoordinates && data.targetCoordinates.azimuthal !== undefined) {
+        // Single target mode (legacy)
+        updateAzimuthArrow(observerLat, observerLon, data.targetCoordinates.azimuthal, target);
     }
 
     // Update aircraft markers
