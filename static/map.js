@@ -192,9 +192,9 @@ function updateAircraftMarkers(flights, observerLat, observerLon) {
             <span style="color: ${color};">●</span> ${getPossibilityText(flight.is_possible_transit, flight.possibility_level)}
         `;
 
-        // Note: We'll add actual position after backend is updated
-        // For now, markers won't appear until we have lat/lon data
-        if (flight.latitude && flight.longitude) {
+        // Add marker if we have coordinates (check for undefined/null, not falsy)
+        if (flight.latitude !== undefined && flight.latitude !== null &&
+            flight.longitude !== undefined && flight.longitude !== null) {
             const marker = L.marker([flight.latitude, flight.longitude], { icon: aircraftIcon })
                 .addTo(map)
                 .bindPopup(popupContent);
