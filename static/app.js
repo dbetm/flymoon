@@ -11,7 +11,6 @@ const COLUMN_NAMES = [
     "plane_az",
     "elevation_change",
     "direction",
-    "target",
 ];
 const MS_IN_A_MIN = 60000;
 // Possibility levels
@@ -217,6 +216,13 @@ function fetchFlights() {
 
         uniqueFlights.forEach(item => {
             const row = document.createElement('tr');
+
+            // Add target emoji as first column
+            const targetCell = document.createElement("td");
+            if (item.target === "moon") targetCell.textContent = "🌙";
+            else if (item.target === "sun") targetCell.textContent = "☀️";
+            else targetCell.textContent = "";
+            row.appendChild(targetCell);
 
             COLUMN_NAMES.forEach(column => {
                 const val = document.createElement("td");
