@@ -31,12 +31,59 @@ var trackingTimeout = null;
 const TRACK_INTERVAL_MS = 6000;  // 6 seconds (max 10 queries/min on Personal tier)
 const TRACK_TIMEOUT_MS = 180000; // 3 minutes
 
+// Audio context for track mode sounds
+let audioCtx = null;
+
+function playTrackOnSound() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = audioCtx.currentTime;
+
+    // First tone: 400 Hz, 100ms
+    const osc1 = audioCtx.createOscillator();
+    const gain1 = audioCtx.createGain();
+    osc1.frequency.value = 400;
+    osc1.connect(gain1);
+    gain1.connect(audioCtx.destination);
+    gain1.gain.setValueAtTime(0.3, now);
+    gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+    osc1.start(now);
+    osc1.stop(now + 0.1);
+
+    // Second tone: 700 Hz, 100ms (after 140ms pause)
+    const osc2 = audioCtx.createOscillator();
+    const gain2 = audioCtx.createGain();
+    osc2.frequency.value = 700;
+    osc2.connect(gain2);
+    gain2.connect(audioCtx.destination);
+    gain2.gain.setValueAtTime(0.3, now + 0.14);
+    gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.24);
+    osc2.start(now + 0.14);
+    osc2.stop(now + 0.24);
+}
+
+function playTrackOffSound() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = audioCtx.currentTime;
+
+    // Single tone: 380 Hz, 120ms, quieter
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.frequency.value = 380;
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+    osc.start(now);
+    osc.stop(now + 0.12);
+}
+
 function startTracking(flightId) {
     // Stop any existing tracking
     stopTracking();
 
     trackingFlightId = flightId;
     console.log(`Track mode: started for ${flightId}`);
+    playTrackOnSound();
 
     // Visual indicator
     updateTrackingIndicator();
@@ -66,6 +113,7 @@ function stopTracking() {
     if (trackingFlightId) {
         console.log(`Track mode: stopped for ${trackingFlightId}`);
         trackingFlightId = null;
+        playTrackOffSound();
     }
     updateTrackingIndicator();
 }
