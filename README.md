@@ -125,7 +125,16 @@ Tap into the target icon and it'll toggle between Sun, Moon, and Auto mode (🌙
 
 **Map visualization**
 
-Click the Map button to see an interactive map showing your observer position, the flight search bounding box, and the azimuth direction to the target. Aircraft with predicted transits are shown as colored diamonds (NTDS-style): green for high probability, orange for medium, yellow for low. The bounding box is draggable for easy adjustment.
+Click the 🗺️ button to see an interactive map showing:
+- 📍 Your observer position
+- Draggable bounding box (drag corners to resize)
+- Azimuth arrows: orange for ☀️ sun, blue for 🌙 moon (click for altitude/azimuth)
+- Aircraft as ✈️ emoji (rotated to heading) or colored ◆ diamonds for predicted transits
+- Transit probability: green = high, orange = medium, yellow = low
+
+**Interactive features:**
+- Click an aircraft on the map to flash and scroll to its table row
+- Click a table row to flash and pan to the aircraft on the map
 
 **Weather filtering**
 
