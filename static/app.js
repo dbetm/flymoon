@@ -197,7 +197,8 @@ function fetchFlights() {
         // Deduplicate flights by ID for display (keep highest possibility level)
         const seenFlights = {};
         data.flights.forEach(flight => {
-            const id = flight.id;
+            // Normalize ID (trim whitespace, consistent case)
+            const id = String(flight.id).trim().toUpperCase();
             if (!seenFlights[id]) {
                 seenFlights[id] = flight;
             } else {
@@ -213,6 +214,7 @@ function fetchFlights() {
             }
         });
         const uniqueFlights = Object.values(seenFlights);
+        console.log(`Dedupe: ${data.flights.length} flights -> ${uniqueFlights.length} unique`);
 
         uniqueFlights.forEach(item => {
             const row = document.createElement('tr');
