@@ -142,6 +142,8 @@ function savePosition() {
     let longitude = parseFloat(long.value);
     let elev = document.getElementById("elevation");
     let elevation = parseFloat(elev.value);
+    let minAlt = document.getElementById("minAltitude");
+    let minAltitude = parseFloat(minAlt.value) || 15;
 
     if(isNaN(latitude) || isNaN(longitude) || isNaN(elevation)) {
         alert("Please, type all your coordinates. Use MAPS.ie or Google Earth");
@@ -151,6 +153,7 @@ function savePosition() {
     localStorage.setItem("latitude", latitude);
     localStorage.setItem("longitude", longitude);
     localStorage.setItem("elevation", elevation);
+    localStorage.setItem("minAltitude", minAltitude);
 
     alert("Position saved in local storage!");
 }
@@ -159,17 +162,20 @@ function loadPosition() {
     const savedLat = localStorage.getItem("latitude");
     const savedLon = localStorage.getItem("longitude");
     const savedElev = localStorage.getItem("elevation");
+    const savedMinAlt = localStorage.getItem("minAltitude");
 
     if (savedLat === null || savedLat === "" || savedLat === "null") {
         console.log("No position saved in local storage");
+        document.getElementById("minAltitude").value = 15; // Default
         return;
     }
 
     document.getElementById("latitude").value = savedLat;
     document.getElementById("longitude").value = savedLon;
     document.getElementById("elevation").value = savedElev;
+    document.getElementById("minAltitude").value = savedMinAlt || 15;
 
-    console.log("Position loaded from local storage:", savedLat, savedLon, savedElev);
+    console.log("Position loaded from local storage:", savedLat, savedLon, savedElev, "minAlt:", savedMinAlt);
 }
 
 function getLocalStorageItem(key, defaultValue) {
@@ -183,6 +189,7 @@ function clearPosition() {
     document.getElementById("latitude").value = "";
     document.getElementById("longitude").value = "";
     document.getElementById("elevation").value = "";
+    document.getElementById("minAltitude").value = "15";
 }
 
 function go() {
@@ -259,11 +266,13 @@ function fetchFlights() {
     alertNoResults.innerHTML = '';
     alertTargetUnderHorizon = '';
 
+    const minAltitude = document.getElementById("minAltitude").value || 15;
     const endpoint_url = (
         `/flights?target=${encodeURIComponent(target)}`
         + `&latitude=${encodeURIComponent(latitude)}`
         + `&longitude=${encodeURIComponent(longitude)}`
         + `&elevation=${encodeURIComponent(elevation)}`
+        + `&min_altitude=${encodeURIComponent(minAltitude)}`
         + `&send-notification=${autoMode}`
     );
 
@@ -337,7 +346,11 @@ function fetchFlights() {
 
             // Click handler: normal click flashes, Cmd/Ctrl+click toggles tracking
             row.addEventListener('click', function(e) {
-                if (e.metaKey || e.ctrlKey) {
+                if ((e.metaKey || e.ctrlKey) && e.altKey) {
+                    // Cmd/Ctrl+Option: test sounds only
+                    playTrackOnSound();
+                    setTimeout(playTrackOffSound, 500);
+                } else if (e.metaKey || e.ctrlKey) {
                     // Cmd/Ctrl+click: toggle track mode
                     if (trackingFlightId === normalizedId) {
                         stopTracking();

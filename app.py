@@ -40,9 +40,10 @@ def get_all_flights():
     latitude = float(request.args["latitude"])
     longitude = float(request.args["longitude"])
     elevation = float(request.args["elevation"])
+    min_altitude = float(request.args.get("min_altitude", 15))
     has_send_notification = request.args["send-notification"] == "true"
 
-    data: dict = get_transits(latitude, longitude, elevation, target, test_mode)
+    data: dict = get_transits(latitude, longitude, elevation, target, test_mode, min_altitude)
     data["flights"] = sort_results(data["flights"])
 
     end_time = time.time()
