@@ -322,9 +322,6 @@ def get_transits(
                 data.append(transit_result)
                 logger.info(transit_result)
 
-    # Filter out flights with no destination (N/D)
-    data = [f for f in data if f.get("destination") != "N/D"]
-
     return {
         "flights": data,
         "targetCoordinates": target_coordinates,
