@@ -159,6 +159,11 @@ function savePosition() {
     localStorage.setItem("elevation", elevation);
     localStorage.setItem("minAltitude", minAltitude);
 
+    // Save bounding box if user has edited it
+    if (window.lastBoundingBox) {
+        localStorage.setItem("boundingBox", JSON.stringify(window.lastBoundingBox));
+    }
+
     alert("Position saved in local storage!");
 }
 
@@ -167,6 +172,7 @@ function loadPosition() {
     const savedLon = localStorage.getItem("longitude");
     const savedElev = localStorage.getItem("elevation");
     const savedMinAlt = localStorage.getItem("minAltitude");
+    const savedBoundingBox = localStorage.getItem("boundingBox");
 
     if (savedLat === null || savedLat === "" || savedLat === "null") {
         console.log("No position saved in local storage");
@@ -178,6 +184,16 @@ function loadPosition() {
     document.getElementById("longitude").value = savedLon;
     document.getElementById("elevation").value = savedElev;
     document.getElementById("minAltitude").value = savedMinAlt || 15;
+
+    // Load saved bounding box
+    if (savedBoundingBox) {
+        try {
+            window.lastBoundingBox = JSON.parse(savedBoundingBox);
+            console.log("Bounding box loaded from local storage:", window.lastBoundingBox);
+        } catch (e) {
+            console.error("Error parsing saved bounding box:", e);
+        }
+    }
 
     console.log("Position loaded from local storage:", savedLat, savedLon, savedElev, "minAlt:", savedMinAlt);
 }
@@ -207,7 +223,7 @@ function go() {
         mapVisible = false;
         resultsDiv.style.display = 'none';
         mapContainer.style.display = 'none';
-        document.getElementById("goBtn").textContent = 'Go';
+        document.getElementById("goBtn").textContent = 'Show/Hide';
     } else {
         // Validate coordinates first
         let lat = document.getElementById("latitude");
@@ -223,7 +239,7 @@ function go() {
         mapVisible = true;
         resultsDiv.style.display = 'block';
         mapContainer.style.display = 'block';
-        document.getElementById("goBtn").textContent = 'Hide';
+        document.getElementById("goBtn").textContent = 'Show/Hide';
 
         fetchFlights();
     }
@@ -321,37 +337,66 @@ function fetchFlights() {
         + `&send-notification=${autoMode}`
     );
 
+    // Show loading spinner
+    document.getElementById("loadingSpinner").style.display = "block";
+    document.getElementById("results").style.display = "none";
+
     fetch(endpoint_url)
     .then(response => response.json())
     .then(data => {
+        // Hide loading spinner
+        document.getElementById("loadingSpinner").style.display = "none";
+        document.getElementById("results").style.display = "block";
 
         if(data.flights.length == 0) {
             alertNoResults.innerHTML = "No flights!"
         }
 
-        // Display weather info
-        if(data.weather) {
-            let weatherText = `${data.weather.icon} ${data.weather.description}`;
-            if(data.weather.cloud_cover !== null) {
-                weatherText += ` (${data.weather.cloud_cover}% clouds)`;
-            }
-            if(!data.weather.api_success) {
-                weatherText += " ⚠️";
-            }
-            document.getElementById("weatherInfo").innerHTML = weatherText;
+        // LINE 1: Tracking status - Sun and Moon with weather
+        let trackingParts = [];
+
+        // Always show Sun status
+        if(data.targetCoordinates && data.targetCoordinates.sun) {
+            let isTracking = data.trackingTargets && data.trackingTargets.includes('sun');
+            let status = isTracking ? "Tracking" : "Not tracking";
+            trackingParts.push(`☀️ ${status}`);
         }
 
-        // Display tracking status for each target
-        if(data.targetCoordinates) {
-            let statusParts = [];
-            for(let [targetName, coords] of Object.entries(data.targetCoordinates)) {
-                let icon = targetName === "moon" ? "🌙" : "☀️";
-                let isTracking = data.trackingTargets && data.trackingTargets.includes(targetName);
-                let status = isTracking ? "Tracking" : "Not tracking";
-                statusParts.push(`${status} ${icon}`);
-            }
-            document.getElementById("trackingStatus").innerHTML = statusParts.join(" | ");
+        // Always show Moon status
+        if(data.targetCoordinates && data.targetCoordinates.moon) {
+            let isTracking = data.trackingTargets && data.trackingTargets.includes('moon');
+            let status = isTracking ? "Tracking" : "Not tracking";
+            trackingParts.push(`🌙 ${status}`);
         }
+
+        // Weather
+        if(data.weather && data.weather.cloud_cover !== null) {
+            trackingParts.push(`☁️ ${data.weather.cloud_cover}% clouds`);
+        }
+
+        document.getElementById("trackingStatus").innerHTML = trackingParts.join("&nbsp;&nbsp;&nbsp;&nbsp;");
+
+        // LINE 3: Target coordinates - Sun and Moon alt/az
+        let coordParts = [];
+
+        // Always show Sun coordinates
+        if(data.targetCoordinates && data.targetCoordinates.sun) {
+            let coords = data.targetCoordinates.sun;
+            let altStr = coords.altitude !== null && coords.altitude !== undefined ? coords.altitude.toFixed(1) : "—";
+            let azStr = coords.azimuthal !== null && coords.azimuthal !== undefined ? coords.azimuthal.toFixed(1) : "—";
+            coordParts.push(`☀️ Alt: ${altStr}° Az: ${azStr}°`);
+        }
+
+        // Always show Moon coordinates
+        if(data.targetCoordinates && data.targetCoordinates.moon) {
+            let coords = data.targetCoordinates.moon;
+            let altStr = coords.altitude !== null && coords.altitude !== undefined ? coords.altitude.toFixed(1) : "—";
+            let azStr = coords.azimuthal !== null && coords.azimuthal !== undefined ? coords.azimuthal.toFixed(1) : "—";
+            coordParts.push(`🌙 Alt: ${altStr}° Az: ${azStr}°`);
+        }
+
+        document.getElementById("targetCoordinates").innerHTML = coordParts.join("&nbsp;&nbsp;&nbsp;&nbsp;");
+
 
         // Check if any targets are trackable
         if(data.trackingTargets && data.trackingTargets.length === 0) {
@@ -469,7 +514,7 @@ function fetchFlights() {
             bodyTable.appendChild(row);
         });
 
-        renderTargetCoordinates(data.targetCoordinates);
+        // renderTargetCoordinates(data.targetCoordinates); // Disabled - now using inline display above
         if(autoMode == true && hasVeryPossibleTransits == true) soundAlert();
 
         // Always update map visualization when data is fetched (use deduplicated flights)
@@ -477,6 +522,18 @@ function fetchFlights() {
             const mapData = {...data, flights: uniqueFlights};
             updateMapVisualization(mapData, parseFloat(latitude), parseFloat(longitude), parseFloat(elevation));
         }
+
+        // Save bounding box for next time
+        if(data.boundingBox) {
+            window.lastBoundingBox = data.boundingBox;
+        }
+    })
+    .catch(error => {
+        // Hide loading spinner on error
+        document.getElementById("loadingSpinner").style.display = "none";
+        document.getElementById("results").style.display = "block";
+        alert("Error getting flight data. Check console for details.");
+        console.error("Error:", error);
     });
 }
 
@@ -492,7 +549,6 @@ function toggleTarget() {
     else target = "moon";
 
     document.getElementById("targetCoordinates").innerHTML = "";
-    document.getElementById("weatherInfo").innerHTML = "";
     document.getElementById("trackingStatus").innerHTML = "";
     displayTarget();
 

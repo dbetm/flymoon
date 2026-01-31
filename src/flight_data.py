@@ -56,11 +56,20 @@ def load_existing_flight_data(path: str) -> dict:
 
 
 def sort_results(data: List[dict]) -> List[dict]:
-    """Sort data flight results considering if it's possible transit, ETA and time."""
+    """Sort data flight results considering if it's possible transit, angular separation, ETA and time."""
 
-    def _custom_sort(a: dict) -> bool:
-        total_diff = a["alt_diff"] + a["az_diff"] if a["is_possible_transit"] else 100
-        return (a["is_possible_transit"], -1 * total_diff, a["time"], a["id"])
+    def _custom_sort(a: dict) -> tuple:
+        # Use angular_separation if available, otherwise fallback to alt+az diff, or 100 for no transit
+        if a["is_possible_transit"] and a.get("angular_separation") is not None:
+            total_diff = a["angular_separation"]
+        elif a["is_possible_transit"] and a.get("alt_diff") is not None and a.get("az_diff") is not None:
+            total_diff = a["alt_diff"] + a["az_diff"]
+        else:
+            total_diff = 100  # No transit
+
+        # Sort by: is_possible_transit (descending), total_diff (ascending - smaller is better), time, id
+        time_val = a["time"] if a["time"] is not None else 999
+        return (a["is_possible_transit"], -1 * total_diff, time_val, a["id"])
 
     return sorted(data, key=_custom_sort, reverse=True)
 
