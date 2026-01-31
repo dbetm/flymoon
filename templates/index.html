@@ -92,6 +92,17 @@
 
     <script>
         loadPosition();
+
+        // Auto-show results and map if position is saved
+        window.addEventListener('DOMContentLoaded', function() {
+            const savedLat = localStorage.getItem("latitude");
+            if (savedLat && savedLat !== "" && savedLat !== "null") {
+                // Position is saved, auto-fetch and show results
+                setTimeout(() => {
+                    go();  // This will toggle results on and fetch data
+                }, 100);
+            }
+        });
     </script>
 </body>
 </html>

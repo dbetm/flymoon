@@ -17,12 +17,16 @@ const MS_IN_A_MIN = 60000;
 const LOW_LEVEL = 1, MEDIUM_LEVEL = 2, HIGH_LEVEL = 3;
 var autoMode = false;
 var target = getLocalStorageItem("target", "auto");
-var autoGoInterval = setInterval(go, 86400000);
+var autoGoInterval = setInterval(goFetch, 86400000);
 var refreshTimerLabelInterval = setInterval(refreshTimer, MS_IN_A_MIN);
 // By default disable auto go and refresh timer label
 clearInterval(autoGoInterval);
 clearInterval(refreshTimerLabelInterval);
 displayTarget();
+
+// State tracking for toggles
+var resultsVisible = false;
+var mapVisible = false;
 
 // Track mode state
 var trackingFlightId = null;
@@ -193,12 +197,53 @@ function clearPosition() {
 }
 
 function go() {
+    // Toggle results visibility
+    const resultsDiv = document.getElementById("results");
+    const mapContainer = document.getElementById("mapContainer");
+
+    if (resultsVisible) {
+        // Hide results and map
+        resultsVisible = false;
+        mapVisible = false;
+        resultsDiv.style.display = 'none';
+        mapContainer.style.display = 'none';
+        document.getElementById("goBtn").textContent = 'Go';
+    } else {
+        // Validate coordinates first
+        let lat = document.getElementById("latitude");
+        let latitude = parseFloat(lat.value);
+
+        if(isNaN(latitude)) {
+            alert("Please, type your coordinates and save them");
+            return;
+        }
+
+        // Show results and fetch data
+        resultsVisible = true;
+        mapVisible = true;
+        resultsDiv.style.display = 'block';
+        mapContainer.style.display = 'block';
+        document.getElementById("goBtn").textContent = 'Hide';
+
+        fetchFlights();
+    }
+}
+
+function goFetch() {
+    // Internal function for auto mode - just fetches without toggling
     let lat = document.getElementById("latitude");
     let latitude = parseFloat(lat.value);
 
     if(isNaN(latitude)) {
-        alert("Please, type your coordinates and save them");
         return;
+    }
+
+    // Auto-show results if in auto mode
+    if (autoMode && !resultsVisible) {
+        resultsVisible = true;
+        mapVisible = true;
+        document.getElementById("results").style.display = 'block';
+        document.getElementById("mapContainer").style.display = 'block';
     }
 
     fetchFlights();
@@ -206,7 +251,6 @@ function go() {
 
 function auto() {
     if(autoMode == true) {
-        document.getElementById("goBtn").style.display = 'inline-block';
         document.getElementById("autoBtn").innerHTML = 'Auto';
         document.getElementById("autoGoNote").innerHTML = "";
 
@@ -215,8 +259,6 @@ function auto() {
         clearInterval(refreshTimerLabelInterval);
     }
     else {
-        document.getElementById("goBtn").style.display = 'none';
-
         let freq = prompt("Enter a frequency in minutes, recommended 15");
 
         try {
@@ -236,8 +278,11 @@ function auto() {
         document.getElementById("autoGoNote").innerHTML = `Auto check every ${freq} minute(s).`;
 
         autoMode = true;
-        autoGoInterval = setInterval(go, MS_IN_A_MIN * freq);
+        autoGoInterval = setInterval(goFetch, MS_IN_A_MIN * freq);
         refreshTimerLabelInterval = setInterval(refreshTimer, MS_IN_A_MIN);
+
+        // Trigger initial fetch
+        goFetch();
     }
 }
 
@@ -334,6 +379,12 @@ function fetchFlights() {
         });
         const uniqueFlights = Object.values(seenFlights);
         console.log(`Dedupe: ${data.flights.length} flights -> ${uniqueFlights.length} unique`);
+        // Debug: show final dedupe results
+        uniqueFlights.forEach(f => {
+            if (f.is_possible_transit) {
+                console.log(`  ${f.id} (${f.target}): level=${f.possibility_level}, is_transit=${f.is_possible_transit}`);
+            }
+        });
 
         uniqueFlights.forEach(item => {
             const row = document.createElement('tr');
@@ -420,10 +471,9 @@ function fetchFlights() {
 
         renderTargetCoordinates(data.targetCoordinates);
         if(autoMode == true && hasVeryPossibleTransits == true) soundAlert();
-        
-        // Update map visualization if map is visible (use deduplicated flights)
-        const mapContainer = document.getElementById('mapContainer');
-        if(mapContainer && mapContainer.style.display !== 'none') {
+
+        // Always update map visualization when data is fetched (use deduplicated flights)
+        if(mapVisible) {
             const mapData = {...data, flights: uniqueFlights};
             updateMapVisualization(mapData, parseFloat(latitude), parseFloat(longitude), parseFloat(elevation));
         }

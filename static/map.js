@@ -277,15 +277,17 @@ function calculateDestination(lat, lon, bearing, distance) {
 
 function toggleMap() {
     const mapContainer = document.getElementById('mapContainer');
+    const mapButton = document.querySelector('[onclick="toggleMap()"]');
     const isHidden = mapContainer.style.display === 'none';
-    
+
     if (isHidden) {
+        mapVisible = true;
         mapContainer.style.display = 'block';
-        
+
         // Initialize map if not already done
         const lat = parseFloat(document.getElementById('latitude').value);
         const lon = parseFloat(document.getElementById('longitude').value);
-        
+
         if (!isNaN(lat) && !isNaN(lon)) {
             if (!mapInitialized) {
                 initializeMap(lat, lon);
@@ -296,9 +298,11 @@ function toggleMap() {
             }, 100);
         } else {
             alert('Please enter your coordinates first');
+            mapVisible = false;
             mapContainer.style.display = 'none';
         }
     } else {
+        mapVisible = false;
         mapContainer.style.display = 'none';
     }
 }

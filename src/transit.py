@@ -86,6 +86,7 @@ def check_transit(
     my_position: Topos,
     target: CelestialObject,
     earth_ref,
+    test_mode: bool = False,
 ) -> dict:
     """Given the data of a flight, compute a possible transit with the target.
 
@@ -106,6 +107,8 @@ def check_transit(
         It could be the Moon or Sun, or whatever celestial object to compute a possible transit.
     earth_ref: Any
         Earth data gotten from the de421.bsp database by NASA's JPL.
+    test_mode: bool
+        If True, evaluates current position (t=0) for static test aircraft.
 
     Returns
     -------
@@ -118,6 +121,50 @@ def check_transit(
     response = None
     no_decreasing_count = 0
     update_response = False
+
+    # In test mode, check current position first (t=0, static aircraft)
+    if test_mode:
+        current_alt, current_az = geographic_to_altaz(
+            flight["latitude"],
+            flight["longitude"],
+            flight["elevation"],
+            earth_ref,
+            my_position,
+            ref_datetime,
+        )
+
+        alt_diff = abs(current_alt - target.altitude.degrees)
+        az_diff = abs(current_az - target.azimuthal.degrees)
+        diff_combined = alt_diff + az_diff
+
+        min_diff_combined = diff_combined
+
+        alt_threshold, az_threshold = get_thresholds(target.altitude.degrees)
+
+        if current_alt > 0 and alt_diff < alt_threshold and az_diff < az_threshold:
+            response = {
+                "id": flight["name"],
+                "origin": flight["origin"],
+                "destination": flight["destination"],
+                "alt_diff": round(float(alt_diff), 3),
+                "az_diff": round(float(az_diff), 3),
+                "time": 0.0,  # Current position
+                "target_alt": round(float(target.altitude.degrees), 2),
+                "plane_alt": round(float(current_alt), 2),
+                "target_az": round(float(target.azimuthal.degrees), 2),
+                "plane_az": round(float(current_az), 2),
+                "is_possible_transit": 1,
+                "possibility_level": get_possibility_level(
+                    target.altitude.degrees, alt_diff, az_diff, 0.0
+                ),
+                "elevation_change": CHANGE_ELEVATION.get(
+                    flight["elevation_change"], None
+                ),
+                "direction": flight["direction"],
+                "target": target.name,
+                "latitude": flight["latitude"],
+                "longitude": flight["longitude"],
+            }
 
     for idx, minute in enumerate(window_time):
         # Get future position of plane
@@ -214,6 +261,252 @@ def check_transit(
     }
 
 
+def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> dict:
+    """Generate mock transit results for demonstration purposes.
+
+    Returns hardcoded results showing HIGH, MEDIUM, LOW, and NONE classifications
+    for both moon and sun targets.
+    """
+    # Fixed celestial target positions
+    moon_az, moon_alt = 135.0, 40.0
+    sun_az, sun_alt = 225.0, 35.0
+
+    # Helper to create aircraft position at specific azimuth and distance
+    def position_at(azimuth_deg, distance_deg):
+        import math
+        az_rad = math.radians(azimuth_deg)
+        lat = obs_lat + distance_deg * math.cos(az_rad)
+        lon = obs_lon + distance_deg * math.sin(az_rad)
+        return round(lat, 6), round(lon, 6)
+
+    flights = []
+
+    # MOON TRANSITS
+    # HIGH - nearly perfect alignment
+    lat, lon = position_at(moon_az, 0.15)
+    flights.append({
+        "id": "MOON_HIGH",
+        "origin": "Los Angeles",
+        "destination": "San Diego",
+        "alt_diff": 0.5,
+        "az_diff": 0.3,
+        "time": 2.5,
+        "target_alt": moon_alt,
+        "plane_alt": 40.5,
+        "target_az": moon_az,
+        "plane_az": 135.3,
+        "is_possible_transit": 1,
+        "possibility_level": 3,  # HIGH
+        "elevation_change": "descending",
+        "direction": 315,
+        "target": "moon",
+        "latitude": lat,
+        "longitude": lon,
+    })
+
+    # MEDIUM - moderate alignment
+    lat, lon = position_at(moon_az - 2, 0.20)
+    flights.append({
+        "id": "MOON_MED",
+        "origin": "Phoenix",
+        "destination": "San Diego",
+        "alt_diff": 1.8,
+        "az_diff": 1.5,
+        "time": 3.2,
+        "target_alt": moon_alt,
+        "plane_alt": 38.2,
+        "target_az": moon_az,
+        "plane_az": 133.5,
+        "is_possible_transit": 1,
+        "possibility_level": 2,  # MEDIUM
+        "elevation_change": "descending",
+        "direction": 310,
+        "target": "moon",
+        "latitude": lat,
+        "longitude": lon,
+    })
+
+    # LOW - marginal alignment
+    lat, lon = position_at(moon_az + 7, 0.25)
+    flights.append({
+        "id": "MOON_LOW",
+        "origin": "San Francisco",
+        "destination": "San Diego",
+        "alt_diff": 6.5,
+        "az_diff": 5.8,
+        "time": 4.8,
+        "target_alt": moon_alt,
+        "plane_alt": 33.5,
+        "target_az": moon_az,
+        "plane_az": 140.8,
+        "is_possible_transit": 1,
+        "possibility_level": 1,  # LOW
+        "elevation_change": "descending",
+        "direction": 305,
+        "target": "moon",
+        "latitude": lat,
+        "longitude": lon,
+    })
+
+    # SUN TRANSITS
+    # HIGH - nearly perfect alignment
+    lat, lon = position_at(sun_az, 0.15)
+    flights.append({
+        "id": "SUN_HIGH",
+        "origin": "Las Vegas",
+        "destination": "San Diego",
+        "alt_diff": 0.4,
+        "az_diff": 0.6,
+        "time": 2.8,
+        "target_alt": sun_alt,
+        "plane_alt": 35.4,
+        "target_az": sun_az,
+        "plane_az": 225.6,
+        "is_possible_transit": 1,
+        "possibility_level": 3,  # HIGH
+        "elevation_change": "descending",
+        "direction": 45,
+        "target": "sun",
+        "latitude": lat,
+        "longitude": lon,
+    })
+
+    # MEDIUM - moderate alignment
+    lat, lon = position_at(sun_az + 2, 0.20)
+    flights.append({
+        "id": "SUN_MED",
+        "origin": "Denver",
+        "destination": "San Diego",
+        "alt_diff": 1.9,
+        "az_diff": 1.6,
+        "time": 3.5,
+        "target_alt": sun_alt,
+        "plane_alt": 33.1,
+        "target_az": sun_az,
+        "plane_az": 226.6,
+        "is_possible_transit": 1,
+        "possibility_level": 2,  # MEDIUM
+        "elevation_change": "descending",
+        "direction": 40,
+        "target": "sun",
+        "latitude": lat,
+        "longitude": lon,
+    })
+
+    # LOW - marginal alignment
+    lat, lon = position_at(sun_az - 7, 0.25)
+    flights.append({
+        "id": "SUN_LOW",
+        "origin": "Oakland",
+        "destination": "San Diego",
+        "alt_diff": 6.2,
+        "az_diff": 5.5,
+        "time": 5.2,
+        "target_alt": sun_alt,
+        "plane_alt": 28.8,
+        "target_az": sun_az,
+        "plane_az": 219.5,
+        "is_possible_transit": 1,
+        "possibility_level": 1,  # LOW
+        "elevation_change": "descending",
+        "direction": 35,
+        "target": "sun",
+        "latitude": lat,
+        "longitude": lon,
+    })
+
+    # NONE - no transit (far from both targets)
+    lat, lon = position_at(0, 0.25)  # North
+    flights.append({
+        "id": "NONE_01",
+        "origin": "San Diego",
+        "destination": "San Francisco",
+        "alt_diff": None,
+        "az_diff": None,
+        "time": None,
+        "target_alt": None,
+        "plane_alt": None,
+        "target_az": None,
+        "plane_az": None,
+        "is_possible_transit": 0,
+        "possibility_level": 0,  # NONE
+        "elevation_change": "climbing",
+        "direction": 0,
+        "target": "moon",
+        "latitude": lat,
+        "longitude": lon,
+    })
+
+    lat, lon = position_at(180, 0.25)  # South
+    flights.append({
+        "id": "NONE_02",
+        "origin": "San Diego",
+        "destination": "Denver",
+        "alt_diff": None,
+        "az_diff": None,
+        "time": None,
+        "target_alt": None,
+        "plane_alt": None,
+        "target_az": None,
+        "plane_az": None,
+        "is_possible_transit": 0,
+        "possibility_level": 0,  # NONE
+        "elevation_change": "level",
+        "direction": 180,
+        "target": "sun",
+        "latitude": lat,
+        "longitude": lon,
+    })
+
+    lat, lon = position_at(270, 0.25)  # West
+    flights.append({
+        "id": "PRIV01",
+        "origin": "San Diego",
+        "destination": "N/D",
+        "alt_diff": None,
+        "az_diff": None,
+        "time": None,
+        "target_alt": None,
+        "plane_alt": None,
+        "target_az": None,
+        "plane_az": None,
+        "is_possible_transit": 0,
+        "possibility_level": 0,  # NONE
+        "elevation_change": "level",
+        "direction": 270,
+        "target": "moon",
+        "latitude": lat,
+        "longitude": lon,
+    })
+
+    return {
+        "flights": flights,
+        "targetCoordinates": {
+            "moon": {"altitude": moon_alt, "azimuthal": moon_az},
+            "sun": {"altitude": sun_alt, "azimuthal": sun_az}
+        },
+        "trackingTargets": ["moon", "sun"],
+        "weather": {
+            "cloud_cover": 0,
+            "condition": "clear",
+            "icon": "☀️",
+            "description": "clear sky",
+            "api_success": True
+        },
+        "boundingBox": {
+            "latLowerLeft": obs_lat - 0.5,
+            "lonLowerLeft": obs_lon - 0.5,
+            "latUpperRight": obs_lat + 0.5,
+            "lonUpperRight": obs_lon + 0.5,
+        },
+        "observerPosition": {
+            "latitude": obs_lat,
+            "longitude": obs_lon,
+            "elevation": obs_elev,
+        },
+    }
+
+
 def get_transits(
     latitude: float,
     longitude: float,
@@ -230,7 +523,13 @@ def get_transits(
         'moon', 'sun', or 'auto' (checks both if conditions permit)
     min_altitude : float
         Minimum altitude in degrees for target to be tracked (default from env or 15)
+    test_mode : bool
+        If True, return mock results for demonstration
     """
+    # MOCK MODE - return hardcoded demo results
+    if test_mode:
+        logger.info("🎭 MOCK MODE: Returning demonstration results")
+        return generate_mock_results(latitude, longitude, elevation)
     API_KEY = os.getenv("AEROAPI_API_KEY")
     WEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
     MIN_ALTITUDE = min_altitude if min_altitude is not None else float(os.getenv("MIN_TARGET_ALTITUDE", 15))
@@ -261,28 +560,52 @@ def get_transits(
     # Determine which targets to check
     targets_to_check = []
     target_coordinates = {}
-    
+
+    # In test mode, use fake positions from test data metadata
+    test_overrides = {}
+    if test_mode:
+        try:
+            test_data = load_existing_flight_data(TEST_DATA_PATH)
+            meta = test_data.get("_test_metadata", {})
+            test_overrides = {
+                "moon": {
+                    "altitude": meta.get("moon_altitude", 60),
+                    "azimuth": meta.get("moon_azimuth", 180),
+                },
+                "sun": {
+                    "altitude": meta.get("sun_altitude", 55),
+                    "azimuth": meta.get("sun_azimuth", 200),
+                },
+            }
+            logger.info(f"Test mode: using fake positions {test_overrides}")
+        except Exception:
+            pass
+
     if target_name == "auto":
         # Check both moon and sun if conditions permit
         for target in ["moon", "sun"]:
-            obj = CelestialObject(name=target, observer_position=MY_POSITION)
+            overrides = test_overrides.get(target) if test_mode else None
+            obj = CelestialObject(name=target, observer_position=MY_POSITION, test_overrides=overrides)
             obj.update_position(ref_datetime=ref_datetime)
             coords = obj.get_coordinates()
+
             target_coordinates[target] = coords
-            
+
             if coords["altitude"] >= MIN_ALTITUDE and is_clear:
                 targets_to_check.append(target)
-                logger.info(f"{target} at {coords['altitude']}° - tracking enabled")
+                logger.info(f"{target} at {coords['altitude']}° az {coords['azimuthal']}° - tracking enabled")
             else:
                 reason = "below horizon" if coords["altitude"] < MIN_ALTITUDE else "weather"
                 logger.info(f"{target} at {coords['altitude']}° - skipped ({reason})")
     else:
         # Single target mode
-        obj = CelestialObject(name=target_name, observer_position=MY_POSITION)
+        overrides = test_overrides.get(target_name) if test_mode else None
+        obj = CelestialObject(name=target_name, observer_position=MY_POSITION, test_overrides=overrides)
         obj.update_position(ref_datetime=ref_datetime)
         coords = obj.get_coordinates()
+
         target_coordinates[target_name] = coords
-        
+
         if coords["altitude"] >= MIN_ALTITUDE and is_clear:
             targets_to_check.append(target_name)
         else:
@@ -308,12 +631,13 @@ def get_transits(
 
         # Check transits for each target
         for target in targets_to_check:
-            celestial_obj = CelestialObject(name=target, observer_position=MY_POSITION)
+            overrides = test_overrides.get(target) if test_mode else None
+            celestial_obj = CelestialObject(name=target, observer_position=MY_POSITION, test_overrides=overrides)
             celestial_obj.update_position(ref_datetime=ref_datetime)
-            
+
             for flight in flight_data:
                 celestial_obj.update_position(ref_datetime=ref_datetime)
-                
+
                 transit_result = check_transit(
                     flight,
                     window_time,
@@ -321,6 +645,7 @@ def get_transits(
                     MY_POSITION,
                     celestial_obj,
                     EARTH,
+                    test_mode=test_mode,
                 )
                 data.append(transit_result)
                 logger.info(transit_result)
