@@ -16,26 +16,61 @@
     <div class="header-row">
         <span class="title">✈️ Flymoon</span>
         <span id="targetIcon" class="target-icon" onclick="toggleTarget();">-</span>
-        <span id="weatherInfo" class="status-text"></span>
+        <span id="trackingStatus" class="status-text" style="flex: 1; text-align: center;"></span>
     </div>
 
     <div class="controls-row">
-        <button id="goBtn" class="btn-primary" onclick="go();">Go</button>
+        <button id="goBtn" class="btn-primary" onclick="go();">Show/Hide</button>
         <button id="autoBtn" class="btn-primary" onclick="auto();">Auto</button>
         <span class="separator">|</span>
-        <input type="number" id="latitude" placeholder="Lat" autocomplete="on" title="Latitude">
-        <input type="number" id="longitude" placeholder="Lon" autocomplete="on" title="Longitude">
-        <input type="number" id="elevation" placeholder="Elev" autocomplete="on" title="Elevation (m)">
-        <input type="number" id="minAltitude" placeholder="Min°" autocomplete="on" title="Minimum horizon altitude (degrees)" style="width:50px;">
-        <button class="btn-sm" onclick="savePosition()" title="Save position">💾</button>
-        <button class="btn-sm" onclick="clearPosition()" title="Clear">✕</button>
+        <div style="display: inline-block; text-align: center;">
+            <input type="number" id="latitude" placeholder="Lat" autocomplete="on" title="Latitude">
+            <div style="font-size: 0.7em; color: #aaa; margin-top: -2px;">Observer Lat</div>
+        </div>
+        <div style="display: inline-block; text-align: center;">
+            <input type="number" id="longitude" placeholder="Lon" autocomplete="on" title="Longitude">
+            <div style="font-size: 0.7em; color: #aaa; margin-top: -2px;">Observer Lon</div>
+        </div>
+        <div style="display: inline-block; text-align: center;">
+            <input type="number" id="elevation" placeholder="Elev" autocomplete="on" title="Elevation (m)">
+            <div style="font-size: 0.7em; color: #aaa; margin-top: -2px;">Elevation (m)</div>
+        </div>
+        <div style="display: inline-block; text-align: center;">
+            <input type="number" id="minAltitude" placeholder="Min°" autocomplete="on" title="Minimum horizon altitude (degrees)" style="width:50px;">
+            <div style="font-size: 0.7em; color: #aaa; margin-top: -2px;">Min Alt (°)</div>
+        </div>
+        <div style="display: inline-block; text-align: center;">
+            <button class="btn-sm" onclick="savePosition()" title="Save position">💾</button>
+            <div style="font-size: 0.7em; color: #aaa; margin-top: -2px;">Save</div>
+        </div>
+        <div style="display: inline-block; text-align: center;">
+            <button class="btn-sm" onclick="clearPosition()" title="Clear" style="font-size: 1.2em;">✕</button>
+            <div style="font-size: 0.7em; color: #aaa; margin-top: -2px;">Clear</div>
+        </div>
         <span class="separator">|</span>
-        <button class="btn-sm" onclick="toggleMap()" title="Toggle map">🗺️</button>
-        <button class="btn-sm" onclick="requestNotificationPermission()" title="Enable alerts">🔔</button>
+        <div style="display: inline-block; text-align: center;">
+            <button class="btn-sm" onclick="toggleMap()" title="Toggle map">🗺️</button>
+            <div style="font-size: 0.7em; color: #aaa; margin-top: -2px;">Map</div>
+        </div>
+        <div style="display: inline-block; text-align: center;">
+            <button class="btn-sm" onclick="requestNotificationPermission()" title="Enable alerts">🔔</button>
+            <div style="font-size: 0.7em; color: #aaa; margin-top: -2px;">Alerts</div>
+        </div>
     </div>
 
-    <p id="targetCoordinates" class="coords-text"></p>
-    <p id="trackingStatus" class="status-text"></p>
+    <!-- Loading spinner -->
+    <div id="loadingSpinner" style="display: none; text-align: center; padding: 20px;">
+        <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+        <p style="margin-top: 10px; color: #666;">Loading flight data...</p>
+    </div>
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+
+    <p id="targetCoordinates" class="coords-text" style="margin: 5px 0;"></p>
 
     <div id="mapContainer" style="display: none;">
         <div id="map" style="height: 500px; width: 100%; margin: 20px 0;"></div>

@@ -127,6 +127,17 @@ function updateBoundingBox(latLowerLeft, lonLowerLeft, latUpperRight, lonUpperRi
         // Track when user edits the bounding box
         boundingBoxLayer.on('editable:vertex:dragend', function() {
             boundingBoxUserEdited = true;
+
+            // Save the new bounding box coordinates
+            const bounds = boundingBoxLayer.getBounds();
+            const newBoundingBox = {
+                latLowerLeft: bounds.getSouth(),
+                lonLowerLeft: bounds.getWest(),
+                latUpperRight: bounds.getNorth(),
+                lonUpperRight: bounds.getEast()
+            };
+            window.lastBoundingBox = newBoundingBox;
+            console.log("Bounding box updated:", newBoundingBox);
         });
     }
 
