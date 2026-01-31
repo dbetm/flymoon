@@ -272,18 +272,33 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
     sun_az, sun_alt = 225.0, 35.0
 
     # Helper to create aircraft position at specific azimuth and distance
-    def position_at(azimuth_deg, distance_deg):
+    # Uses haversine formula to match the map's azimuth arrow calculation
+    def position_at(azimuth_deg, distance_km):
         import math
-        az_rad = math.radians(azimuth_deg)
-        lat = obs_lat + distance_deg * math.cos(az_rad)
-        lon = obs_lon + distance_deg * math.sin(az_rad)
-        return round(lat, 6), round(lon, 6)
+        R = 6371  # Earth's radius in km
+        d = distance_km / R  # Angular distance in radians
+
+        brng = math.radians(azimuth_deg)
+        lat1 = math.radians(obs_lat)
+        lon1 = math.radians(obs_lon)
+
+        lat2 = math.asin(
+            math.sin(lat1) * math.cos(d) +
+            math.cos(lat1) * math.sin(d) * math.cos(brng)
+        )
+
+        lon2 = lon1 + math.atan2(
+            math.sin(brng) * math.sin(d) * math.cos(lat1),
+            math.cos(d) - math.sin(lat1) * math.sin(lat2)
+        )
+
+        return round(math.degrees(lat2), 6), round(math.degrees(lon2), 6)
 
     flights = []
 
     # MOON TRANSITS
     # HIGH - nearly perfect alignment
-    lat, lon = position_at(moon_az, 0.15)
+    lat, lon = position_at(moon_az, 15)  # 15 km on moon bearing
     flights.append({
         "id": "MOON_HIGH",
         "origin": "Los Angeles",
@@ -305,7 +320,7 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
     })
 
     # MEDIUM - moderate alignment
-    lat, lon = position_at(moon_az - 2, 0.20)
+    lat, lon = position_at(moon_az - 2, 20)  # 20 km, offset 2° from moon bearing
     flights.append({
         "id": "MOON_MED",
         "origin": "Phoenix",
@@ -327,7 +342,7 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
     })
 
     # LOW - marginal alignment
-    lat, lon = position_at(moon_az + 7, 0.25)
+    lat, lon = position_at(moon_az + 7, 25)  # 25 km, offset 7° from moon bearing
     flights.append({
         "id": "MOON_LOW",
         "origin": "San Francisco",
@@ -350,7 +365,7 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
 
     # SUN TRANSITS
     # HIGH - nearly perfect alignment
-    lat, lon = position_at(sun_az, 0.15)
+    lat, lon = position_at(sun_az, 15)  # 15 km on sun bearing
     flights.append({
         "id": "SUN_HIGH",
         "origin": "Las Vegas",
@@ -372,7 +387,7 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
     })
 
     # MEDIUM - moderate alignment
-    lat, lon = position_at(sun_az + 2, 0.20)
+    lat, lon = position_at(sun_az + 2, 20)  # 20 km, offset 2° from sun bearing
     flights.append({
         "id": "SUN_MED",
         "origin": "Denver",
@@ -394,7 +409,7 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
     })
 
     # LOW - marginal alignment
-    lat, lon = position_at(sun_az - 7, 0.25)
+    lat, lon = position_at(sun_az - 7, 25)  # 25 km, offset 7° from sun bearing
     flights.append({
         "id": "SUN_LOW",
         "origin": "Oakland",
@@ -416,7 +431,7 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
     })
 
     # NONE - no transit (far from both targets)
-    lat, lon = position_at(0, 0.25)  # North
+    lat, lon = position_at(0, 25)  # North, 25 km
     flights.append({
         "id": "NONE_01",
         "origin": "San Diego",
@@ -437,7 +452,7 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "longitude": lon,
     })
 
-    lat, lon = position_at(180, 0.25)  # South
+    lat, lon = position_at(180, 25)  # South, 25 km
     flights.append({
         "id": "NONE_02",
         "origin": "San Diego",
@@ -458,7 +473,7 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "longitude": lon,
     })
 
-    lat, lon = position_at(270, 0.25)  # West
+    lat, lon = position_at(270, 25)  # West, 25 km
     flights.append({
         "id": "PRIV01",
         "origin": "San Diego",

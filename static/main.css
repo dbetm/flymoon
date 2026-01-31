@@ -195,26 +195,60 @@ body {
     border: none;
 }
 
-/* Flash animation for table rows - 3 flashes, partial transparency */
+/* Flash animation for table rows - 3 distinct flashes with clear gaps */
 @keyframes flash-row {
-    0%, 100% { opacity: 1; }
-    17%, 50%, 83% { opacity: 0.3; }
-    33%, 67% { opacity: 1; }
+    0% { opacity: 1; }
+    10% { opacity: 0.15; }
+    15% { opacity: 1; }
+    40% { opacity: 0.15; }
+    45% { opacity: 1; }
+    70% { opacity: 0.15; }
+    75% { opacity: 1; }
+    100% { opacity: 1; }
 }
 
 .flash-row {
-    animation: flash-row 1.5s ease-in-out;
+    animation: flash-row 1.2s linear;
 }
 
-/* Flash animation for map markers - 3 flashes using filter only */
+/* Flash animation for map markers - 3 distinct flashes with clear gaps */
 @keyframes flash-marker {
-    0%, 100% { filter: brightness(1) drop-shadow(0 0 0 transparent); }
-    17%, 50%, 83% { filter: brightness(2) drop-shadow(0 0 12px cyan); }
-    33%, 67% { filter: brightness(1) drop-shadow(0 0 0 transparent); }
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    10% {
+        transform: scale(2);
+        opacity: 1;
+    }
+    15% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    40% {
+        transform: scale(2);
+        opacity: 1;
+    }
+    45% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    70% {
+        transform: scale(2);
+        opacity: 1;
+    }
+    75% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 .flash-marker {
-    animation: flash-marker 1.5s ease-in-out;
+    animation: flash-marker 1.2s linear;
 }
 
 /* Clickable table rows */

@@ -40,9 +40,13 @@ function flashAircraftMarker(flightId) {
     if (marker) {
         const element = marker.getElement();
         if (element) {
-            element.classList.remove('flash-marker');
-            void element.offsetWidth; // Trigger reflow
-            element.classList.add('flash-marker');
+            // Apply animation to the inner div, not the positioned container
+            const innerDiv = element.querySelector('div');
+            if (innerDiv) {
+                innerDiv.classList.remove('flash-marker');
+                void innerDiv.offsetWidth; // Trigger reflow
+                innerDiv.classList.add('flash-marker');
+            }
         }
         // Pan to marker
         map.panTo(marker.getLatLng());
@@ -197,9 +201,10 @@ function updateAircraftMarkers(flights, observerLat, observerLon) {
         const rotation = (flight.direction - 90);
         const aircraftIcon = L.divIcon({
             html: isTransit
-                ? `<div style="font-size: 32px; color: ${color};">◆</div>`
+                ? `<div style="font-size: 36px; color: ${color}; text-shadow: 0 0 3px black, 0 0 3px black, 0 0 8px ${color}, 1px 1px 0 black, -1px -1px 0 black, 1px -1px 0 black, -1px 1px 0 black; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; line-height: 1;">◆</div>`
                 : `<div style="transform: rotate(${rotation}deg); font-size: 20px;">✈️</div>`,
-            iconSize: [32, 32],
+            iconSize: [36, 36],
+            iconAnchor: [18, 18],  // Center the icon on coordinates
             className: 'aircraft-icon'
         });
 
@@ -225,8 +230,8 @@ function updateAircraftMarkers(flights, observerLat, observerLon) {
                 .addTo(map)
                 .bindPopup(popupContent);
 
-            // Color the marker based on possibility
-            marker.getElement()?.style.setProperty('filter', `drop-shadow(0 0 5px ${color})`);
+            // Add strong shadow for visibility
+            marker.getElement()?.style.setProperty('filter', `drop-shadow(0 0 8px ${color}) drop-shadow(0 0 4px rgba(0,0,0,0.8))`);
 
             // Store normalized ID for cross-referencing
             const normalizedId = String(flightId).trim().toUpperCase();
