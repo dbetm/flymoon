@@ -73,12 +73,17 @@ def get_all_flights():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--test", action="store_true", help="load existing flight data")
+    parser = argparse.ArgumentParser(description="Flymoon Transit Monitor")
+    parser.add_argument("--test", action="store_true", help="Use test data (deprecated, use --demo)")
+    parser.add_argument("--demo", action="store_true", help="Use mock demonstration data with guaranteed classifications")
     args = parser.parse_args()
 
     global test_mode
-    test_mode = args.test
+    test_mode = args.test or args.demo
+
+    if test_mode:
+        mode = "DEMO" if args.demo else "TEST"
+        logger.info(f"🎭 Starting in {mode} mode - using mock data")
 
     port = 8000
     app.run(host="0.0.0.0", port=port, debug=True)
