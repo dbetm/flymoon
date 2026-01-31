@@ -1,0 +1,423 @@
+[
+  {
+    "test_name": "BOUNDARY_HIGH_0.99",
+    "description": "Just inside HIGH threshold (0.99\u00b0)",
+    "passed": false,
+    "errors": [
+      "Classification mismatch: expected 3, got 0",
+      "Separation mismatch: ground_truth=185.733\u00b0, algorithm=180.000\u00b0"
+    ],
+    "ground_truth": {
+      "angular_separation": 185.733,
+      "alt_diff": 45.791,
+      "az_diff": 180.0,
+      "aircraft_alt": 85.79,
+      "aircraft_az": 0.0
+    },
+    "algorithm": {
+      "angular_separation": 180.0,
+      "alt_diff": 0.049,
+      "az_diff": 180.0,
+      "classification": 0
+    },
+    "expected": {
+      "classification": 3
+    }
+  },
+  {
+    "test_name": "BOUNDARY_MED_1.01",
+    "description": "Just outside HIGH threshold (1.01\u00b0)",
+    "passed": false,
+    "errors": [
+      "Classification mismatch: expected 2, got 0",
+      "Separation mismatch: ground_truth=185.704\u00b0, algorithm=180.000\u00b0"
+    ],
+    "ground_truth": {
+      "angular_separation": 185.704,
+      "alt_diff": 45.672,
+      "az_diff": 180.0,
+      "aircraft_alt": 85.67,
+      "aircraft_az": 0.0
+    },
+    "algorithm": {
+      "angular_separation": 180.0,
+      "alt_diff": 0.001,
+      "az_diff": 180.0,
+      "classification": 0
+    },
+    "expected": {
+      "classification": 2
+    }
+  },
+  {
+    "test_name": "BOUNDARY_MED_1.99",
+    "description": "Just inside MEDIUM threshold (1.99\u00b0)",
+    "passed": false,
+    "errors": [
+      "Classification mismatch: expected 2, got 0",
+      "Separation mismatch: ground_truth=184.751\u00b0, algorithm=180.000\u00b0"
+    ],
+    "ground_truth": {
+      "angular_separation": 184.751,
+      "alt_diff": 41.628,
+      "az_diff": 180.0,
+      "aircraft_alt": 81.63,
+      "aircraft_az": 0.0
+    },
+    "algorithm": {
+      "angular_separation": 180.0,
+      "alt_diff": 0.199,
+      "az_diff": 180.0,
+      "classification": 0
+    },
+    "expected": {
+      "classification": 2
+    }
+  },
+  {
+    "test_name": "BOUNDARY_LOW_2.01",
+    "description": "Just outside MEDIUM threshold (2.01\u00b0)",
+    "passed": false,
+    "errors": [
+      "Classification mismatch: expected 1, got 0",
+      "Separation mismatch: ground_truth=184.711\u00b0, algorithm=180.000\u00b0"
+    ],
+    "ground_truth": {
+      "angular_separation": 184.711,
+      "alt_diff": 41.451,
+      "az_diff": 180.0,
+      "aircraft_alt": 81.45,
+      "aircraft_az": 360.0
+    },
+    "algorithm": {
+      "angular_separation": 180.0,
+      "alt_diff": 0.226,
+      "az_diff": 180.0,
+      "classification": 0
+    },
+    "expected": {
+      "classification": 1
+    }
+  },
+  {
+    "test_name": "BOUNDARY_LOW_5.99",
+    "description": "Just inside LOW threshold (5.99\u00b0)",
+    "passed": false,
+    "errors": [
+      "Classification mismatch: expected 1, got 0",
+      "Separation mismatch: ground_truth=181.843\u00b0, algorithm=180.000\u00b0"
+    ],
+    "ground_truth": {
+      "angular_separation": 181.843,
+      "alt_diff": 25.822,
+      "az_diff": 180.0,
+      "aircraft_alt": 65.82,
+      "aircraft_az": 0.0
+    },
+    "algorithm": {
+      "angular_separation": 180.0,
+      "alt_diff": 0.128,
+      "az_diff": 180.0,
+      "classification": 0
+    },
+    "expected": {
+      "classification": 1
+    }
+  },
+  {
+    "test_name": "BOUNDARY_UNLIKELY_6.01",
+    "description": "Just outside LOW threshold (6.01\u00b0)",
+    "passed": false,
+    "errors": [
+      "Separation mismatch: ground_truth=181.836\u00b0, algorithm=180.000\u00b0"
+    ],
+    "ground_truth": {
+      "angular_separation": 181.836,
+      "alt_diff": 25.772,
+      "az_diff": 180.0,
+      "aircraft_alt": 65.77,
+      "aircraft_az": 360.0
+    },
+    "algorithm": {
+      "angular_separation": 180.0,
+      "alt_diff": 0.103,
+      "az_diff": 180.0,
+      "classification": 0
+    },
+    "expected": {
+      "classification": 0
+    }
+  },
+  {
+    "test_name": "DIRECT_TRANSIT_0.0",
+    "description": "Perfect alignment - aircraft at target center",
+    "passed": false,
+    "errors": [
+      "Separation mismatch: ground_truth=4.854\u00b0, algorithm=0.087\u00b0"
+    ],
+    "ground_truth": {
+      "angular_separation": 4.854,
+      "alt_diff": 4.854,
+      "az_diff": 0.0,
+      "aircraft_alt": 35.15,
+      "aircraft_az": 180.0
+    },
+    "algorithm": {
+      "angular_separation": 0.087,
+      "alt_diff": 0.087,
+      "az_diff": 0.0,
+      "classification": 3
+    },
+    "expected": {
+      "classification": 3
+    }
+  },
+  {
+    "test_name": "APPROACH_HEAD_ON_0.5",
+    "description": "0.5\u00b0 separation, HEAD_ON approach",
+    "passed": false,
+    "errors": [
+      "Classification mismatch: expected 3, got 1",
+      "Separation mismatch: ground_truth=5.254\u00b0, algorithm=2.395\u00b0"
+    ],
+    "ground_truth": {
+      "angular_separation": 5.254,
+      "alt_diff": 4.854,
+      "az_diff": 2.009,
+      "aircraft_alt": 35.15,
+      "aircraft_az": 182.01
+    },
+    "algorithm": {
+      "angular_separation": 2.395,
+      "alt_diff": 0.413,
+      "az_diff": 2.359,
+      "classification": 1
+    },
+    "expected": {
+      "classification": 3
+    }
+  },
+  {
+    "test_name": "APPROACH_PERPENDICULAR_0.5",
+    "description": "0.5\u00b0 separation, PERPENDICULAR approach",
+    "passed": false,
+    "errors": [
+      "Classification mismatch: expected 3, got 1",
+      "Separation mismatch: ground_truth=5.254\u00b0, algorithm=4.847\u00b0"
+    ],
+    "ground_truth": {
+      "angular_separation": 5.254,
+      "alt_diff": 4.854,
+      "az_diff": 2.009,
+      "aircraft_alt": 35.15,
+      "aircraft_az": 182.01
+    },
+    "algorithm": {
+      "angular_separation": 4.847,
+      "alt_diff": 4.838,
+      "az_diff": 0.302,
+      "classification": 1
+    },
+    "expected": {
+      "classification": 3
+    }
+  },
+  {
+    "test_name": "APPROACH_OBLIQUE_45_0.5",
+    "description": "0.5\u00b0 separation, OBLIQUE_45 approach",
+    "passed": false,
+    "errors": [
+      "Classification mismatch: expected 3, got 1",
+      "Separation mismatch: ground_truth=5.254\u00b0, algorithm=3.522\u00b0"
+    ],
+    "ground_truth": {
+      "angular_separation": 5.254,
+      "alt_diff": 4.854,
+      "az_diff": 2.009,
+      "aircraft_alt": 35.15,
+      "aircraft_az": 182.01
+    },
+    "algorithm": {
+      "angular_separation": 3.522,
+      "alt_diff": 3.072,
+      "az_diff": 1.722,
+      "classification": 1
+    },
+    "expected": {
+      "classification": 3
+    }
+  },
+  {
+    "test_name": "APPROACH_RECEDING_0.5",
+    "description": "0.5\u00b0 separation, RECEDING approach",
+    "passed": false,
+    "errors": [
+      "Classification mismatch: expected 3, got 1"
+    ],
+    "ground_truth": {
+      "angular_separation": 5.254,
+      "alt_diff": 4.854,
+      "az_diff": 2.009,
+      "aircraft_alt": 35.15,
+      "aircraft_az": 182.01
+    },
+    "algorithm": {
+      "angular_separation": 5.254,
+      "alt_diff": 4.854,
+      "az_diff": 2.009,
+      "classification": 1
+    },
+    "expected": {
+      "classification": 3
+    }
+  },
+  {
+    "test_name": "ALTITUDE_LOW_1.0",
+    "description": "1.0\u00b0 separation at 10000 ft",
+    "passed": false,
+    "errors": [
+      "Classification mismatch: expected 3, got 1",
+      "Separation mismatch: ground_truth=28.940\u00b0, algorithm=4.262\u00b0"
+    ],
+    "ground_truth": {
+      "angular_separation": 28.94,
+      "alt_diff": 28.923,
+      "az_diff": 1.005,
+      "aircraft_alt": 11.08,
+      "aircraft_az": 181.0
+    },
+    "algorithm": {
+      "angular_separation": 4.262,
+      "alt_diff": 1.11,
+      "az_diff": 4.115,
+      "classification": 1
+    },
+    "expected": {
+      "classification": 3
+    }
+  },
+  {
+    "test_name": "ALTITUDE_MED_1.0",
+    "description": "1.0\u00b0 separation at 25000 ft",
+    "passed": false,
+    "errors": [
+      "Classification mismatch: expected 3, got 2",
+      "Separation mismatch: ground_truth=13.433\u00b0, algorithm=1.677\u00b0"
+    ],
+    "ground_truth": {
+      "angular_separation": 13.433,
+      "alt_diff": 13.395,
+      "az_diff": 1.005,
+      "aircraft_alt": 26.6,
+      "aircraft_az": 181.0
+    },
+    "algorithm": {
+      "angular_separation": 1.677,
+      "alt_diff": 0.087,
+      "az_diff": 1.675,
+      "classification": 2
+    },
+    "expected": {
+      "classification": 3
+    }
+  },
+  {
+    "test_name": "ALTITUDE_HIGH_1.0",
+    "description": "1.0\u00b0 separation at 45000 ft",
+    "passed": false,
+    "errors": [
+      "Classification mismatch: expected 3, got 1"
+    ],
+    "ground_truth": {
+      "angular_separation": 2.425,
+      "alt_diff": 2.207,
+      "az_diff": 1.005,
+      "aircraft_alt": 42.21,
+      "aircraft_az": 181.0
+    },
+    "algorithm": {
+      "angular_separation": 2.425,
+      "alt_diff": 2.207,
+      "az_diff": 1.005,
+      "classification": 1
+    },
+    "expected": {
+      "classification": 3
+    }
+  },
+  {
+    "test_name": "EDGE_MIN_ALTITUDE",
+    "description": "Target exactly at minimum altitude (15\u00b0)",
+    "passed": false,
+    "errors": [
+      "Classification mismatch: expected 3, got 0",
+      "Separation mismatch: ground_truth=185.733\u00b0, algorithm=180.000\u00b0"
+    ],
+    "ground_truth": {
+      "angular_separation": 185.733,
+      "alt_diff": 45.791,
+      "az_diff": 180.0,
+      "aircraft_alt": 85.79,
+      "aircraft_az": 0.0
+    },
+    "algorithm": {
+      "angular_separation": 180.0,
+      "alt_diff": 0.049,
+      "az_diff": 180.0,
+      "classification": 0
+    },
+    "expected": {
+      "classification": 3
+    }
+  },
+  {
+    "test_name": "EDGE_FAST_AIRCRAFT",
+    "description": "Very fast aircraft (600 kts = 1111 km/h)",
+    "passed": false,
+    "errors": [
+      "Classification mismatch: expected 3, got 0",
+      "Separation mismatch: ground_truth=185.733\u00b0, algorithm=180.000\u00b0"
+    ],
+    "ground_truth": {
+      "angular_separation": 185.733,
+      "alt_diff": 45.791,
+      "az_diff": 180.0,
+      "aircraft_alt": 85.79,
+      "aircraft_az": 360.0
+    },
+    "algorithm": {
+      "angular_separation": 180.0,
+      "alt_diff": 0.163,
+      "az_diff": 180.0,
+      "classification": 0
+    },
+    "expected": {
+      "classification": 3
+    }
+  },
+  {
+    "test_name": "EDGE_SLOW_AIRCRAFT",
+    "description": "Very slow aircraft (100 kts = 185 km/h)",
+    "passed": false,
+    "errors": [
+      "Classification mismatch: expected 3, got 0",
+      "Separation mismatch: ground_truth=183.417\u00b0, algorithm=180.000\u00b0"
+    ],
+    "ground_truth": {
+      "angular_separation": 183.417,
+      "alt_diff": 35.239,
+      "az_diff": 180.0,
+      "aircraft_alt": 75.24,
+      "aircraft_az": 0.0
+    },
+    "algorithm": {
+      "angular_separation": 180.0,
+      "alt_diff": 0.117,
+      "az_diff": 180.0,
+      "classification": 0
+    },
+    "expected": {
+      "classification": 3
+    }
+  }
+]
