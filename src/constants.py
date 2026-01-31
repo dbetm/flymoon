@@ -64,7 +64,7 @@ class Altitude(Enum):
 
 
 class PossibilityLevel(Enum):
-    IMPOSSIBLE = 0
+    UNLIKELY = 0
     LOW = 1
     MEDIUM = 2
     HIGH = 3

@@ -39,44 +39,51 @@ area_bbox = AreaBoundingBox(
 )
 
 
-def get_thresholds(altitude: float) -> Tuple[float, float]:
-    """Receives target altitude and return the suggested threshold for both coordinates:
-    altitude and azimuthal.
+def calculate_angular_separation(alt_diff: float, az_diff: float) -> float:
+    """Calculate true angular separation using Euclidean distance.
+
+    For small angles, this is sufficiently accurate:
+    angular_separation ≈ sqrt(alt_diff² + az_diff²)
+
+    Parameters
+    ----------
+    alt_diff : float
+        Altitude difference in degrees
+    az_diff : float
+        Azimuth difference in degrees
+
+    Returns
+    -------
+    float
+        Angular separation in degrees
     """
-    if Altitude.LOW(altitude):
-        return (5.0, 10.0)
-    elif Altitude.MEDIUM(altitude):
-        return (10.0, 20.0)
-    elif Altitude.MEDIUM_HIGH(altitude):
-        return (10.0, 15.0)
-    elif Altitude.HIGH(altitude):
-        return (8.0, 180.0)
-
-    logger.warning(f"{altitude=}")
-    raise Exception(f"Given altitude is not valid!")
+    return np.sqrt(alt_diff**2 + az_diff**2)
 
 
-def get_possibility_level(
-    altitude: float, alt_diff: float, az_diff: float, eta: float = None
-) -> str:
-    possibility_level = PossibilityLevel.IMPOSSIBLE
+def get_possibility_level(angular_separation: float) -> str:
+    """Classify transit probability based on angular separation.
 
-    if alt_diff <= 10 and az_diff <= 10 or (Altitude.HIGH(altitude) and alt_diff <= 5):
-        possibility_level = PossibilityLevel.LOW
+    Sun and Moon are ~0.5° diameter. Classification based on how close
+    the aircraft passes to the target center.
 
-    if Altitude.LOW(altitude) and (alt_diff <= 1 and az_diff <= 2):
-        possibility_level = PossibilityLevel.MEDIUM
-    elif Altitude.MEDIUM(altitude) and (alt_diff <= 2 and az_diff <= 2):
-        possibility_level = PossibilityLevel.MEDIUM
-    elif Altitude.MEDIUM_HIGH(altitude) and (alt_diff <= 3 and az_diff <= 3):
-        possibility_level = PossibilityLevel.MEDIUM
-    elif Altitude.HIGH(altitude) and (alt_diff <= 5 and az_diff <= 10):
-        possibility_level = PossibilityLevel.MEDIUM
+    Parameters
+    ----------
+    angular_separation : float
+        Angular separation in degrees between aircraft and target
 
-    if eta is not None and (alt_diff <= 1 and az_diff <= 1):
-        possibility_level = PossibilityLevel.HIGH
-
-    return possibility_level.value
+    Returns
+    -------
+    str
+        Possibility level: HIGH (≤1°), MEDIUM (≤2°), LOW (≤6°), or UNLIKELY (>6°)
+    """
+    if angular_separation <= 1.0:
+        return PossibilityLevel.HIGH.value
+    elif angular_separation <= 2.0:
+        return PossibilityLevel.MEDIUM.value
+    elif angular_separation <= 6.0:
+        return PossibilityLevel.LOW.value
+    else:
+        return PossibilityLevel.UNLIKELY.value
 
 
 def check_transit(
@@ -117,7 +124,7 @@ def check_transit(
         id, origin, destination, time, target_alt, plane_alt, target_az, plane_az, alt_diff, az_diff,
         is_possible_transit, and change_elev.
     """
-    min_diff_combined = float("inf")
+    min_angular_sep = float("inf")
     response = None
     no_decreasing_count = 0
     update_response = False
@@ -135,28 +142,26 @@ def check_transit(
 
         alt_diff = abs(current_alt - target.altitude.degrees)
         az_diff = abs(current_az - target.azimuthal.degrees)
-        diff_combined = alt_diff + az_diff
+        angular_sep = calculate_angular_separation(alt_diff, az_diff)
 
-        min_diff_combined = diff_combined
+        min_angular_sep = angular_sep
 
-        alt_threshold, az_threshold = get_thresholds(target.altitude.degrees)
-
-        if current_alt > 0 and alt_diff < alt_threshold and az_diff < az_threshold:
+        # Always record if aircraft is above horizon, regardless of separation
+        if current_alt > 0:
             response = {
                 "id": flight["name"],
                 "origin": flight["origin"],
                 "destination": flight["destination"],
                 "alt_diff": round(float(alt_diff), 3),
                 "az_diff": round(float(az_diff), 3),
+                "angular_separation": round(float(angular_sep), 3),
                 "time": 0.0,  # Current position
                 "target_alt": round(float(target.altitude.degrees), 2),
                 "plane_alt": round(float(current_alt), 2),
                 "target_az": round(float(target.azimuthal.degrees), 2),
                 "plane_az": round(float(current_az), 2),
-                "is_possible_transit": 1,
-                "possibility_level": get_possibility_level(
-                    target.altitude.degrees, alt_diff, az_diff, 0.0
-                ),
+                "is_possible_transit": 1 if angular_sep <= 6.0 else 0,
+                "possibility_level": get_possibility_level(angular_sep),
                 "elevation_change": CHANGE_ELEVATION.get(
                     flight["elevation_change"], None
                 ),
@@ -194,23 +199,21 @@ def check_transit(
 
         alt_diff = abs(future_alt - target.altitude.degrees)
         az_diff = abs(future_az - target.azimuthal.degrees)
-        diff_combined = alt_diff + az_diff
+        angular_sep = calculate_angular_separation(alt_diff, az_diff)
 
         if no_decreasing_count >= 180:
-            logger.info(f"diff is increasing, stop checking, min={round(minute, 2)}")
+            logger.info(f"Angular separation increasing, stop checking at min={round(minute, 2)}")
             break
 
-        if diff_combined < min_diff_combined:
+        if angular_sep < min_angular_sep:
             no_decreasing_count = 0
-            min_diff_combined = diff_combined
+            min_angular_sep = angular_sep
             update_response = True
         else:
             no_decreasing_count += 1
 
-        alt_threshold, az_threshold = get_thresholds(target.altitude.degrees)
-
-        if future_alt > 0 and alt_diff < alt_threshold and az_diff < az_threshold:
-
+        # Always track aircraft above horizon, will be classified by angular separation
+        if future_alt > 0:
             if update_response:
                 response = {
                     "id": flight["name"],
@@ -218,15 +221,14 @@ def check_transit(
                     "destination": flight["destination"],
                     "alt_diff": round(float(alt_diff), 3),
                     "az_diff": round(float(az_diff), 3),
+                    "angular_separation": round(float(angular_sep), 3),
                     "time": round(float(minute), 3),
                     "target_alt": round(float(target.altitude.degrees), 2),
                     "plane_alt": round(float(future_alt), 2),
                     "target_az": round(float(target.azimuthal.degrees), 2),
                     "plane_az": round(float(future_az), 2),
-                    "is_possible_transit": 1,
-                    "possibility_level": get_possibility_level(
-                        target.altitude.degrees, alt_diff, az_diff, minute
-                    ),
+                    "is_possible_transit": 1 if angular_sep <= 6.0 else 0,
+                    "possibility_level": get_possibility_level(angular_sep),
                     "elevation_change": CHANGE_ELEVATION.get(
                         flight["elevation_change"], None
                     ),
@@ -246,13 +248,14 @@ def check_transit(
         "destination": flight["destination"],
         "alt_diff": None,
         "az_diff": None,
+        "angular_separation": None,
         "time": None,
         "target_alt": None,
         "plane_alt": None,
         "target_az": None,
         "plane_az": None,
         "is_possible_transit": 0,
-        "possibility_level": PossibilityLevel.IMPOSSIBLE.value,
+        "possibility_level": PossibilityLevel.UNLIKELY.value,
         "elevation_change": CHANGE_ELEVATION.get(flight["elevation_change"], None),
         "direction": flight["direction"],
         "target": target.name,
@@ -297,14 +300,16 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
     flights = []
 
     # MOON TRANSITS
-    # HIGH - nearly perfect alignment
+    # HIGH - nearly perfect alignment (≤1°)
     lat, lon = position_at(moon_az, 15)  # 15 km on moon bearing
+    alt_diff, az_diff = 0.5, 0.3
     flights.append({
         "id": "MOON_HIGH",
         "origin": "Los Angeles",
         "destination": "San Diego",
-        "alt_diff": 0.5,
-        "az_diff": 0.3,
+        "alt_diff": alt_diff,
+        "az_diff": az_diff,
+        "angular_separation": round(np.sqrt(alt_diff**2 + az_diff**2), 3),
         "time": 2.5,
         "target_alt": moon_alt,
         "plane_alt": 40.5,
@@ -319,19 +324,21 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "longitude": lon,
     })
 
-    # MEDIUM - moderate alignment
+    # MEDIUM - moderate alignment (≤2°)
     lat, lon = position_at(moon_az - 2, 20)  # 20 km, offset 2° from moon bearing
+    alt_diff, az_diff = 1.2, 1.0
     flights.append({
         "id": "MOON_MED",
         "origin": "Phoenix",
         "destination": "San Diego",
-        "alt_diff": 1.8,
-        "az_diff": 1.5,
+        "alt_diff": alt_diff,
+        "az_diff": az_diff,
+        "angular_separation": round(np.sqrt(alt_diff**2 + az_diff**2), 3),
         "time": 3.2,
         "target_alt": moon_alt,
-        "plane_alt": 38.2,
+        "plane_alt": 38.8,
         "target_az": moon_az,
-        "plane_az": 133.5,
+        "plane_az": 134.0,
         "is_possible_transit": 1,
         "possibility_level": 2,  # MEDIUM
         "elevation_change": "descending",
@@ -341,19 +348,21 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "longitude": lon,
     })
 
-    # LOW - marginal alignment
+    # LOW - marginal alignment (≤6°)
     lat, lon = position_at(moon_az + 7, 25)  # 25 km, offset 7° from moon bearing
+    alt_diff, az_diff = 4.0, 3.5
     flights.append({
         "id": "MOON_LOW",
         "origin": "San Francisco",
         "destination": "San Diego",
-        "alt_diff": 6.5,
-        "az_diff": 5.8,
+        "alt_diff": alt_diff,
+        "az_diff": az_diff,
+        "angular_separation": round(np.sqrt(alt_diff**2 + az_diff**2), 3),
         "time": 4.8,
         "target_alt": moon_alt,
-        "plane_alt": 33.5,
+        "plane_alt": 36.0,
         "target_az": moon_az,
-        "plane_az": 140.8,
+        "plane_az": 138.5,
         "is_possible_transit": 1,
         "possibility_level": 1,  # LOW
         "elevation_change": "descending",
@@ -364,14 +373,16 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
     })
 
     # SUN TRANSITS
-    # HIGH - nearly perfect alignment
+    # HIGH - nearly perfect alignment (≤1°)
     lat, lon = position_at(sun_az, 15)  # 15 km on sun bearing
+    alt_diff, az_diff = 0.4, 0.6
     flights.append({
         "id": "SUN_HIGH",
         "origin": "Las Vegas",
         "destination": "San Diego",
-        "alt_diff": 0.4,
-        "az_diff": 0.6,
+        "alt_diff": alt_diff,
+        "az_diff": az_diff,
+        "angular_separation": round(np.sqrt(alt_diff**2 + az_diff**2), 3),
         "time": 2.8,
         "target_alt": sun_alt,
         "plane_alt": 35.4,
@@ -386,19 +397,21 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "longitude": lon,
     })
 
-    # MEDIUM - moderate alignment
+    # MEDIUM - moderate alignment (≤2°)
     lat, lon = position_at(sun_az + 2, 20)  # 20 km, offset 2° from sun bearing
+    alt_diff, az_diff = 1.3, 1.1
     flights.append({
         "id": "SUN_MED",
         "origin": "Denver",
         "destination": "San Diego",
-        "alt_diff": 1.9,
-        "az_diff": 1.6,
+        "alt_diff": alt_diff,
+        "az_diff": az_diff,
+        "angular_separation": round(np.sqrt(alt_diff**2 + az_diff**2), 3),
         "time": 3.5,
         "target_alt": sun_alt,
-        "plane_alt": 33.1,
+        "plane_alt": 33.7,
         "target_az": sun_az,
-        "plane_az": 226.6,
+        "plane_az": 226.1,
         "is_possible_transit": 1,
         "possibility_level": 2,  # MEDIUM
         "elevation_change": "descending",
@@ -408,19 +421,21 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "longitude": lon,
     })
 
-    # LOW - marginal alignment
+    # LOW - marginal alignment (≤6°)
     lat, lon = position_at(sun_az - 7, 25)  # 25 km, offset 7° from sun bearing
+    alt_diff, az_diff = 3.8, 4.2
     flights.append({
         "id": "SUN_LOW",
         "origin": "Oakland",
         "destination": "San Diego",
-        "alt_diff": 6.2,
-        "az_diff": 5.5,
+        "alt_diff": alt_diff,
+        "az_diff": az_diff,
+        "angular_separation": round(np.sqrt(alt_diff**2 + az_diff**2), 3),
         "time": 5.2,
         "target_alt": sun_alt,
-        "plane_alt": 28.8,
+        "plane_alt": 31.2,
         "target_az": sun_az,
-        "plane_az": 219.5,
+        "plane_az": 220.8,
         "is_possible_transit": 1,
         "possibility_level": 1,  # LOW
         "elevation_change": "descending",
@@ -430,7 +445,7 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "longitude": lon,
     })
 
-    # NONE - no transit (far from both targets)
+    # UNLIKELY - no transit (far from both targets, >6°)
     lat, lon = position_at(0, 25)  # North, 25 km
     flights.append({
         "id": "NONE_01",
@@ -438,13 +453,14 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "destination": "San Francisco",
         "alt_diff": None,
         "az_diff": None,
+        "angular_separation": None,
         "time": None,
         "target_alt": None,
         "plane_alt": None,
         "target_az": None,
         "plane_az": None,
         "is_possible_transit": 0,
-        "possibility_level": 0,  # NONE
+        "possibility_level": 0,  # UNLIKELY
         "elevation_change": "climbing",
         "direction": 0,
         "target": "moon",
@@ -459,13 +475,14 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "destination": "Denver",
         "alt_diff": None,
         "az_diff": None,
+        "angular_separation": None,
         "time": None,
         "target_alt": None,
         "plane_alt": None,
         "target_az": None,
         "plane_az": None,
         "is_possible_transit": 0,
-        "possibility_level": 0,  # NONE
+        "possibility_level": 0,  # UNLIKELY
         "elevation_change": "level",
         "direction": 180,
         "target": "sun",
@@ -480,13 +497,14 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "destination": "N/D",
         "alt_diff": None,
         "az_diff": None,
+        "angular_separation": None,
         "time": None,
         "target_alt": None,
         "plane_alt": None,
         "target_az": None,
         "plane_az": None,
         "is_possible_transit": 0,
-        "possibility_level": 0,  # NONE
+        "possibility_level": 0,  # UNLIKELY
         "elevation_change": "level",
         "direction": 270,
         "target": "moon",
