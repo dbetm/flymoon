@@ -220,17 +220,20 @@ def get_transits(
     elevation: float,
     target_name: str = "auto",
     test_mode: bool = False,
+    min_altitude: float = None,
 ) -> dict:
     """Get transit predictions for celestial targets.
-    
+
     Parameters
     ----------
     target_name : str
         'moon', 'sun', or 'auto' (checks both if conditions permit)
+    min_altitude : float
+        Minimum altitude in degrees for target to be tracked (default from env or 15)
     """
     API_KEY = os.getenv("AEROAPI_API_KEY")
     WEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
-    MIN_ALTITUDE = float(os.getenv("MIN_TARGET_ALTITUDE", 15))
+    MIN_ALTITUDE = min_altitude if min_altitude is not None else float(os.getenv("MIN_TARGET_ALTITUDE", 15))
 
     logger.info(f"{latitude=}, {longitude=}, {elevation=}, {target_name=}")
 
