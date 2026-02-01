@@ -213,6 +213,11 @@ body {
     animation: flash-row 1.2s linear;
 }
 
+/* Persistent highlight for selected aircraft row */
+.selected-row {
+    background-color: rgba(100, 149, 237, 0.15) !important;
+}
+
 /* Flash animation for map markers - 3 distinct flashes with clear gaps */
 @keyframes flash-marker {
     0% {
