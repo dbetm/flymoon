@@ -519,16 +519,28 @@ function fetchFlights() {
                 } else if (column === "direction") {
                     val.textContent = Math.round(value) + "°";
                 } else if (column === "alt_diff" || column === "az_diff") {
-                    val.textContent = Math.round(value) + "º";
+                    const roundedValue = Math.round(value);
+                    val.textContent = roundedValue + "º";
+                    // Color code large angle differences
+                    if (Math.abs(roundedValue) > 10) {
+                        val.style.color = "#888"; // Gray for large differences
+                    }
                 } else if (column === "target_alt" || column === "target_az") {
-                    // Only show target values for possible transits
-                    if (item.is_possible_transit === 1) {
-                        val.textContent = value.toFixed(1) + "º";
-                    } else {
-                        val.textContent = "";
+                    // Always show target values, color code negative/invalid
+                    const numValue = value.toFixed(1);
+                    val.textContent = numValue + "º";
+                    if (value < 0) {
+                        val.style.color = "#888"; // Gray for below horizon
+                        val.style.fontStyle = "italic";
                     }
                 } else if (column === "plane_alt" || column === "plane_az") {
-                    val.textContent = value.toFixed(1) + "º";
+                    // Always show plane values, color code negative/invalid
+                    const numValue = value.toFixed(1);
+                    val.textContent = numValue + "º";
+                    if (value < 0) {
+                        val.style.color = "#888"; // Gray for negative angles
+                        val.style.fontStyle = "italic";
+                    }
                 } else if (value === "N/D") {
                     val.textContent = value + " ⚠️";
                 } else {
