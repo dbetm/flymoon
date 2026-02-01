@@ -344,6 +344,7 @@ body {
     margin-left: 25px;
     position: relative;
     height: calc(100% - 30px);
+    overflow: hidden;
 }
 
 .altitude-bar {
