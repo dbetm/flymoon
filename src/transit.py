@@ -157,6 +157,11 @@ def check_transit(
         ref_datetime,
     )
 
+    # Calculate current differences with target for ALL aircraft
+    current_alt_diff = abs(current_alt - initial_target_alt)
+    current_az_diff = abs(current_az - initial_target_az)
+    current_angular_sep = calculate_angular_separation(current_alt_diff, current_az_diff)
+
     # In test mode, check current position first (t=0, static aircraft)
     if test_mode:
         alt_diff = abs(current_alt - target.altitude.degrees)
@@ -273,24 +278,24 @@ def check_transit(
         response["plane_alt"] = round(float(current_alt), 2)
         response["plane_az"] = round(float(current_az), 2)
         response["time"] = None  # No meaningful ETA for non-transits
-        response["alt_diff"] = None
-        response["az_diff"] = None
-        response["angular_separation"] = None
+        response["alt_diff"] = round(float(current_alt_diff), 3)
+        response["az_diff"] = round(float(current_az_diff), 3)
+        response["angular_separation"] = round(float(current_angular_sep), 3)
         return response
 
     if response:
         return response
 
-    # No transit found - return current position with plane_alt and plane_az
+    # No transit found - return current position with plane_alt and plane_az and current differences
     return {
         "id": flight["name"],
         "aircraft_type": flight.get("aircraft_type", "N/A"),
         "fa_flight_id": flight.get("fa_flight_id", ""),
         "origin": flight["origin"],
         "destination": flight["destination"],
-        "alt_diff": None,
-        "az_diff": None,
-        "angular_separation": None,
+        "alt_diff": round(float(current_alt_diff), 3),
+        "az_diff": round(float(current_az_diff), 3),
+        "angular_separation": round(float(current_angular_sep), 3),
         "time": None,
         "target_alt": initial_target_alt,
         "plane_alt": round(float(current_alt), 2),  # Show current position
@@ -522,20 +527,24 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
 
     # UNLIKELY - no transit (far from both targets, >6°)
     lat, lon = position_at(0, 25)  # North, 25 km
+    # This plane is heading North (0°), far from moon at 135°
+    plane_alt_1, plane_az_1 = 25.0, 5.0  # Low on horizon, heading north
+    alt_diff_1 = abs(plane_alt_1 - moon_alt)  # 15°
+    az_diff_1 = abs(plane_az_1 - moon_az)  # 130°
     flights.append({
         "id": "NONE_01",
         "aircraft_type": "B737",
         "fa_flight_id": "NONE_01-test-444",
         "origin": "San Diego",
         "destination": "San Francisco",
-        "alt_diff": None,
-        "az_diff": None,
-        "angular_separation": None,
+        "alt_diff": round(alt_diff_1, 3),
+        "az_diff": round(az_diff_1, 3),
+        "angular_separation": round(np.sqrt(alt_diff_1**2 + az_diff_1**2), 3),
         "time": None,
-        "target_alt": None,
-        "plane_alt": None,
-        "target_az": None,
-        "plane_az": None,
+        "target_alt": moon_alt,
+        "plane_alt": plane_alt_1,
+        "target_az": moon_az,
+        "plane_az": plane_az_1,
         "is_possible_transit": 0,
         "possibility_level": 0,  # UNLIKELY
         "elevation_change": "climbing",
@@ -549,20 +558,24 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
     })
 
     lat, lon = position_at(180, 25)  # South, 25 km
+    # This plane is heading South (180°), somewhat close to sun at 225°
+    plane_alt_2, plane_az_2 = 32.0, 185.0  # Mid-altitude, heading south
+    alt_diff_2 = abs(plane_alt_2 - sun_alt)  # 3°
+    az_diff_2 = abs(plane_az_2 - sun_az)  # 40°
     flights.append({
         "id": "NONE_02",
         "aircraft_type": "A320",
         "fa_flight_id": "NONE_02-test-555",
         "origin": "San Diego",
         "destination": "Denver",
-        "alt_diff": None,
-        "az_diff": None,
-        "angular_separation": None,
+        "alt_diff": round(alt_diff_2, 3),
+        "az_diff": round(az_diff_2, 3),
+        "angular_separation": round(np.sqrt(alt_diff_2**2 + az_diff_2**2), 3),
         "time": None,
-        "target_alt": None,
-        "plane_alt": None,
-        "target_az": None,
-        "plane_az": None,
+        "target_alt": sun_alt,
+        "plane_alt": plane_alt_2,
+        "target_az": sun_az,
+        "plane_az": plane_az_2,
         "is_possible_transit": 0,
         "possibility_level": 0,  # UNLIKELY
         "elevation_change": "level",
@@ -576,20 +589,24 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
     })
 
     lat, lon = position_at(270, 25)  # West, 25 km
+    # This plane is heading West (270°), far from moon at 135°
+    plane_alt_3, plane_az_3 = 15.0, 275.0  # Low altitude private plane, heading west
+    alt_diff_3 = abs(plane_alt_3 - moon_alt)  # 25°
+    az_diff_3 = abs(plane_az_3 - moon_az)  # 140°
     flights.append({
         "id": "PRIV01",
         "aircraft_type": "SR22",
         "fa_flight_id": "PRIV01-test-666",
         "origin": "San Diego",
         "destination": "N/D",
-        "alt_diff": None,
-        "az_diff": None,
-        "angular_separation": None,
+        "alt_diff": round(alt_diff_3, 3),
+        "az_diff": round(az_diff_3, 3),
+        "angular_separation": round(np.sqrt(alt_diff_3**2 + az_diff_3**2), 3),
         "time": None,
-        "target_alt": None,
-        "plane_alt": None,
-        "target_az": None,
-        "plane_az": None,
+        "target_alt": moon_alt,
+        "plane_alt": plane_alt_3,
+        "target_az": moon_az,
+        "plane_az": plane_az_3,
         "is_possible_transit": 0,
         "possibility_level": 0,  # UNLIKELY
         "elevation_change": "level",
