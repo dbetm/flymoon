@@ -214,8 +214,7 @@ body {
 }
 
 /* Persistent highlight for selected aircraft row */
-.selected-row {
-    background-color: rgba(173, 216, 230, 0.3) !important;
+#resultsTable tbody tr.selected-row {
     border-left: 3px solid #87CEEB !important;
 }
 
