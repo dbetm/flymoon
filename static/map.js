@@ -25,13 +25,30 @@ const COLORS = {
     DEFAULT: '#808080'   // Gray
 };
 
-// Flash a table row by flight ID
+// Track currently selected row
+let selectedRowId = null;
+
+// Flash a table row by flight ID and keep it highlighted
 function flashTableRow(flightId) {
     const row = document.querySelector(`tr[data-flight-id="${flightId}"]`);
     if (row) {
+        // Remove highlight from previously selected row
+        if (selectedRowId && selectedRowId !== flightId) {
+            const prevRow = document.querySelector(`tr[data-flight-id="${selectedRowId}"]`);
+            if (prevRow) {
+                prevRow.classList.remove('selected-row');
+            }
+        }
+
+        // Flash animation
         row.classList.remove('flash-row');
         void row.offsetWidth; // Trigger reflow
         row.classList.add('flash-row');
+
+        // Add persistent highlight
+        row.classList.add('selected-row');
+        selectedRowId = flightId;
+
         row.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 }
