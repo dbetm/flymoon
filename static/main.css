@@ -215,7 +215,8 @@ body {
 
 /* Persistent highlight for selected aircraft row */
 .selected-row {
-    background-color: rgba(100, 149, 237, 0.15) !important;
+    background-color: rgba(173, 216, 230, 0.3) !important;
+    border-left: 3px solid #87CEEB !important;
 }
 
 /* Flash animation for map markers - 3 distinct flashes with clear gaps */
