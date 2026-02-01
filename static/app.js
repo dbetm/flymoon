@@ -113,6 +113,125 @@ function playTrackOffSound() {
     osc.stop(now + 0.12);
 }
 
+function updateTrackedFlight() {
+    if (!trackingFlightId) return;
+
+    let latitude = document.getElementById("latitude").value;
+    let longitude = document.getElementById("longitude").value;
+    let elevation = document.getElementById("elevation").value;
+    const minAltitude = document.getElementById("minAltitude").value || 15;
+
+    let endpoint_url = (
+        `/flights?target=${encodeURIComponent(target)}`
+        + `&latitude=${encodeURIComponent(latitude)}`
+        + `&longitude=${encodeURIComponent(longitude)}`
+        + `&elevation=${encodeURIComponent(elevation)}`
+        + `&min_altitude=${encodeURIComponent(minAltitude)}`
+        + `&send-notification=false`
+    );
+
+    if (window.lastBoundingBox) {
+        endpoint_url += `&bbox_lat_ll=${encodeURIComponent(window.lastBoundingBox.latLowerLeft)}`;
+        endpoint_url += `&bbox_lon_ll=${encodeURIComponent(window.lastBoundingBox.lonLowerLeft)}`;
+        endpoint_url += `&bbox_lat_ur=${encodeURIComponent(window.lastBoundingBox.latUpperRight)}`;
+        endpoint_url += `&bbox_lon_ur=${encodeURIComponent(window.lastBoundingBox.lonUpperRight)}`;
+    }
+
+    fetch(endpoint_url)
+    .then(response => response.json())
+    .then(data => {
+        // Find the tracked flight in the response
+        const trackedFlight = data.flights.find(f =>
+            String(f.id).trim().toUpperCase() === trackingFlightId
+        );
+
+        if (!trackedFlight) {
+            console.log(`Track mode: flight ${trackingFlightId} no longer in range`);
+            stopTracking();
+            return;
+        }
+
+        // Update only the tracked flight's row
+        const row = document.querySelector(`tr[data-flight-id="${trackingFlightId}"]`);
+        if (row) {
+            updateFlightRow(row, trackedFlight);
+        }
+
+        // Update the marker on the map
+        if (typeof updateSingleAircraftMarker === 'function') {
+            updateSingleAircraftMarker(trackedFlight);
+        }
+    })
+    .catch(error => {
+        console.error('Track mode update error:', error);
+    });
+}
+
+function updateFlightRow(row, flight) {
+    // Update all cells except the first (target emoji)
+    const cells = row.querySelectorAll('td');
+    let cellIndex = 1; // Skip target emoji column
+
+    COLUMN_NAMES.forEach(column => {
+        const cell = cells[cellIndex++];
+        if (!cell) return;
+
+        const value = flight[column];
+
+        if (value === null || value === undefined) {
+            cell.textContent = "";
+        } else if (column === "id") {
+            const aircraftType = flight.aircraft_type || "";
+            cell.textContent = aircraftType && aircraftType !== "N/A" ? `${value} (${aircraftType})` : value;
+        } else if (column === "time") {
+            const totalSeconds = Math.round(value * 60);
+            const mins = Math.floor(totalSeconds / 60);
+            const secs = totalSeconds % 60;
+            cell.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+        } else if (column === "aircraft_elevation_feet") {
+            const altitude = Math.round(value);
+            if (altitude > 18000) {
+                const flightLevel = Math.round(altitude / 100);
+                cell.textContent = `FL${flightLevel}`;
+            } else {
+                cell.textContent = altitude.toLocaleString('en-US');
+            }
+        } else if (column === "distance_nm") {
+            cell.textContent = value.toFixed(1);
+        } else if (column === "direction") {
+            cell.textContent = Math.round(value) + "°";
+        } else if (column === "alt_diff" || column === "az_diff") {
+            const roundedValue = Math.round(value);
+            cell.textContent = roundedValue + "º";
+            cell.style.color = Math.abs(roundedValue) > 10 ? "#888" : "";
+        } else if (column === "target_alt" || column === "target_az") {
+            const numValue = value.toFixed(1);
+            cell.textContent = numValue + "º";
+            if (value < 0) {
+                cell.style.color = "#888";
+                cell.style.fontStyle = "italic";
+            } else {
+                cell.style.color = "";
+                cell.style.fontStyle = "";
+            }
+        } else if (column === "plane_alt" || column === "plane_az") {
+            const numValue = value.toFixed(1);
+            cell.textContent = numValue + "º";
+            if (value < 0) {
+                cell.style.color = "#888";
+                cell.style.fontStyle = "italic";
+            } else {
+                cell.style.color = "";
+                cell.style.fontStyle = "";
+            }
+        } else if (column === "angular_separation") {
+            cell.textContent = value.toFixed(2) + "º";
+        } else {
+            cell.textContent = value;
+        }
+    });
+}
+
 function startTracking(flightId) {
     // Stop any existing tracking
     stopTracking();
@@ -124,8 +243,8 @@ function startTracking(flightId) {
     // Visual indicator
     updateTrackingIndicator();
 
-    // Start polling
-    trackingInterval = setInterval(fetchFlights, TRACK_INTERVAL_MS);
+    // Start polling - use updateTrackedFlight instead of fetchFlights
+    trackingInterval = setInterval(updateTrackedFlight, TRACK_INTERVAL_MS);
 
     // Auto-stop after 3 minutes
     trackingTimeout = setTimeout(() => {
@@ -133,8 +252,8 @@ function startTracking(flightId) {
         stopTracking();
     }, TRACK_TIMEOUT_MS);
 
-    // Immediate fetch
-    fetchFlights();
+    // Immediate update
+    updateTrackedFlight();
 }
 
 function stopTracking() {
@@ -245,36 +364,29 @@ function clearPosition() {
 }
 
 function go() {
-    // Toggle results visibility
+    // Refresh flight data
     const resultsDiv = document.getElementById("results");
     const mapContainer = document.getElementById("mapContainer");
 
-    if (resultsVisible) {
-        // Hide results and map
-        resultsVisible = false;
-        mapVisible = false;
-        resultsDiv.style.display = 'none';
-        mapContainer.style.display = 'none';
-        document.getElementById("goBtn").textContent = 'Show/Hide';
-    } else {
-        // Validate coordinates first
-        let lat = document.getElementById("latitude");
-        let latitude = parseFloat(lat.value);
+    // Validate coordinates first
+    let lat = document.getElementById("latitude");
+    let latitude = parseFloat(lat.value);
 
-        if(isNaN(latitude)) {
-            alert("Please, type your coordinates and save them");
-            return;
-        }
+    if(isNaN(latitude)) {
+        alert("Please, type your coordinates and save them");
+        return;
+    }
 
-        // Show results and fetch data
+    // Show results and map if not already visible
+    if (!resultsVisible) {
         resultsVisible = true;
         mapVisible = true;
         resultsDiv.style.display = 'block';
         mapContainer.style.display = 'block';
-        document.getElementById("goBtn").textContent = 'Show/Hide';
-
-        fetchFlights();
     }
+
+    // Always fetch fresh data
+    fetchFlights();
 }
 
 function goFetch() {

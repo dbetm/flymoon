@@ -201,6 +201,57 @@ function updateAzimuthArrow(observerLat, observerLon, azimuth, altitude, targetN
     }).addTo(map).bindPopup(`<b>${targetIcon} ${targetName}</b><br>Altitude: ${altitude.toFixed(1)}°<br>Azimuth: ${azimuth.toFixed(1)}°`);
 }
 
+function updateSingleAircraftMarker(flight) {
+    if (!map) return;
+
+    const normalizedId = String(flight.id).trim().toUpperCase();
+
+    // Remove existing marker for this flight
+    if (aircraftMarkers[normalizedId]) {
+        map.removeLayer(aircraftMarkers[normalizedId]);
+        delete aircraftMarkers[normalizedId];
+    }
+
+    // Determine color based on possibility level
+    let color = COLORS.DEFAULT;
+    if (flight.is_possible_transit === 1) {
+        const level = parseInt(flight.possibility_level);
+        if (level === 1) color = COLORS.LOW;
+        else if (level === 2) color = COLORS.MEDIUM;
+        else if (level === 3) color = COLORS.HIGH;
+    }
+
+    // Use diamond for transit aircraft, airplane emoji for others
+    const isTransit = flight.is_possible_transit === 1;
+    const rotation = (flight.direction - 90);
+
+    const aircraftIcon = L.divIcon({
+        html: isTransit
+            ? `<div style="font-size: 36px; color: ${color}; text-shadow: 0 0 3px black, 0 0 3px black, 0 0 8px ${color}, 1px 1px 0 black, -1px -1px 0 black, 1px -1px 0 black, -1px 1px 0 black; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; line-height: 1;">◆</div>`
+            : `<div style="transform: rotate(${rotation}deg); font-size: 20px;">✈️</div>`,
+        iconSize: [36, 36],
+        iconAnchor: [18, 18],
+        className: 'aircraft-icon'
+    });
+
+    // Add marker if we have coordinates
+    if (flight.latitude !== undefined && flight.latitude !== null &&
+        flight.longitude !== undefined && flight.longitude !== null) {
+        const marker = L.marker([flight.latitude, flight.longitude], { icon: aircraftIcon })
+            .addTo(map);
+
+        marker.getElement()?.style.setProperty('filter', `drop-shadow(0 0 8px ${color}) drop-shadow(0 0 4px rgba(0,0,0,0.8))`);
+        marker.flightId = normalizedId;
+
+        marker.on('click', function() {
+            toggleFlightRouteTrack(flight.fa_flight_id, normalizedId);
+            flashTableRow(normalizedId);
+        });
+
+        aircraftMarkers[normalizedId] = marker;
+    }
+}
+
 function updateAircraftMarkers(flights, observerLat, observerLon) {
     if (!map) return;
 
