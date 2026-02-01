@@ -63,8 +63,9 @@ def calculate_angular_separation(alt_diff: float, az_diff: float) -> float:
 def get_possibility_level(angular_separation: float) -> str:
     """Classify transit probability based on angular separation.
 
-    Sun and Moon are ~0.5° diameter. Classification based on how close
-    the aircraft passes to the target center.
+    Using 1.0° target diameter (expanded from actual ~0.5° to increase detection
+    of partial transits). Classification based on how close the aircraft passes
+    to the target center.
 
     Parameters
     ----------
@@ -74,13 +75,13 @@ def get_possibility_level(angular_separation: float) -> str:
     Returns
     -------
     str
-        Possibility level: HIGH (≤1°), MEDIUM (≤2°), LOW (≤6°), or UNLIKELY (>6°)
+        Possibility level: HIGH (≤2°), MEDIUM (≤4°), LOW (≤12°), or UNLIKELY (>12°)
     """
-    if angular_separation <= 1.0:
+    if angular_separation <= 2.0:
         return PossibilityLevel.HIGH.value
-    elif angular_separation <= 2.0:
+    elif angular_separation <= 4.0:
         return PossibilityLevel.MEDIUM.value
-    elif angular_separation <= 6.0:
+    elif angular_separation <= 12.0:
         return PossibilityLevel.LOW.value
     else:
         return PossibilityLevel.UNLIKELY.value
