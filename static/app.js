@@ -657,11 +657,13 @@ function updateAltitudeDisplay(flights) {
     flights.forEach(flight => {
         const altitude = flight.aircraft_elevation_feet || 0;
 
-        // Skip if altitude is invalid or zero
-        if (altitude <= 0 || altitude > MAX_ALTITUDE) return;
+        // Skip if altitude is invalid or above max
+        if (altitude > MAX_ALTITUDE) return;
 
         // Calculate position from bottom (0 = ground, 100% = FL450)
-        const percentFromBottom = (altitude / MAX_ALTITUDE) * 100;
+        // Clamp negative altitudes to 0% (bottom)
+        const clampedAltitude = Math.max(0, altitude);
+        const percentFromBottom = (clampedAltitude / MAX_ALTITUDE) * 100;
 
         // Create line element
         const line = document.createElement("div");
