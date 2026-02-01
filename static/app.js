@@ -640,11 +640,10 @@ function highlightPossibleTransit(possibilityLevel, row) {
 }
 
 function updateAltitudeDisplay(flights) {
-    const overlay = document.getElementById("altitudeOverlay");
     const barsContainer = document.getElementById("altitudeBars");
 
     if (!flights || flights.length === 0) {
-        overlay.style.display = "none";
+        barsContainer.innerHTML = "";
         return;
     }
 
@@ -707,9 +706,6 @@ function updateAltitudeDisplay(flights) {
         line.style.opacity = "0.9";
         barsContainer.appendChild(line);
     });
-
-    // Show the overlay
-    overlay.style.display = "block";
 }
 
 function toggleTarget() {

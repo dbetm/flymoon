@@ -74,7 +74,20 @@
     <p id="targetCoordinates" class="coords-text" style="margin: 5px 0;"></p>
 
     <div id="mapContainer" style="display: none;">
-        <div id="map" style="height: 500px; width: 100%; margin: 20px 0;"></div>
+        <div style="display: flex; align-items: flex-start; gap: 0;">
+            <div id="map" style="height: 500px; flex: 1; margin: 20px 0;"></div>
+            <!-- Altitude Overlay -->
+            <div id="altitudeOverlay">
+                <div class="altitude-header">Aircraft Altitudes</div>
+                <div class="altitude-scale">
+                    <div class="altitude-tick" style="top: 0%;">45k</div>
+                    <div class="altitude-tick" style="top: 33.3%;">30k</div>
+                    <div class="altitude-tick" style="top: 66.6%;">15k</div>
+                    <div class="altitude-tick" style="top: 100%;">0</div>
+                </div>
+                <div id="altitudeBars"></div>
+            </div>
+        </div>
         <div id="mapLegend" style="padding: 10px; background: #f0f0f0; margin-bottom: 10px;">
             <strong>Legend:</strong>
             <span style="margin-left: 10px;">📍 Observer</span>
@@ -88,18 +101,6 @@
             <span style="margin-left: 10px;"><span style="display: inline-block; width: 20px; height: 3px; background: #4169E1; border: 1px dashed #4169E1; vertical-align: middle;"></span> Route</span>
             <span style="margin-left: 10px;"><span style="display: inline-block; width: 20px; height: 3px; background: #32CD32; vertical-align: middle;"></span> Track</span>
         </div>
-    </div>
-
-    <!-- Altitude Overlay -->
-    <div id="altitudeOverlay" style="display: none;">
-        <div class="altitude-header">Aircraft Altitudes</div>
-        <div class="altitude-scale">
-            <div class="altitude-tick" style="top: 0%;">45k</div>
-            <div class="altitude-tick" style="top: 33.3%;">30k</div>
-            <div class="altitude-tick" style="top: 66.6%;">15k</div>
-            <div class="altitude-tick" style="top: 100%;">0</div>
-        </div>
-        <div id="altitudeBars"></div>
     </div>
 
     <div id="results">
