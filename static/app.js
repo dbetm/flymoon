@@ -648,19 +648,14 @@ function updateAltitudeDisplay(flights) {
         return;
     }
 
-    // Clear existing bars
+    // Clear existing lines
     barsContainer.innerHTML = "";
 
     // Maximum altitude for scale (FL450 = 45,000 ft)
     const MAX_ALTITUDE = 45000;
 
-    // Sort flights by altitude (highest first for visual clarity)
-    const sortedFlights = [...flights].sort((a, b) =>
-        b.aircraft_elevation_feet - a.aircraft_elevation_feet
-    );
-
-    // Create a bar for each aircraft
-    sortedFlights.forEach(flight => {
+    // Create a thin line for each aircraft
+    flights.forEach(flight => {
         const altitude = flight.aircraft_elevation_feet || 0;
 
         // Skip if altitude is invalid or zero
@@ -669,52 +664,48 @@ function updateAltitudeDisplay(flights) {
         // Calculate position from bottom (0 = ground, 100% = FL450)
         const percentFromBottom = (altitude / MAX_ALTITUDE) * 100;
 
-        // Create bar element
-        const bar = document.createElement("div");
-        bar.className = "altitude-bar";
-        bar.style.position = "absolute";
-        bar.style.bottom = percentFromBottom + "%";
-        bar.style.left = "0";
-        bar.style.right = "0";
+        // Create line element
+        const line = document.createElement("div");
+        line.style.position = "absolute";
+        line.style.bottom = percentFromBottom + "%";
+        line.style.left = "0";
+        line.style.right = "0";
+        line.style.height = "2px";
+        line.style.cursor = "pointer";
+        line.style.transition = "height 0.2s, opacity 0.2s";
 
         // Color based on possibility level
-        let bgColor = "#666"; // Default gray for unlikely
+        let color = "#666"; // Default gray for unlikely
         const possibilityLevel = parseInt(flight.possibility_level || 0);
         if (possibilityLevel === HIGH_LEVEL) {
-            bgColor = "#32CD32"; // Green
+            color = "#32CD32"; // Green
         } else if (possibilityLevel === MEDIUM_LEVEL) {
-            bgColor = "#FF8C00"; // Orange
+            color = "#FF8C00"; // Orange
         } else if (possibilityLevel === LOW_LEVEL) {
-            bgColor = "#FFD700"; // Yellow
+            color = "#FFD700"; // Yellow
         }
-        bar.style.background = bgColor;
+        line.style.background = color;
 
-        // Add flight ID
-        const idSpan = document.createElement("span");
-        idSpan.className = "altitude-bar-id";
-        idSpan.textContent = flight.id;
-        bar.appendChild(idSpan);
-
-        // Add altitude value
-        const valueSpan = document.createElement("span");
-        valueSpan.className = "altitude-bar-value";
-        if (altitude >= 18000) {
-            const flightLevel = Math.round(altitude / 100);
-            valueSpan.textContent = `FL${flightLevel}`;
-        } else {
-            valueSpan.textContent = `${Math.round(altitude).toLocaleString()}ft`;
-        }
-        bar.appendChild(valueSpan);
+        // Hover effect
+        line.addEventListener('mouseenter', () => {
+            line.style.height = "4px";
+            line.style.opacity = "1";
+        });
+        line.addEventListener('mouseleave', () => {
+            line.style.height = "2px";
+            line.style.opacity = "0.9";
+        });
 
         // Add click handler to flash aircraft on map
         const normalizedId = flight.id.replace(/[^a-zA-Z0-9]/g, '_');
-        bar.addEventListener('click', () => {
+        line.addEventListener('click', () => {
             if (typeof flashAircraftMarker === 'function') {
                 flashAircraftMarker(normalizedId);
             }
         });
 
-        barsContainer.appendChild(bar);
+        line.style.opacity = "0.9";
+        barsContainer.appendChild(line);
     });
 
     // Show the overlay
