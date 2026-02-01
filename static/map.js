@@ -366,53 +366,86 @@ function displayRouteTrack(data, flightId) {
 
     const layerGroup = L.layerGroup();
 
-    // Display route (blue dashed)
-    if (data.route && !data.route.error && data.route.waypoints && data.route.waypoints.length > 0) {
-        const routePoints = data.route.waypoints
-            .filter(pt => pt.latitude && pt.longitude)
-            .map(pt => [pt.latitude, pt.longitude]);
+    console.log('Route/Track data for', flightId, ':', data);
 
-        if (routePoints.length > 0) {
-            const routeLine = L.polyline(routePoints, {
-                color: '#4169E1',
-                weight: 3,
-                dashArray: '10, 10',
-                opacity: 0.7
-            });
-            layerGroup.addLayer(routeLine);
-            routeLine.bindPopup('📍 Planned Route');
+    // Display route (blue dashed)
+    if (data.route && !data.route.error) {
+        console.log('Route data:', data.route);
+
+        // Check different possible response structures
+        const waypoints = data.route.waypoints || data.route.route_waypoints || [];
+
+        if (waypoints.length > 0) {
+            const routePoints = waypoints
+                .filter(pt => pt.latitude && pt.longitude)
+                .map(pt => [pt.latitude, pt.longitude]);
+
+            if (routePoints.length > 0) {
+                console.log('Drawing route with', routePoints.length, 'points');
+                const routeLine = L.polyline(routePoints, {
+                    color: '#4169E1',
+                    weight: 3,
+                    dashArray: '10, 10',
+                    opacity: 0.7
+                });
+                layerGroup.addLayer(routeLine);
+                routeLine.bindPopup('📍 Planned Route (' + routePoints.length + ' waypoints)');
+            } else {
+                console.log('Route has waypoints but no valid lat/lon coordinates');
+            }
+        } else {
+            console.log('No waypoints in route data. Route may not be available for this flight.');
         }
+    } else if (data.route && data.route.error) {
+        console.log('Route error:', data.route.error);
+    } else {
+        console.log('No route data available');
     }
 
     // Display track (green solid with dots)
-    if (data.track && !data.track.error && data.track.positions && data.track.positions.length > 0) {
-        const trackPoints = data.track.positions
-            .filter(pt => pt.latitude && pt.longitude)
-            .map(pt => [pt.latitude, pt.longitude]);
+    if (data.track && !data.track.error) {
+        console.log('Track data:', data.track);
 
-        if (trackPoints.length > 0) {
-            const trackLine = L.polyline(trackPoints, {
-                color: '#32CD32',
-                weight: 3,
-                opacity: 0.8
-            });
-            layerGroup.addLayer(trackLine);
-            trackLine.bindPopup('✈️ Historical Track');
+        const positions = data.track.positions || [];
 
-            // Add position dots every 10th point
-            data.track.positions.forEach((pt, idx) => {
-                if (idx % 10 === 0 && pt.latitude && pt.longitude) {
-                    const dot = L.circleMarker([pt.latitude, pt.longitude], {
-                        radius: 3,
-                        fillColor: '#32CD32',
-                        color: 'white',
-                        weight: 1,
-                        fillOpacity: 0.8
-                    });
-                    layerGroup.addLayer(dot);
-                }
-            });
+        if (positions.length > 0) {
+            const trackPoints = positions
+                .filter(pt => pt.latitude && pt.longitude)
+                .map(pt => [pt.latitude, pt.longitude]);
+
+            if (trackPoints.length > 0) {
+                console.log('Drawing track with', trackPoints.length, 'positions');
+                const trackLine = L.polyline(trackPoints, {
+                    color: '#32CD32',
+                    weight: 3,
+                    opacity: 0.8
+                });
+                layerGroup.addLayer(trackLine);
+                trackLine.bindPopup('✈️ Historical Track (' + trackPoints.length + ' positions)');
+
+                // Add position dots every 10th point
+                positions.forEach((pt, idx) => {
+                    if (idx % 10 === 0 && pt.latitude && pt.longitude) {
+                        const dot = L.circleMarker([pt.latitude, pt.longitude], {
+                            radius: 3,
+                            fillColor: '#32CD32',
+                            color: 'white',
+                            weight: 1,
+                            fillOpacity: 0.8
+                        });
+                        layerGroup.addLayer(dot);
+                    }
+                });
+            } else {
+                console.log('Track has positions but no valid lat/lon coordinates');
+            }
+        } else {
+            console.log('No positions in track data');
         }
+    } else if (data.track && data.track.error) {
+        console.log('Track error:', data.track.error);
+    } else {
+        console.log('No track data available');
     }
 
     layerGroup.addTo(map);
