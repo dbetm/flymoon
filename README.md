@@ -68,7 +68,9 @@ In Windows, if you don't have a text editor to open the `.env` file, you can dow
 
 3) Set your observer position. Set `OBSERVER_LATITUDE`, `OBSERVER_LONGITUDE`, and `OBSERVER_ELEVATION` (in meters). This is where you'll be observing from.
 
-4) (Optional) When using the auto mode If you want to receive notifications in your smartphone, you can get an API KEY from [Pushbucket platform](https://www.pushbullet.com/) and then set `PUSH_BULLET_API_KEY`. To get it, create an account, install the app in your phone and go to *Settings* > *Create Access Token*.
+4) (Optional) Set `AUTO_REFRESH_INTERVAL_MINUTES` to configure the default auto-refresh polling interval. Default is 6 minutes, which keeps within FlightAware's free tier rate limits (~10 queries/minute, 500/month). Recommended range: 5-10 minutes for continuous monitoring.
+
+5) (Optional) When using the auto mode If you want to receive notifications in your smartphone, you can get an API KEY from [Pushbucket platform](https://www.pushbullet.com/) and then set `PUSH_BULLET_API_KEY`. To get it, create an account, install the app in your phone and go to *Settings* > *Create Access Token*.
 
 
 ![](data/assets/bounding-box-example.png)

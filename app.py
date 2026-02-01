@@ -297,6 +297,15 @@ def update_gallery_metadata(filepath):
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/config")
+def get_config():
+    """Get client configuration settings."""
+    auto_refresh_interval = int(os.getenv("AUTO_REFRESH_INTERVAL_MINUTES", "6"))
+    return jsonify({
+        "autoRefreshIntervalMinutes": auto_refresh_interval
+    })
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Flymoon Transit Monitor")
     parser.add_argument("--test", action="store_true", help="Use test data (deprecated, use --demo)")

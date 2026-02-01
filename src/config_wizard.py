@@ -292,6 +292,25 @@ class ConfigWizard:
         print("STEP 4: Optional Settings")
         print("-" * 40)
 
+        # Auto-refresh interval
+        print("\nAuto-refresh interval (optional)")
+        print("  Sets how often the app checks for new flights when in auto mode.")
+        print("  Recommended: 6 minutes (keeps within FlightAware free tier limits)")
+        print("  Range: 5-15 minutes for continuous monitoring")
+
+        current_interval = os.getenv("AUTO_REFRESH_INTERVAL_MINUTES", "6")
+        print(f"\n  Current interval: {current_interval} minutes")
+
+        if self._prompt_yes_no("  Change auto-refresh interval?", default=False):
+            interval = self._prompt_float("  Enter interval in minutes (e.g., 6)",
+                                         default=6, min_val=1, max_val=60)
+            set_key(self.config_file, "AUTO_REFRESH_INTERVAL_MINUTES", str(int(interval)))
+            print("  Saved!")
+        else:
+            # Set default if not already set
+            if not os.getenv("AUTO_REFRESH_INTERVAL_MINUTES"):
+                set_key(self.config_file, "AUTO_REFRESH_INTERVAL_MINUTES", "6")
+
         # Weather API
         print("\nOpenWeatherMap API key (optional)")
         print("  Enables weather-based filtering (skip checks when cloudy).")
