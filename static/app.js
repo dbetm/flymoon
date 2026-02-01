@@ -12,7 +12,7 @@ const COLUMN_NAMES = [
     "elevation_change",
     "aircraft_elevation_feet",
     "direction",
-    "distance_km",
+    "distance_nm",
 ];
 const MS_IN_A_MIN = 60000;
 // Possibility levels
@@ -25,6 +25,36 @@ var refreshTimerLabelInterval = setInterval(refreshTimer, MS_IN_A_MIN);
 clearInterval(autoGoInterval);
 clearInterval(refreshTimerLabelInterval);
 displayTarget();
+
+// App configuration from server
+var appConfig = {
+    autoRefreshIntervalMinutes: 6  // Default, will be loaded from server
+};
+
+// Load configuration from server
+fetch('/config')
+    .then(response => response.json())
+    .then(config => {
+        appConfig = config;
+        console.log('Loaded config:', appConfig);
+    })
+    .catch(error => {
+        console.error('Error loading config:', error);
+    });
+
+// Page visibility detection - pause polling when page is hidden
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden && autoMode) {
+        console.log('Page hidden - pausing auto-refresh');
+        clearInterval(autoGoInterval);
+        clearInterval(refreshTimerLabelInterval);
+    } else if (!document.hidden && autoMode) {
+        console.log('Page visible - resuming auto-refresh');
+        const freq = parseInt(localStorage.getItem("frequency")) || appConfig.autoRefreshIntervalMinutes;
+        autoGoInterval = setInterval(goFetch, MS_IN_A_MIN * freq);
+        refreshTimerLabelInterval = setInterval(refreshTimer, MS_IN_A_MIN);
+    }
+});
 
 // State tracking for toggles
 var resultsVisible = false;
@@ -277,7 +307,22 @@ function auto() {
         clearInterval(refreshTimerLabelInterval);
     }
     else {
-        let freq = prompt("Enter a frequency in minutes, recommended 15");
+        // Get configured default from server or use saved frequency
+        const savedFreq = localStorage.getItem("frequency");
+        const defaultFreq = appConfig.autoRefreshIntervalMinutes || 6;
+        const suggestedFreq = savedFreq || defaultFreq;
+
+        let freq = prompt(
+            `Enter refresh interval in minutes\n` +
+            `Default: ${defaultFreq} min (configured)\n` +
+            `Recommended: 5-10 min for continuous monitoring`,
+            suggestedFreq
+        );
+
+        // User cancelled
+        if (freq === null) {
+            return;
+        }
 
         try {
             freq = parseInt(freq);
@@ -293,7 +338,7 @@ function auto() {
 
         localStorage.setItem("frequency", freq);
         document.getElementById("autoBtn").innerHTML = "Auto " + freq  + " min ⴵ";
-        document.getElementById("autoGoNote").innerHTML = `Auto check every ${freq} minute(s).`;
+        document.getElementById("autoGoNote").innerHTML = `Auto-refresh every ${freq} minute(s). Pauses when page is hidden.`;
 
         autoMode = true;
         autoGoInterval = setInterval(goFetch, MS_IN_A_MIN * freq);
@@ -513,8 +558,8 @@ function fetchFlights() {
                     } else {
                         val.textContent = altitude.toLocaleString('en-US');
                     }
-                } else if (column === "distance_km") {
-                    // Show distance in km with one decimal place
+                } else if (column === "distance_nm") {
+                    // Show distance in nautical miles with one decimal place
                     val.textContent = value.toFixed(1);
                 } else if (column === "direction") {
                     val.textContent = Math.round(value) + "°";
