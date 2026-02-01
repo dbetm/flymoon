@@ -14,9 +14,10 @@
 </head>
 <body>
     <div class="header-row">
-        <span class="title">✈️ Flymoon</span>
+        <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Flymoon Transit Tracker" class="logo" />
         <span id="targetIcon" class="target-icon" onclick="toggleTarget();">-</span>
         <span id="trackingStatus" class="status-text" style="flex: 1; text-align: center;"></span>
+        <a href="/gallery" class="btn-sm" title="View Transit Image Gallery">📸 Gallery</a>
     </div>
 
     <div class="controls-row">
@@ -84,7 +85,21 @@
             <span style="margin-left: 10px;"><span style="display: inline-block; width: 16px; height: 12px; border: 2px dashed red; vertical-align: middle;"></span> Bounding box</span>
             <span style="margin-left: 10px;"><span style="display: inline-block; width: 20px; height: 4px; background: #FF4500; vertical-align: middle;"></span> Sun azimuth</span>
             <span style="margin-left: 10px;"><span style="display: inline-block; width: 20px; height: 4px; background: #4169E1; vertical-align: middle;"></span> Moon azimuth</span>
+            <span style="margin-left: 10px;"><span style="display: inline-block; width: 20px; height: 3px; background: #4169E1; border: 1px dashed #4169E1; vertical-align: middle;"></span> Route</span>
+            <span style="margin-left: 10px;"><span style="display: inline-block; width: 20px; height: 3px; background: #32CD32; vertical-align: middle;"></span> Track</span>
         </div>
+    </div>
+
+    <!-- Altitude Overlay -->
+    <div id="altitudeOverlay" style="display: none;">
+        <div class="altitude-header">Aircraft Altitudes</div>
+        <div class="altitude-scale">
+            <div class="altitude-tick" style="top: 0%;">45k</div>
+            <div class="altitude-tick" style="top: 33.3%;">30k</div>
+            <div class="altitude-tick" style="top: 66.6%;">15k</div>
+            <div class="altitude-tick" style="top: 100%;">0</div>
+        </div>
+        <div id="altitudeBars"></div>
     </div>
 
     <div id="results">
@@ -92,18 +107,20 @@
             <thead>
                 <tr>
                     <th></th>
-                    <th>id</th>
+                    <th>id (type)</th>
                     <th>origin</th>
                     <th>destination</th>
                     <th>ETA</th>
                     <th>target alt</th>
-                    <th>plane alt</th>
+                    <th>plane angle</th>
                     <th>△alt</th>
                     <th>target az</th>
                     <th>plane az</th>
                     <th>△az</th>
                     <th>elev</th>
+                    <th>GPS alt (ft)</th>
                     <th>hdg</th>
+                    <th>dist (km)</th>
                 </tr>
             </thead>
             <tbody id="flightData">
@@ -113,6 +130,11 @@
     <p id="autoGoNote" class="status-text"></p>
     <h3 class="alert" id="noResults"></h3>
     <h3 class="alert" id="targetUnderHorizon"></h3>
+
+    <footer class="attribution-footer">
+        <p><i>Created with deep appreciation for the idea and initial design by Davide Betancourt Montellano</i></p>
+        <p><i>Creado con profundo agradecimiento por la idea y el diseño inicial de Davide Betancourt Montellano.</i></p>
+    </footer>
 
     <audio id="alertSound" src="{{ url_for('static', filename='sounds/tissman-alert1-maximum-distortion.mp3') }}" preload="auto">
     </audio>

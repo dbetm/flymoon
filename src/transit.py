@@ -94,6 +94,8 @@ def check_transit(
     target: CelestialObject,
     earth_ref,
     test_mode: bool = False,
+    observer_lat: float = 0.0,
+    observer_lon: float = 0.0,
 ) -> dict:
     """Given the data of a flight, compute a possible transit with the target.
 
@@ -129,17 +131,33 @@ def check_transit(
     no_decreasing_count = 0
     update_response = False
 
+    # Capture target position at reference time (same for all aircraft)
+    initial_target_alt = round(float(target.altitude.degrees), 2)
+    initial_target_az = round(float(target.azimuthal.degrees), 2)
+
+    # Calculate horizontal distance from observer to aircraft (km)
+    from math import radians, sin, cos, sqrt, atan2
+    R = 6371  # Earth radius in km
+    lat1, lon1 = radians(observer_lat), radians(observer_lon)
+    lat2, lon2 = radians(flight["latitude"]), radians(flight["longitude"])
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1-a))
+    distance_km = R * c
+
+    # Calculate current position for ALL aircraft (for display purposes)
+    current_alt, current_az = geographic_to_altaz(
+        flight["latitude"],
+        flight["longitude"],
+        flight["elevation"],
+        earth_ref,
+        my_position,
+        ref_datetime,
+    )
+
     # In test mode, check current position first (t=0, static aircraft)
     if test_mode:
-        current_alt, current_az = geographic_to_altaz(
-            flight["latitude"],
-            flight["longitude"],
-            flight["elevation"],
-            earth_ref,
-            my_position,
-            ref_datetime,
-        )
-
         alt_diff = abs(current_alt - target.altitude.degrees)
         az_diff = abs(current_az - target.azimuthal.degrees)
         angular_sep = calculate_angular_separation(alt_diff, az_diff)
@@ -150,15 +168,17 @@ def check_transit(
         if current_alt > 0:
             response = {
                 "id": flight["name"],
+                "aircraft_type": flight.get("aircraft_type", "N/A"),
+                "fa_flight_id": flight.get("fa_flight_id", ""),
                 "origin": flight["origin"],
                 "destination": flight["destination"],
                 "alt_diff": round(float(alt_diff), 3),
                 "az_diff": round(float(az_diff), 3),
                 "angular_separation": round(float(angular_sep), 3),
                 "time": 0.0,  # Current position
-                "target_alt": round(float(target.altitude.degrees), 2),
+                "target_alt": initial_target_alt,
                 "plane_alt": round(float(current_alt), 2),
-                "target_az": round(float(target.azimuthal.degrees), 2),
+                "target_az": initial_target_az,
                 "plane_az": round(float(current_az), 2),
                 "is_possible_transit": 1 if angular_sep <= 6.0 else 0,
                 "possibility_level": get_possibility_level(angular_sep),
@@ -169,6 +189,9 @@ def check_transit(
                 "target": target.name,
                 "latitude": flight["latitude"],
                 "longitude": flight["longitude"],
+                "aircraft_elevation": flight.get("elevation", 0),  # Actual altitude in meters
+                "aircraft_elevation_feet": flight.get("elevation_feet", 0),  # Actual altitude in feet
+                "distance_km": round(distance_km, 1),  # Distance from observer in km
             }
 
     for idx, minute in enumerate(window_time):
@@ -217,15 +240,17 @@ def check_transit(
             if update_response:
                 response = {
                     "id": flight["name"],
+                    "aircraft_type": flight.get("aircraft_type", "N/A"),
+                    "fa_flight_id": flight.get("fa_flight_id", ""),
                     "origin": flight["origin"],
                     "destination": flight["destination"],
                     "alt_diff": round(float(alt_diff), 3),
                     "az_diff": round(float(az_diff), 3),
                     "angular_separation": round(float(angular_sep), 3),
                     "time": round(float(minute), 3),
-                    "target_alt": round(float(target.altitude.degrees), 2),
+                    "target_alt": initial_target_alt,
                     "plane_alt": round(float(future_alt), 2),
-                    "target_az": round(float(target.azimuthal.degrees), 2),
+                    "target_az": initial_target_az,
                     "plane_az": round(float(future_az), 2),
                     "is_possible_transit": 1 if angular_sep <= 6.0 else 0,
                     "possibility_level": get_possibility_level(angular_sep),
@@ -236,24 +261,40 @@ def check_transit(
                     "target": target.name,
                     "latitude": flight["latitude"],
                     "longitude": flight["longitude"],
+                    "aircraft_elevation": flight.get("elevation", 0),  # Actual altitude in meters
+                    "aircraft_elevation_feet": flight.get("elevation_feet", 0),  # Actual altitude in feet
+                    "distance_km": round(distance_km, 1),  # Distance from observer in km
                 }
         update_response = False
+
+    # If response exists but is NOT a possible transit, override with current position
+    if response and response.get("is_possible_transit") == 0:
+        response["plane_alt"] = round(float(current_alt), 2)
+        response["plane_az"] = round(float(current_az), 2)
+        response["time"] = None  # No meaningful ETA for non-transits
+        response["alt_diff"] = None
+        response["az_diff"] = None
+        response["angular_separation"] = None
+        return response
 
     if response:
         return response
 
+    # No transit found - return current position with plane_alt and plane_az
     return {
         "id": flight["name"],
+        "aircraft_type": flight.get("aircraft_type", "N/A"),
+        "fa_flight_id": flight.get("fa_flight_id", ""),
         "origin": flight["origin"],
         "destination": flight["destination"],
         "alt_diff": None,
         "az_diff": None,
         "angular_separation": None,
         "time": None,
-        "target_alt": None,
-        "plane_alt": None,
-        "target_az": None,
-        "plane_az": None,
+        "target_alt": initial_target_alt,
+        "plane_alt": round(float(current_alt), 2),  # Show current position
+        "target_az": initial_target_az,
+        "plane_az": round(float(current_az), 2),  # Show current position
         "is_possible_transit": 0,
         "possibility_level": PossibilityLevel.UNLIKELY.value,
         "elevation_change": CHANGE_ELEVATION.get(flight["elevation_change"], None),
@@ -261,6 +302,9 @@ def check_transit(
         "target": target.name,
         "latitude": flight["latitude"],
         "longitude": flight["longitude"],
+        "aircraft_elevation": flight.get("elevation", 0),  # Actual altitude in meters
+        "aircraft_elevation_feet": flight.get("elevation_feet", 0),  # Actual altitude in feet
+        "distance_km": round(distance_km, 1),  # Distance from observer in km
     }
 
 
@@ -305,6 +349,8 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
     alt_diff, az_diff = 0.5, 0.3
     flights.append({
         "id": "MOON_HIGH",
+        "aircraft_type": "A320",
+        "fa_flight_id": "MOON_HIGH-test-123",
         "origin": "Los Angeles",
         "destination": "San Diego",
         "alt_diff": alt_diff,
@@ -322,6 +368,9 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "target": "moon",
         "latitude": lat,
         "longitude": lon,
+        "aircraft_elevation": 10668,  # 35,000 ft in meters
+        "aircraft_elevation_feet": 35000,  # 35,000 ft
+        "distance_km": 15.0,  # 15 km from observer
     })
 
     # MEDIUM - moderate alignment (≤2°)
@@ -329,6 +378,8 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
     alt_diff, az_diff = 1.2, 1.0
     flights.append({
         "id": "MOON_MED",
+        "aircraft_type": "B737",
+        "fa_flight_id": "MOON_MED-test-456",
         "origin": "Phoenix",
         "destination": "San Diego",
         "alt_diff": alt_diff,
@@ -346,6 +397,9 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "target": "moon",
         "latitude": lat,
         "longitude": lon,
+        "aircraft_elevation": 10972,  # 36,000 ft in meters
+        "aircraft_elevation_feet": 36000,  # 36,000 ft
+        "distance_km": 20.0,  # 20 km from observer
     })
 
     # LOW - marginal alignment (≤6°)
@@ -353,6 +407,8 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
     alt_diff, az_diff = 4.0, 3.5
     flights.append({
         "id": "MOON_LOW",
+        "aircraft_type": "A321",
+        "fa_flight_id": "MOON_LOW-test-789",
         "origin": "San Francisco",
         "destination": "San Diego",
         "alt_diff": alt_diff,
@@ -370,6 +426,9 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "target": "moon",
         "latitude": lat,
         "longitude": lon,
+        "aircraft_elevation": 11277,  # 37,000 ft in meters
+        "aircraft_elevation_feet": 37000,  # 37,000 ft
+        "distance_km": 25.0,  # 25 km from observer
     })
 
     # SUN TRANSITS
@@ -378,6 +437,8 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
     alt_diff, az_diff = 0.4, 0.6
     flights.append({
         "id": "SUN_HIGH",
+        "aircraft_type": "B777",
+        "fa_flight_id": "SUN_HIGH-test-111",
         "origin": "Las Vegas",
         "destination": "San Diego",
         "alt_diff": alt_diff,
@@ -395,6 +456,9 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "target": "sun",
         "latitude": lat,
         "longitude": lon,
+        "aircraft_elevation": 10363,  # 34,000 ft in meters
+        "aircraft_elevation_feet": 34000,  # 34,000 ft
+        "distance_km": 15.0,  # 15 km from observer
     })
 
     # MEDIUM - moderate alignment (≤2°)
@@ -402,6 +466,8 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
     alt_diff, az_diff = 1.3, 1.1
     flights.append({
         "id": "SUN_MED",
+        "aircraft_type": "A330",
+        "fa_flight_id": "SUN_MED-test-222",
         "origin": "Denver",
         "destination": "San Diego",
         "alt_diff": alt_diff,
@@ -419,6 +485,9 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "target": "sun",
         "latitude": lat,
         "longitude": lon,
+        "aircraft_elevation": 10058,  # 33,000 ft in meters
+        "aircraft_elevation_feet": 33000,  # 33,000 ft
+        "distance_km": 20.0,  # 20 km from observer
     })
 
     # LOW - marginal alignment (≤6°)
@@ -426,6 +495,8 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
     alt_diff, az_diff = 3.8, 4.2
     flights.append({
         "id": "SUN_LOW",
+        "aircraft_type": "B787",
+        "fa_flight_id": "SUN_LOW-test-333",
         "origin": "Oakland",
         "destination": "San Diego",
         "alt_diff": alt_diff,
@@ -443,12 +514,17 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "target": "sun",
         "latitude": lat,
         "longitude": lon,
+        "aircraft_elevation": 9754,  # 32,000 ft in meters
+        "aircraft_elevation_feet": 32000,  # 32,000 ft
+        "distance_km": 25.0,  # 25 km from observer
     })
 
     # UNLIKELY - no transit (far from both targets, >6°)
     lat, lon = position_at(0, 25)  # North, 25 km
     flights.append({
         "id": "NONE_01",
+        "aircraft_type": "B737",
+        "fa_flight_id": "NONE_01-test-444",
         "origin": "San Diego",
         "destination": "San Francisco",
         "alt_diff": None,
@@ -466,11 +542,16 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "target": "moon",
         "latitude": lat,
         "longitude": lon,
+        "aircraft_elevation": 7620,  # 25,000 ft in meters
+        "aircraft_elevation_feet": 25000,  # 25,000 ft
+        "distance_km": 25.0,  # 25 km from observer
     })
 
     lat, lon = position_at(180, 25)  # South, 25 km
     flights.append({
         "id": "NONE_02",
+        "aircraft_type": "A320",
+        "fa_flight_id": "NONE_02-test-555",
         "origin": "San Diego",
         "destination": "Denver",
         "alt_diff": None,
@@ -488,11 +569,16 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "target": "sun",
         "latitude": lat,
         "longitude": lon,
+        "aircraft_elevation": 9144,  # 30,000 ft in meters
+        "aircraft_elevation_feet": 30000,  # 30,000 ft
+        "distance_km": 25.0,  # 25 km from observer
     })
 
     lat, lon = position_at(270, 25)  # West, 25 km
     flights.append({
         "id": "PRIV01",
+        "aircraft_type": "SR22",
+        "fa_flight_id": "PRIV01-test-666",
         "origin": "San Diego",
         "destination": "N/D",
         "alt_diff": None,
@@ -510,6 +596,9 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "target": "moon",
         "latitude": lat,
         "longitude": lon,
+        "aircraft_elevation": 1524,  # 5,000 ft in meters (private plane)
+        "aircraft_elevation_feet": 5000,  # 5,000 ft
+        "distance_km": 25.0,  # 25 km from observer
     })
 
     return {
@@ -547,6 +636,7 @@ def get_transits(
     target_name: str = "auto",
     test_mode: bool = False,
     min_altitude: float = None,
+    custom_bbox: dict = None,
 ) -> dict:
     """Get transit predictions for celestial targets.
 
@@ -558,6 +648,8 @@ def get_transits(
         Minimum altitude in degrees for target to be tracked (default from env or 15)
     test_mode : bool
         If True, return mock results for demonstration
+    custom_bbox : dict
+        Optional custom bounding box with keys: lat_lower_left, lon_lower_left, lat_upper_right, lon_upper_right
     """
     # MOCK MODE - return hardcoded demo results
     if test_mode:
@@ -648,13 +740,25 @@ def get_transits(
     data = list()
     tracking_targets = targets_to_check.copy()  # For response
 
+    # Use custom bounding box if provided, otherwise use default
+    if custom_bbox:
+        search_bbox = AreaBoundingBox(
+            lat_lower_left=custom_bbox["lat_lower_left"],
+            long_lower_left=custom_bbox["lon_lower_left"],
+            lat_upper_right=custom_bbox["lat_upper_right"],
+            long_upper_right=custom_bbox["lon_upper_right"],
+        )
+        logger.info(f"Using custom search area: {search_bbox}")
+    else:
+        search_bbox = area_bbox
+
     if targets_to_check:
         # Fetch flight data once
         if test_mode:
             raw_flight_data = load_existing_flight_data(TEST_DATA_PATH)
             logger.info("Loading existing flight data since is using TEST mode")
         else:
-            raw_flight_data = get_flight_data(area_bbox, API_URL, API_KEY)
+            raw_flight_data = get_flight_data(search_bbox, API_URL, API_KEY)
 
         flight_data = list()
         for flight in raw_flight_data["flights"]:
@@ -679,9 +783,14 @@ def get_transits(
                     celestial_obj,
                     EARTH,
                     test_mode=test_mode,
+                    observer_lat=latitude,
+                    observer_lon=longitude,
                 )
                 data.append(transit_result)
                 logger.info(transit_result)
+
+    # Determine which bounding box to return
+    response_bbox = search_bbox if custom_bbox else area_bbox
 
     return {
         "flights": data,
@@ -689,10 +798,10 @@ def get_transits(
         "trackingTargets": tracking_targets,
         "weather": weather_info,
         "boundingBox": {
-            "latLowerLeft": float(area_bbox.lat_lower_left),
-            "lonLowerLeft": float(area_bbox.long_lower_left),
-            "latUpperRight": float(area_bbox.lat_upper_right),
-            "lonUpperRight": float(area_bbox.long_upper_right),
+            "latLowerLeft": float(response_bbox.lat_lower_left),
+            "lonLowerLeft": float(response_bbox.long_lower_left),
+            "latUpperRight": float(response_bbox.lat_upper_right),
+            "lonUpperRight": float(response_bbox.long_upper_right),
         },
         "observerPosition": {
             "latitude": latitude,

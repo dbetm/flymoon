@@ -10,7 +10,9 @@ const COLUMN_NAMES = [
     "plane_az",
     "az_diff",
     "elevation_change",
+    "aircraft_elevation_feet",
     "direction",
+    "distance_km",
 ];
 const MS_IN_A_MIN = 60000;
 // Possibility levels
@@ -328,7 +330,7 @@ function fetchFlights() {
     alertTargetUnderHorizon = '';
 
     const minAltitude = document.getElementById("minAltitude").value || 15;
-    const endpoint_url = (
+    let endpoint_url = (
         `/flights?target=${encodeURIComponent(target)}`
         + `&latitude=${encodeURIComponent(latitude)}`
         + `&longitude=${encodeURIComponent(longitude)}`
@@ -336,6 +338,14 @@ function fetchFlights() {
         + `&min_altitude=${encodeURIComponent(minAltitude)}`
         + `&send-notification=${autoMode}`
     );
+
+    // Add custom bounding box if user has edited it
+    if (window.lastBoundingBox) {
+        endpoint_url += `&bbox_lat_ll=${encodeURIComponent(window.lastBoundingBox.latLowerLeft)}`;
+        endpoint_url += `&bbox_lon_ll=${encodeURIComponent(window.lastBoundingBox.lonLowerLeft)}`;
+        endpoint_url += `&bbox_lat_ur=${encodeURIComponent(window.lastBoundingBox.latUpperRight)}`;
+        endpoint_url += `&bbox_lon_ur=${encodeURIComponent(window.lastBoundingBox.lonUpperRight)}`;
+    }
 
     // Show loading spinner
     document.getElementById("loadingSpinner").style.display = "block";
@@ -461,9 +471,12 @@ function fetchFlights() {
                         startTracking(normalizedId);
                     }
                 } else {
-                    // Normal click: flash aircraft on map
+                    // Normal click: flash aircraft on map and show route/track
                     if (typeof flashAircraftMarker === 'function') {
                         flashAircraftMarker(normalizedId);
+                    }
+                    if (typeof toggleFlightRouteTrack === 'function') {
+                        toggleFlightRouteTrack(item.fa_flight_id, normalizedId);
                     }
                 }
             });
@@ -481,18 +494,41 @@ function fetchFlights() {
 
                 if (value === null || value === undefined) {
                     val.textContent = "";
+                } else if (column === "id") {
+                    // Show "ID (TYPE)" format
+                    const aircraftType = item.aircraft_type || "";
+                    val.textContent = aircraftType && aircraftType !== "N/A" ? `${value} (${aircraftType})` : value;
                 } else if (column === "time") {
                     // Format ETA as mm:ss
                     const totalSeconds = Math.round(value * 60);
                     const mins = Math.floor(totalSeconds / 60);
                     const secs = totalSeconds % 60;
                     val.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+                } else if (column === "aircraft_elevation_feet") {
+                    // Show GPS altitude in feet with comma formatting, or as flight level if > 18000
+                    const altitude = Math.round(value);
+                    if (altitude > 18000) {
+                        const flightLevel = Math.round(altitude / 100);
+                        val.textContent = `FL${flightLevel}`;
+                    } else {
+                        val.textContent = altitude.toLocaleString('en-US');
+                    }
+                } else if (column === "distance_km") {
+                    // Show distance in km with one decimal place
+                    val.textContent = value.toFixed(1);
                 } else if (column === "direction") {
                     val.textContent = Math.round(value) + "°";
                 } else if (column === "alt_diff" || column === "az_diff") {
                     val.textContent = Math.round(value) + "º";
-                } else if (column === "target_alt" || column === "plane_alt" || column === "target_az" || column === "plane_az") {
-                    val.textContent = Math.round(value) + "º";
+                } else if (column === "target_alt" || column === "target_az") {
+                    // Only show target values for possible transits
+                    if (item.is_possible_transit === 1) {
+                        val.textContent = value.toFixed(1) + "º";
+                    } else {
+                        val.textContent = "";
+                    }
+                } else if (column === "plane_alt" || column === "plane_az") {
+                    val.textContent = value.toFixed(1) + "º";
                 } else if (value === "N/D") {
                     val.textContent = value + " ⚠️";
                 } else {

@@ -18,9 +18,11 @@ body {
     margin-bottom: 4px;
 }
 
-.title {
-    font-size: 1.4em;
-    font-weight: bold;
+.logo {
+    height: 40px;
+    width: auto;
+    vertical-align: middle;
+    margin-right: 10px;
 }
 
 .target-icon {
@@ -270,4 +272,116 @@ body {
 @keyframes tracking-pulse {
     0%, 100% { outline-color: cyan; }
     50% { outline-color: transparent; }
+}
+
+/* Attribution footer */
+.attribution-footer {
+    margin-top: 40px;
+    padding: 20px 10px;
+    text-align: center;
+    color: #888;
+    font-size: 0.75em;
+    border-top: 1px solid #333;
+}
+
+.attribution-footer p {
+    margin: 5px 0;
+}
+
+/* Responsive - stack on mobile */
+@media (max-width: 600px) {
+    .attribution-footer {
+        font-size: 0.7em;
+    }
+
+    .attribution-footer p {
+        margin: 8px 0;
+    }
+}
+
+/* Altitude Overlay */
+#altitudeOverlay {
+    position: fixed;
+    right: 0;
+    top: 200px;
+    width: 140px;
+    height: 500px;
+    background: rgba(26, 26, 26, 0.95);
+    border-left: 2px solid #444;
+    padding: 10px;
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+.altitude-header {
+    color: #ccc;
+    font-size: 0.75em;
+    font-weight: bold;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.altitude-scale {
+    position: absolute;
+    left: 5px;
+    top: 40px;
+    bottom: 10px;
+    width: 30px;
+    border-left: 1px solid #666;
+}
+
+.altitude-tick {
+    position: absolute;
+    left: -5px;
+    color: #888;
+    font-size: 0.65em;
+    transform: translateY(-50%);
+}
+
+#altitudeBars {
+    margin-left: 35px;
+    position: relative;
+    height: calc(100% - 40px);
+}
+
+.altitude-bar {
+    position: relative;
+    height: 18px;
+    margin-bottom: 3px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.altitude-bar:hover {
+    transform: translateX(-5px);
+    filter: brightness(1.2);
+}
+
+.altitude-bar-id {
+    font-size: 0.65em;
+    color: white;
+    font-weight: bold;
+    text-shadow: 0 0 3px black;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 50px;
+}
+
+.altitude-bar-value {
+    font-size: 0.6em;
+    color: white;
+    text-shadow: 0 0 3px black;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    #altitudeOverlay {
+        width: 100px;
+    }
 }

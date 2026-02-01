@@ -8,6 +8,8 @@ let azimuthArrows = {};  // Store arrows by target name
 let aircraftMarkers = {};
 let mapInitialized = false;
 let boundingBoxUserEdited = false;
+let aircraftRouteCache = {};  // Cache fetched routes/tracks
+let currentRouteLayer = null;  // Currently displayed route/track
 
 // Arrow colors for each target
 const ARROW_COLORS = {
@@ -210,6 +212,12 @@ function updateAircraftMarkers(flights, observerLat, observerLon) {
         // Airplane emoji points right (90°), so subtract 90 to align with compass heading
         const isTransit = flight.is_possible_transit === 1;
         const rotation = (flight.direction - 90);
+
+        // Debug: Log heading and rotation for verification
+        if (!isTransit && flight.direction) {
+            console.log(`Aircraft ${flightId}: heading=${flight.direction}°, rotation=${rotation}°, isTransit=${isTransit}`);
+        }
+
         const aircraftIcon = L.divIcon({
             html: isTransit
                 ? `<div style="font-size: 36px; color: ${color}; text-shadow: 0 0 3px black, 0 0 3px black, 0 0 8px ${color}, 1px 1px 0 black, -1px -1px 0 black, 1px -1px 0 black, -1px 1px 0 black; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; line-height: 1;">◆</div>`
@@ -224,7 +232,7 @@ function updateAircraftMarkers(flights, observerLat, observerLon) {
         // This will be updated after backend changes
         
         const popupContent = `
-            <b>${flight.id}</b><br>
+            <b>${flight.id}</b>${flight.aircraft_type && flight.aircraft_type !== 'N/A' ? ` (${flight.aircraft_type})` : ''}<br>
             ${flight.origin} → ${flight.destination}<br>
             Target: ${flight.target || 'N/A'}<br>
             ETA: ${flight.time ? flight.time.toFixed(1) + ' min' : 'N/A'}<br>
@@ -248,14 +256,168 @@ function updateAircraftMarkers(flights, observerLat, observerLon) {
             const normalizedId = String(flightId).trim().toUpperCase();
             marker.flightId = normalizedId;
 
-            // Click handler to flash corresponding table row
+            // Click handler to show route/track and flash table row
             marker.on('click', function() {
+                toggleFlightRouteTrack(flight.fa_flight_id, normalizedId);
                 flashTableRow(normalizedId);
             });
 
             aircraftMarkers[normalizedId] = marker;
         }
     });
+}
+
+function updateAltitudeOverlay(flights) {
+    const container = document.getElementById('altitudeBars');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    // Sort by aircraft elevation descending
+    const sortedFlights = [...flights].sort((a, b) =>
+        (b.aircraft_elevation || 0) - (a.aircraft_elevation || 0)
+    );
+
+    const MAX_ALT = 45000; // feet
+
+    sortedFlights.forEach(flight => {
+        const altMeters = flight.aircraft_elevation || 0;
+        if (altMeters <= 0) return; // Skip if no altitude data
+
+        const altFeet = Math.round(altMeters * 3.28084); // meters to feet
+        const barWidthPercent = (altFeet / MAX_ALT) * 100;
+
+        // Determine color
+        let color = '#808080'; // Gray default
+        if (flight.is_possible_transit === 1) {
+            const level = parseInt(flight.possibility_level);
+            if (level === 3) color = '#32CD32'; // GREEN
+            else if (level === 2) color = '#FF8C00'; // ORANGE
+            else if (level === 1) color = '#FFD700'; // YELLOW
+        }
+
+        const bar = document.createElement('div');
+        bar.className = 'altitude-bar';
+        bar.style.background = color;
+        bar.style.width = `${Math.max(barWidthPercent, 20)}%`; // Minimum 20% visible
+
+        const idLabel = document.createElement('span');
+        idLabel.className = 'altitude-bar-id';
+        idLabel.textContent = flight.id;
+
+        const altLabel = document.createElement('span');
+        altLabel.className = 'altitude-bar-value';
+        altLabel.textContent = `${(altFeet/1000).toFixed(1)}k`;
+
+        bar.appendChild(idLabel);
+        bar.appendChild(altLabel);
+
+        // Click to flash on map
+        bar.addEventListener('click', () => {
+            const normalizedId = String(flight.id).trim().toUpperCase();
+            if (typeof flashAircraftMarker === 'function') {
+                flashAircraftMarker(normalizedId);
+            }
+        });
+
+        container.appendChild(bar);
+    });
+}
+
+async function toggleFlightRouteTrack(faFlightId, flightId) {
+    if (!map || !faFlightId) return;
+
+    // If already showing this flight's route, hide it
+    if (currentRouteLayer && currentRouteLayer.flightId === flightId) {
+        map.removeLayer(currentRouteLayer);
+        currentRouteLayer = null;
+        return;
+    }
+
+    // Remove previous route if showing different flight
+    if (currentRouteLayer) {
+        map.removeLayer(currentRouteLayer);
+    }
+
+    // Check cache first
+    if (aircraftRouteCache[flightId]) {
+        displayRouteTrack(aircraftRouteCache[flightId], flightId);
+        return;
+    }
+
+    // Fetch route and track
+    try {
+        const [routeResponse, trackResponse] = await Promise.all([
+            fetch(`/flights/${faFlightId}/route`).then(r => r.json()).catch(e => ({ error: e.message })),
+            fetch(`/flights/${faFlightId}/track`).then(r => r.json()).catch(e => ({ error: e.message }))
+        ]);
+
+        // Cache the data
+        aircraftRouteCache[flightId] = { route: routeResponse, track: trackResponse };
+        displayRouteTrack(aircraftRouteCache[flightId], flightId);
+    } catch (error) {
+        console.error('Error fetching route/track:', error);
+        alert('Could not fetch route/track data. This may be because the aircraft is not currently transmitting data or API rate limits have been reached.');
+    }
+}
+
+function displayRouteTrack(data, flightId) {
+    if (!map) return;
+
+    const layerGroup = L.layerGroup();
+
+    // Display route (blue dashed)
+    if (data.route && !data.route.error && data.route.waypoints && data.route.waypoints.length > 0) {
+        const routePoints = data.route.waypoints
+            .filter(pt => pt.latitude && pt.longitude)
+            .map(pt => [pt.latitude, pt.longitude]);
+
+        if (routePoints.length > 0) {
+            const routeLine = L.polyline(routePoints, {
+                color: '#4169E1',
+                weight: 3,
+                dashArray: '10, 10',
+                opacity: 0.7
+            });
+            layerGroup.addLayer(routeLine);
+            routeLine.bindPopup('📍 Planned Route');
+        }
+    }
+
+    // Display track (green solid with dots)
+    if (data.track && !data.track.error && data.track.positions && data.track.positions.length > 0) {
+        const trackPoints = data.track.positions
+            .filter(pt => pt.latitude && pt.longitude)
+            .map(pt => [pt.latitude, pt.longitude]);
+
+        if (trackPoints.length > 0) {
+            const trackLine = L.polyline(trackPoints, {
+                color: '#32CD32',
+                weight: 3,
+                opacity: 0.8
+            });
+            layerGroup.addLayer(trackLine);
+            trackLine.bindPopup('✈️ Historical Track');
+
+            // Add position dots every 10th point
+            data.track.positions.forEach((pt, idx) => {
+                if (idx % 10 === 0 && pt.latitude && pt.longitude) {
+                    const dot = L.circleMarker([pt.latitude, pt.longitude], {
+                        radius: 3,
+                        fillColor: '#32CD32',
+                        color: 'white',
+                        weight: 1,
+                        fillOpacity: 0.8
+                    });
+                    layerGroup.addLayer(dot);
+                }
+            });
+        }
+    }
+
+    layerGroup.addTo(map);
+    layerGroup.flightId = flightId;
+    currentRouteLayer = layerGroup;
 }
 
 function getPossibilityText(isPossible, level) {
@@ -293,12 +455,14 @@ function calculateDestination(lat, lon, bearing, distance) {
 
 function toggleMap() {
     const mapContainer = document.getElementById('mapContainer');
+    const altOverlay = document.getElementById('altitudeOverlay');
     const mapButton = document.querySelector('[onclick="toggleMap()"]');
     const isHidden = mapContainer.style.display === 'none';
 
     if (isHidden) {
         mapVisible = true;
         mapContainer.style.display = 'block';
+        if (altOverlay) altOverlay.style.display = 'block';
 
         // Initialize map if not already done
         const lat = parseFloat(document.getElementById('latitude').value);
@@ -316,10 +480,12 @@ function toggleMap() {
             alert('Please enter your coordinates first');
             mapVisible = false;
             mapContainer.style.display = 'none';
+            if (altOverlay) altOverlay.style.display = 'none';
         }
     } else {
         mapVisible = false;
         mapContainer.style.display = 'none';
+        if (altOverlay) altOverlay.style.display = 'none';
     }
 }
 
@@ -359,5 +525,6 @@ function updateMapVisualization(data, observerLat, observerLon, observerElev) {
     // Update aircraft markers
     if (data.flights && data.flights.length > 0) {
         updateAircraftMarkers(data.flights, observerLat, observerLon);
+        updateAltitudeOverlay(data.flights);
     }
 }
