@@ -193,6 +193,7 @@ def check_transit(
                     flight["elevation_change"], None
                 ),
                 "direction": flight["direction"],
+                "speed": flight["speed"],
                 "target": target.name,
                 "latitude": flight["latitude"],
                 "longitude": flight["longitude"],
@@ -265,6 +266,7 @@ def check_transit(
                         flight["elevation_change"], None
                     ),
                     "direction": flight["direction"],
+                    "speed": flight["speed"],
                     "target": target.name,
                     "latitude": flight["latitude"],
                     "longitude": flight["longitude"],

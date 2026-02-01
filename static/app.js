@@ -12,6 +12,7 @@ const COLUMN_NAMES = [
     "elevation_change",
     "aircraft_elevation_feet",
     "direction",
+    "speed",
     "distance_nm",
 ];
 const MS_IN_A_MIN = 60000;
@@ -200,6 +201,8 @@ function updateFlightRow(row, flight) {
             cell.textContent = value.toFixed(1);
         } else if (column === "direction") {
             cell.textContent = Math.round(value) + "°";
+        } else if (column === "speed") {
+            cell.textContent = Math.round(value);
         } else if (column === "alt_diff" || column === "az_diff") {
             const roundedValue = Math.round(value);
             cell.textContent = roundedValue + "º";
@@ -675,6 +678,9 @@ function fetchFlights() {
                     val.textContent = value.toFixed(1);
                 } else if (column === "direction") {
                     val.textContent = Math.round(value) + "°";
+                } else if (column === "speed") {
+                    // Show speed in knots, rounded to whole number
+                    val.textContent = Math.round(value);
                 } else if (column === "alt_diff" || column === "az_diff") {
                     const roundedValue = Math.round(value);
                     val.textContent = roundedValue + "º";
