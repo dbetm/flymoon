@@ -231,23 +231,11 @@ function updateAircraftMarkers(flights, observerLat, observerLon) {
         // For now, create a note that position data is needed
         // This will be updated after backend changes
         
-        const popupContent = `
-            <b>${flight.id}</b>${flight.aircraft_type && flight.aircraft_type !== 'N/A' ? ` (${flight.aircraft_type})` : ''}<br>
-            ${flight.origin} → ${flight.destination}<br>
-            Target: ${flight.target || 'N/A'}<br>
-            ETA: ${flight.time ? flight.time.toFixed(1) + ' min' : 'N/A'}<br>
-            Alt diff: ${flight.alt_diff ? flight.alt_diff.toFixed(2) + '°' : 'N/A'}<br>
-            Az diff: ${flight.az_diff ? flight.az_diff.toFixed(2) + '°' : 'N/A'}<br>
-            Heading: ${flight.direction}°<br>
-            <span style="color: ${color};">●</span> ${getPossibilityText(flight.is_possible_transit, flight.possibility_level)}
-        `;
-
         // Add marker if we have coordinates (check for undefined/null, not falsy)
         if (flight.latitude !== undefined && flight.latitude !== null &&
             flight.longitude !== undefined && flight.longitude !== null) {
             const marker = L.marker([flight.latitude, flight.longitude], { icon: aircraftIcon })
-                .addTo(map)
-                .bindPopup(popupContent);
+                .addTo(map);
 
             // Add strong shadow for visibility
             marker.getElement()?.style.setProperty('filter', `drop-shadow(0 0 8px ${color}) drop-shadow(0 0 4px rgba(0,0,0,0.8))`);
