@@ -1,10 +1,15 @@
 from dataclasses import dataclass
 from datetime import datetime
-from math import asin, atan2, cos, degrees, radians, sin
+from math import asin, atan2, cos, degrees, radians, sin, sqrt
 
 from skyfield.api import wgs84
 
-from src.constants import EARTH_RADIOUS, EARTH_TIMESCALE, NUM_MINUTES_PER_HOUR
+from src.constants import (
+    EARTH_RADIOUS,
+    EARTH_TIMESCALE,
+    KM_TO_NAUTICAL_MILES,
+    NUM_MINUTES_PER_HOUR,
+)
 
 
 @dataclass
@@ -13,6 +18,51 @@ class AreaBoundingBox:
     long_lower_left: float
     lat_upper_right: float
     long_upper_right: float
+
+
+def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Calculate the great circle distance between two points on Earth using the Haversine formula.
+
+    Parameters
+    ----------
+    lat1 : float
+        Latitude of the first point in decimal degrees.
+    lon1 : float
+        Longitude of the first point in decimal degrees.
+    lat2 : float
+        Latitude of the second point in decimal degrees.
+    lon2 : float
+        Longitude of the second point in decimal degrees.
+
+    Returns
+    -------
+    float
+        Distance between the two points in nautical miles.
+
+    Notes
+    -----
+    The Haversine formula calculates the shortest distance over the earth's surface,
+    giving an "as-the-crow-flies" distance between the points (ignoring any hills, etc.).
+
+    Formula:
+        a = sin²(Δlat/2) + cos(lat1) * cos(lat2) * sin²(Δlon/2)
+        c = 2 * atan2(√a, √(1-a))
+        distance = R * c
+
+    where R is the Earth's radius and Δlat, Δlon are the differences in latitude and longitude.
+    """
+    lat1_rad, lon1_rad = radians(lat1), radians(lon1)
+    lat2_rad, lon2_rad = radians(lat2), radians(lon2)
+
+    dlat = lat2_rad - lat1_rad
+    dlon = lon2_rad - lon1_rad
+
+    a = sin(dlat / 2) ** 2 + cos(lat1_rad) * cos(lat2_rad) * sin(dlon / 2) ** 2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    distance_km = EARTH_RADIOUS * c
+    distance_nm = distance_km * KM_TO_NAUTICAL_MILES
+
+    return distance_nm
 
 
 def predict_position(

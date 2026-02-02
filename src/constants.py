@@ -6,6 +6,7 @@ from skyfield.api import load
 NUM_MINUTES_PER_HOUR = 60
 NUM_SECONDS_PER_MIN = 60
 EARTH_RADIOUS = 6371
+KM_TO_NAUTICAL_MILES = 0.539957
 
 # Notifications
 TARGET_TO_EMOJI = {"moon": "🌙", "sun": "☀️", "both": "🌙☀️"}
