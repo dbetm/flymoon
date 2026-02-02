@@ -10,9 +10,9 @@ from tzlocal import get_localzone_name
 from src import logger
 from src.astro import CelestialObject
 from src.constants import (
-    API_URL,
     ASTRO_EPHEMERIS,
     CHANGE_ELEVATION,
+    FLIGHTS_SEARCH_URL,
     INTERVAL_IN_SECS,
     NUM_SECONDS_PER_MIN,
     TEST_DATA_PATH,
@@ -779,7 +779,7 @@ def get_transits(
             raw_flight_data = load_existing_flight_data(TEST_DATA_PATH)
             logger.info("Loading existing flight data since is using TEST mode")
         else:
-            raw_flight_data = get_flight_data(search_bbox, API_URL, API_KEY)
+            raw_flight_data = get_flight_data(search_bbox, FLIGHTS_SEARCH_URL, API_KEY)
 
         flight_data = list()
         for flight in raw_flight_data["flights"]:
