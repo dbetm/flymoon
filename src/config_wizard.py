@@ -92,17 +92,50 @@ class ConfigWizard:
                 })
 
     def _check_bounding_box(self):
-        """Check flight search bounding box."""
+        """Check flight search bounding box, set default if missing."""
         fields = ["LAT_LOWER_LEFT", "LONG_LOWER_LEFT", "LAT_UPPER_RIGHT", "LONG_UPPER_RIGHT"]
         values = {f: os.getenv(f) for f in fields}
 
         missing = [f for f, v in values.items() if not v]
         if missing:
-            self.errors.append({
-                "field": "BOUNDING_BOX",
-                "message": f"Bounding box incomplete (missing: {', '.join(missing)})",
-                "severity": "ERROR",
-            })
+            # Try to create a default bounding box from observer location
+            lat = os.getenv("OBSERVER_LATITUDE")
+            lon = os.getenv("OBSERVER_LONGITUDE")
+
+            if lat and lon:
+                try:
+                    lat_f = float(lat)
+                    lon_f = float(lon)
+
+                    # Create a ±2° bounding box around observer location
+                    lat_ll = lat_f - 2.0
+                    lon_ll = lon_f - 2.0
+                    lat_ur = lat_f + 2.0
+                    lon_ur = lon_f + 2.0
+
+                    # Save default bounding box
+                    set_key(self.config_file, "LAT_LOWER_LEFT", str(lat_ll))
+                    set_key(self.config_file, "LONG_LOWER_LEFT", str(lon_ll))
+                    set_key(self.config_file, "LAT_UPPER_RIGHT", str(lat_ur))
+                    set_key(self.config_file, "LONG_UPPER_RIGHT", str(lon_ur))
+
+                    self.warnings.append({
+                        "field": "BOUNDING_BOX",
+                        "message": f"Set default bounding box (±2° from observer location)",
+                        "severity": "WARNING",
+                    })
+                except (ValueError, TypeError):
+                    self.errors.append({
+                        "field": "BOUNDING_BOX",
+                        "message": f"Cannot create default bounding box: invalid coordinates",
+                        "severity": "ERROR",
+                    })
+            else:
+                self.errors.append({
+                    "field": "BOUNDING_BOX",
+                    "message": f"Bounding box incomplete and no observer location set for default",
+                    "severity": "ERROR",
+                })
 
     def _prompt(self, message, default=None, required=True):
         """Prompt user for input with optional default."""
