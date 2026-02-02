@@ -12,6 +12,7 @@ from src.astro import CelestialObject
 from src.constants import (
     ASTRO_EPHEMERIS,
     CHANGE_ELEVATION,
+    EARTH_RADIOUS,
     FLIGHTS_SEARCH_URL,
     INTERVAL_IN_SECS,
     NUM_SECONDS_PER_MIN,
@@ -25,6 +26,7 @@ from src.position import (
     AreaBoundingBox,
     geographic_to_altaz,
     get_my_pos,
+    haversine_distance,
     predict_position,
 )
 from src.weather import get_weather_condition
@@ -136,17 +138,10 @@ def check_transit(
     initial_target_alt = round(float(target.altitude.degrees), 2)
     initial_target_az = round(float(target.azimuthal.degrees), 2)
 
-    # Calculate horizontal distance from observer to aircraft (km)
-    from math import radians, sin, cos, sqrt, atan2
-    R = 6371  # Earth radius in km
-    lat1, lon1 = radians(observer_lat), radians(observer_lon)
-    lat2, lon2 = radians(flight["latitude"]), radians(flight["longitude"])
-    dlat = lat2 - lat1
-    dlon = lon2 - lon1
-    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
-    c = 2 * atan2(sqrt(a), sqrt(1-a))
-    distance_nm = R * c
-    distance_nm = distance_nm * 0.539957  # Convert km to nautical miles
+    # Calculate horizontal distance from observer to aircraft in nautical miles
+    distance_nm = haversine_distance(
+        observer_lat, observer_lon, flight["latitude"], flight["longitude"]
+    )
 
     # Calculate current position for ALL aircraft (for display purposes)
     current_alt, current_az = geographic_to_altaz(
@@ -331,8 +326,7 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
     # Uses haversine formula to match the map's azimuth arrow calculation
     def position_at(azimuth_deg, distance_km):
         import math
-        R = 6371  # Earth's radius in km
-        d = distance_km / R  # Angular distance in radians
+        d = distance_km / EARTH_RADIOUS  # Angular distance in radians
 
         brng = math.radians(azimuth_deg)
         lat1 = math.radians(obs_lat)
