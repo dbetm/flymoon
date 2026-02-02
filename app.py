@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
 from werkzeug.utils import secure_filename
 
-from src.constants import POSSIBLE_TRANSITS_LOGFILENAME
+from src.constants import FLIGHT_ROUTE_URL, FLIGHT_TRACK_URL, POSSIBLE_TRANSITS_LOGFILENAME
 
 # SETUP
 load_dotenv()
@@ -101,7 +101,7 @@ def get_all_flights():
 def get_flight_route(fa_flight_id):
     """Get the filed route for a specific flight."""
     API_KEY = os.getenv("AEROAPI_API_KEY")
-    url = f"https://aeroapi.flightaware.com/aeroapi/flights/{fa_flight_id}/route"
+    url = FLIGHT_ROUTE_URL.format(fa_flight_id)
     headers = {"Accept": "application/json; charset=UTF-8", "x-apikey": API_KEY}
 
     try:
@@ -119,7 +119,7 @@ def get_flight_route(fa_flight_id):
 def get_flight_track(fa_flight_id):
     """Get the historical track positions for a specific flight."""
     API_KEY = os.getenv("AEROAPI_API_KEY")
-    url = f"https://aeroapi.flightaware.com/aeroapi/flights/{fa_flight_id}/track"
+    url = FLIGHT_TRACK_URL.format(fa_flight_id)
     headers = {"Accept": "application/json; charset=UTF-8", "x-apikey": API_KEY}
 
     try:
