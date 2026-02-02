@@ -4,6 +4,7 @@ import json
 import os
 import time
 from datetime import date, datetime
+from http import HTTPStatus
 
 import requests
 from dotenv import load_dotenv
@@ -106,13 +107,13 @@ def get_flight_route(fa_flight_id):
 
     try:
         response = requests.get(url=url, headers=headers, timeout=10)
-        if response.status_code == 200:
+        if response.status_code == HTTPStatus.OK:
             return jsonify(response.json())
         else:
             return jsonify({"error": f"API returned status {response.status_code}"}), response.status_code
     except Exception as e:
         logger.error(f"Error fetching route for {fa_flight_id}: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 @app.route("/flights/<fa_flight_id>/track")
@@ -124,13 +125,13 @@ def get_flight_track(fa_flight_id):
 
     try:
         response = requests.get(url=url, headers=headers, timeout=10)
-        if response.status_code == 200:
+        if response.status_code == HTTPStatus.OK:
             return jsonify(response.json())
         else:
             return jsonify({"error": f"API returned status {response.status_code}"}), response.status_code
     except Exception as e:
         logger.error(f"Error fetching track for {fa_flight_id}: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 @app.route("/gallery")
@@ -143,11 +144,11 @@ def gallery():
 def upload_transit_image():
     """Upload a transit image with metadata."""
     if 'file' not in request.files:
-        return jsonify({"error": "No file provided"}), 400
+        return jsonify({"error": "No file provided"}), HTTPStatus.BAD_REQUEST
 
     file = request.files['file']
     if file.filename == '':
-        return jsonify({"error": "No file selected"}), 400
+        return jsonify({"error": "No file selected"}), HTTPStatus.BAD_REQUEST
 
     if file and allowed_file(file.filename):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -181,9 +182,9 @@ def upload_transit_image():
             json.dump(metadata, f, indent=2)
 
         logger.info(f"Uploaded transit image: {filename}")
-        return jsonify({"success": True, "filename": filename}), 200
+        return jsonify({"success": True, "filename": filename}), HTTPStatus.OK
 
-    return jsonify({"error": "Invalid file type. Allowed: png, jpg, jpeg, gif"}), 400
+    return jsonify({"error": "Invalid file type. Allowed: png, jpg, jpeg, gif"}), HTTPStatus.BAD_REQUEST
 
 
 @app.route("/gallery/list")
@@ -235,7 +236,7 @@ def delete_gallery_image(filepath):
         gallery_abs = os.path.abspath(app.config['UPLOAD_FOLDER'])
 
         if not abs_path.startswith(gallery_abs):
-            return jsonify({"error": "Invalid file path"}), 403
+            return jsonify({"error": "Invalid file path"}), HTTPStatus.FORBIDDEN
 
         # Delete image file
         if os.path.exists(abs_path):
@@ -248,10 +249,10 @@ def delete_gallery_image(filepath):
             os.remove(metadata_path)
             logger.info(f"Deleted metadata: {metadata_path}")
 
-        return jsonify({"success": True}), 200
+        return jsonify({"success": True}), HTTPStatus.OK
     except Exception as e:
         logger.error(f"Error deleting image {filepath}: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 @app.route("/gallery/update/<path:filepath>", methods=['POST'])
@@ -264,7 +265,7 @@ def update_gallery_metadata(filepath):
         gallery_abs = os.path.abspath(app.config['UPLOAD_FOLDER'])
 
         if not abs_path.startswith(gallery_abs):
-            return jsonify({"error": "Invalid file path"}), 403
+            return jsonify({"error": "Invalid file path"}), HTTPStatus.FORBIDDEN
 
         # Get metadata file path
         metadata_path = abs_path.rsplit('.', 1)[0] + '.json'
@@ -291,10 +292,10 @@ def update_gallery_metadata(filepath):
             json.dump(metadata, f, indent=2)
 
         logger.info(f"Updated metadata for: {filepath}")
-        return jsonify({"success": True, "metadata": metadata}), 200
+        return jsonify({"success": True, "metadata": metadata}), HTTPStatus.OK
     except Exception as e:
         logger.error(f"Error updating metadata for {filepath}: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 @app.route("/config")
