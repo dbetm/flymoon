@@ -1,0 +1,53 @@
+name: ClamAV-Scan
+
+on:
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  clamav-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code from PR
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install ClamAV
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clamav clamav-daemon
+
+      - name: Update hashes database
+        run: |
+          sudo systemctl stop clamav-freshclam || true
+          sudo freshclam
+
+      - name: Get files added or updated
+        id: changed
+        run: |
+          git fetch origin ${{ github.base_ref }} --depth=1
+          git diff --name-only origin/${{ github.base_ref }}...HEAD > changed-files.txt
+          cat changed-files.txt
+
+      - name: Scan files
+        run: |
+          cat changed-files.txt | xargs -r clamscan --infected --alert-broken \
+            2>&1 | tee scan-results.txt
+
+      - name: Verify results
+        run: |
+          if grep -q "Infected files: 0" scan-results.txt; then
+            echo "✅ No threats found"
+          else
+            echo "🚨 Infected files were detected!"
+            grep "FOUND" scan-results.txt || true
+            exit 1
+          fi
+
+      - name: Upload report (when it has failed)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: virus-scan-report
+          path: scan-results.txt
