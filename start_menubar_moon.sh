@@ -1,7 +1,9 @@
 #!/bin/zsh
 # Launch menubar monitor for Moon transits
 
-cd /Users/Tom/flymoon
+# TODO: we can't assume all the user have the project at home, need a refactor to be able to pass the route
+# issue oppened #
+cd ~/flymoon
 python3 menubar_monitor.py \
   --latitude 21.659 \
   --longitude -105.22 \

@@ -115,10 +115,10 @@ class TransitMonitor(rumps.App):
             # Get monitor settings
             monitor_target = os.getenv("MONITOR_TARGET")
             monitor_interval = os.getenv("MONITOR_INTERVAL")
-            
-            self.target = monitor_target.lower().strip("'\")") if monitor_target else "auto"
+
+            self.target = monitor_target.lower().strip("'\"") if monitor_target else "auto"
             self.interval = int(monitor_interval.strip("'\"")) if monitor_interval else 15
-            
+
             logger.info(f"Loaded config from {CONFIG_FILE}")
         except Exception as e:
             logger.warning(f"Could not parse config from .env: {e}")
@@ -369,7 +369,6 @@ class TransitMonitor(rumps.App):
         )
         
         flights = data.get("flights", [])
-        target_coords = data.get("targetCoordinates", {})
         weather_info = data.get("weather", {})
         tracking_targets = data.get("trackingTargets", [])
         

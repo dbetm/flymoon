@@ -12,6 +12,9 @@ from datetime import datetime
 
 from dotenv import load_dotenv
 
+from src.flight_data import save_possible_transits
+from src.constants import POSSIBLE_TRANSITS_LOGFILENAME
+
 load_dotenv()
 
 from src import logger
@@ -99,11 +102,6 @@ def check_and_notify(
         # Save to CSV (only MEDIUM/HIGH)
         if not test_mode:
             try:
-                from datetime import date
-                from src.flight_data import save_possible_transits
-                from src.constants import POSSIBLE_TRANSITS_LOGFILENAME
-                import asyncio
-                
                 date_ = date.today().strftime("%Y%m%d")
                 asyncio.run(
                     save_possible_transits(

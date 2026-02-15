@@ -1,7 +1,6 @@
 #!/bin/zsh
 # Launch menubar monitor for Sun transits
 
-cd /Users/Tom/flymoon
 python3 menubar_monitor.py \
   --latitude 21.659 \
   --longitude -105.22 \
