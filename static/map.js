@@ -295,10 +295,6 @@ function updateAircraftMarkers(flights, observerLat, observerLon) {
             className: 'aircraft-icon'
         });
 
-        // Since we don't have current lat/lon in flight results, we'll need to add them
-        // For now, create a note that position data is needed
-        // This will be updated after backend changes
-        
         // Add marker if we have coordinates (check for undefined/null, not falsy)
         if (flight.latitude !== undefined && flight.latitude !== null &&
             flight.longitude !== undefined && flight.longitude !== null) {
@@ -433,7 +429,7 @@ function displayRouteTrack(data, flightId) {
 
         if (waypoints.length > 0) {
             const routePoints = waypoints
-                .filter(pt => pt.latitude && pt.longitude)
+                .filter(pt => pt.latitude != null && pt.longitude != null)
                 .map(pt => [pt.latitude, pt.longitude]);
 
             if (routePoints.length > 0) {
@@ -466,7 +462,7 @@ function displayRouteTrack(data, flightId) {
 
         if (positions.length > 0) {
             const trackPoints = positions
-                .filter(pt => pt.latitude && pt.longitude)
+                .filter(pt => pt.latitude != null && pt.longitude != null)
                 .map(pt => [pt.latitude, pt.longitude]);
 
             if (trackPoints.length > 0) {
@@ -481,7 +477,7 @@ function displayRouteTrack(data, flightId) {
 
                 // Add position dots every 10th point
                 positions.forEach((pt, idx) => {
-                    if (idx % 10 === 0 && pt.latitude && pt.longitude) {
+                    if (idx % 10 === 0 && pt.latitude != null && pt.longitude != null) {
                         const dot = L.circleMarker([pt.latitude, pt.longitude], {
                             radius: 3,
                             fillColor: '#32CD32',
@@ -545,7 +541,6 @@ function calculateDestination(lat, lon, bearing, distance) {
 function toggleMap() {
     const mapContainer = document.getElementById('mapContainer');
     const altOverlay = document.getElementById('altitudeOverlay');
-    const mapButton = document.querySelector('[onclick="toggleMap()"]');
     const isHidden = mapContainer.style.display === 'none';
 
     if (isHidden) {

@@ -12,7 +12,7 @@ The transit detection and classification algorithm has been **completely refacto
 
 **Key Changes:**
 - ✅ Unified classification using true angular separation (not separate alt/az checks)
-- ✅ Simple thresholds: HIGH ≤1°, MEDIUM ≤2°, LOW ≤6°, UNLIKELY >6°
+- ✅ Simple thresholds: HIGH ≤2°, MEDIUM ≤4°, LOW ≤12°, UNLIKELY >12°
 - ✅ Removed altitude-dependent thresholds
 - ✅ Renamed IMPOSSIBLE → UNLIKELY
 - ✅ Added angular_separation field to output

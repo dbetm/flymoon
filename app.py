@@ -217,7 +217,6 @@ def list_gallery():
                 images.append({
                     "path": rel_path,
                     "filename": file,
-                    "full_path": full_path,  # For delete operations
                     "metadata": metadata
                 })
 
