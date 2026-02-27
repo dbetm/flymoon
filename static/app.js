@@ -43,13 +43,16 @@ fetch('/config')
         console.error('Error loading config:', error);
     });
 
-// Page visibility detection - pause polling when page is hidden
+// Page visibility detection - optionally pause polling when page is hidden
 document.addEventListener('visibilitychange', function() {
-    if (document.hidden && autoMode) {
+    const pauseWhenHidden = localStorage.getItem("pauseWhenHidden") === 'true'; // Default false
+
+    if (document.hidden && autoMode && pauseWhenHidden) {
         console.log('Page hidden - pausing auto-refresh');
         clearInterval(autoGoInterval);
         clearInterval(refreshTimerLabelInterval);
-    } else if (!document.hidden && autoMode) {
+    }
+    else if (!document.hidden && autoMode && pauseWhenHidden) {
         console.log('Page visible - resuming auto-refresh');
         const freq = parseInt(localStorage.getItem("frequency")) || appConfig.autoRefreshIntervalMinutes;
         autoGoInterval = setInterval(goFetch, MS_IN_A_MIN * freq);
@@ -453,14 +456,11 @@ function auto() {
 
         localStorage.setItem("frequency", freq);
         document.getElementById("autoBtn").innerHTML = "Auto " + freq  + " min ⴵ";
-        document.getElementById("autoGoNote").innerHTML = `Auto-refresh every ${freq} minute(s). Pauses when page is hidden.`;
+        document.getElementById("autoGoNote").innerHTML = `Auto-refresh every ${freq} m.`;
 
         autoMode = true;
         autoGoInterval = setInterval(goFetch, MS_IN_A_MIN * freq);
         refreshTimerLabelInterval = setInterval(refreshTimer, MS_IN_A_MIN);
-
-        // Trigger initial fetch
-        goFetch();
     }
 }
 
@@ -951,4 +951,11 @@ function requestNotificationPermission() {
             alert('Alerts were not enabled.');
         }
     });
+}
+
+// Pause when hidden preference
+function togglePauseWhenHidden() {
+    const checkbox = document.getElementById('pauseWhenHidden');
+    localStorage.setItem('pauseWhenHidden', checkbox.checked);
+    console.log('Pause when hidden:', checkbox.checked);
 }
