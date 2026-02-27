@@ -173,3 +173,6 @@ tests/test_results.json
 # misc
 exp.ipynb
 *.DS_Store
+
+# VSCode
+.vscode/*
