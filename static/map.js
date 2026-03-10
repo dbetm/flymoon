@@ -282,9 +282,9 @@ function updateAircraftMarkers(flights, observerLat, observerLon) {
         const rotation = (flight.direction - 90);
 
         // Debug: Log heading and rotation for verification
-        if (!isTransit && flight.direction) {
-            console.log(`Aircraft ${flightId}: heading=${flight.direction}°, rotation=${rotation}°, isTransit=${isTransit}`);
-        }
+        // if (!isTransit && flight.direction) {
+        //     console.log(`Aircraft ${flightId}: heading=${flight.direction}°, rotation=${rotation}°, isTransit=${isTransit}`);
+        // }
 
         const aircraftIcon = L.divIcon({
             html: isTransit

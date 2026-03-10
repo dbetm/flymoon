@@ -9,6 +9,7 @@ const COLUMN_NAMES = [
     "target_az",
     "plane_az",
     "az_diff",
+    "angular_separation",
     "elevation_change",
     "aircraft_elevation_feet",
     "direction",
@@ -580,12 +581,14 @@ function fetchFlights() {
             const id = String(flight.id).trim().toUpperCase();
             if (!seenFlights[id]) {
                 seenFlights[id] = flight;
-            } else {
+            }
+            else {
                 // Keep the one with higher possibility (transit > non-transit, higher level wins)
                 const existing = seenFlights[id];
                 if (flight.is_possible_transit > existing.is_possible_transit) {
                     seenFlights[id] = flight;
-                } else if (flight.is_possible_transit === existing.is_possible_transit) {
+                }
+                else if (flight.is_possible_transit === existing.is_possible_transit) {
                     if (parseInt(flight.possibility_level || 0) > parseInt(existing.possibility_level || 0)) {
                         seenFlights[id] = flight;
                     }
@@ -681,11 +684,10 @@ function fetchFlights() {
                 } else if (column === "speed") {
                     // Show speed in knots, rounded to whole number
                     val.textContent = Math.round(value);
-                } else if (column === "alt_diff" || column === "az_diff") {
-                    const roundedValue = Math.round(value);
-                    val.textContent = roundedValue + "º";
+                } else if (column === "alt_diff" || column === "az_diff" || column === "angular_separation") {
+                    val.textContent = value + "º";
                     // Color code large angle differences
-                    if (Math.abs(roundedValue) > 10) {
+                    if (Math.abs(value) > 10) {
                         val.style.color = "#888"; // Gray for large differences
                     }
                 } else if (column === "target_alt" || column === "target_az") {

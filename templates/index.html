@@ -117,12 +117,13 @@
                     <th>origin</th>
                     <th>destination</th>
                     <th>ETA</th>
-                    <th>target angle</th>
-                    <th>plane angle</th>
-                    <th>△angle</th>
+                    <th>target alt</th>
+                    <th>plane alt</th>
+                    <th>△alt</th>
                     <th>target az</th>
                     <th>plane az</th>
                     <th>△az</th>
+                    <th>ang sep</th>
                     <th>elev</th>
                     <th>GPS alt (ft)</th>
                     <th>hdg</th>
@@ -156,17 +157,6 @@
 
     <script>
         loadPosition();
-
-        // Auto-show results and map if position is saved
-        window.addEventListener('DOMContentLoaded', function() {
-            const savedLat = localStorage.getItem("latitude");
-            if (savedLat && savedLat !== "" && savedLat !== "null") {
-                // Position is saved, auto-fetch and show results
-                setTimeout(() => {
-                    go();  // This will toggle results on and fetch data
-                }, 100);
-            }
-        });
     </script>
 </body>
 </html>

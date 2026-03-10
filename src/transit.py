@@ -1,6 +1,6 @@
 import os
+import math
 from datetime import datetime, timedelta
-from typing import List, Tuple
 from zoneinfo import ZoneInfo
 
 import numpy as np
@@ -41,25 +41,50 @@ area_bbox = AreaBoundingBox(
 )
 
 
-def calculate_angular_separation(alt_diff: float, az_diff: float) -> float:
-    """Calculate true angular separation using Euclidean distance.
+def calculate_angular_separation(alt_1: float, az_1: float, alt_2: float, az_2: float) -> float:
+    """Calculate great-circle angular separation in alt-az space.
 
-    For small angles, this is sufficiently accurate:
-    angular_separation ≈ sqrt(alt_diff² + az_diff²)
+    Uses the spherical law of cosines, which is numerically stable
+    for all separations and altitudes including near the zenith.
 
     Parameters
     ----------
-    alt_diff : float
-        Altitude difference in degrees
-    az_diff : float
-        Azimuth difference in degrees
+    alt_1 : float
+        Altitude in degrees for the first object
+    az_1 : float
+        Azimuth in degrees for the first object
+    alt_2 : float
+        Altitude in degrees for the first object
+    az_2 : float
+        Azimuth in degrees for the first object
 
     Returns
     -------
     float
         Angular separation in degrees
     """
-    return np.sqrt(alt_diff**2 + az_diff**2)
+
+    # Convert to radians
+    alt_1_rad = math.radians(alt_1)
+    az_1_rad  = math.radians(az_1)
+    alt_2_rad = math.radians(alt_2)
+    az_2_rad  = math.radians(az_2)
+
+    ### Apply spheric cosines law ###
+
+    # Term A: Sines product for altitud
+    term_a = math.sin(alt_1_rad) * math.sin(alt_2_rad)
+
+    # Term B: Product of cosines * cosine of the azimuth diff
+    az_diff = abs(az_1_rad - az_2_rad)
+    term_b = math.cos(alt_1_rad) * math.cos(alt_2_rad) * math.cos(az_diff)
+
+    # Calculate the total angle and convert back to degrees
+    # Note: We bound the value between -1 and 1 to avoid floating-point errors
+    cos_theta = min(1.0, max(-1.0, term_a + term_b))
+    theta_rad = math.acos(cos_theta)
+
+    return math.degrees(theta_rad)
 
 
 def get_possibility_level(angular_separation: float) -> str:
@@ -133,57 +158,119 @@ def check_transit(
     response = None
     no_decreasing_count = 0
     update_response = False
-
-    # Capture target position at reference time (same for all aircraft)
-    initial_target_alt = round(float(target.altitude.degrees), 2)
-    initial_target_az = round(float(target.azimuthal.degrees), 2)
+    POSSIBLE_TRANSIT_LEVELS = {PossibilityLevel.HIGH.value, PossibilityLevel.MEDIUM.value}
 
     # Calculate horizontal distance from observer to aircraft in nautical miles
     distance_nm = haversine_distance(
         observer_lat, observer_lon, flight["latitude"], flight["longitude"]
     )
 
-    # Calculate current position for ALL aircraft (for display purposes)
-    current_alt, current_az = geographic_to_altaz(
-        flight["latitude"],
-        flight["longitude"],
-        flight["elevation"],
-        earth_ref,
-        my_position,
-        ref_datetime,
-    )
+    # # In test mode, check current position first (t=0, static aircraft)
+    # if test_mode:
+    #     alt_diff = abs(current_alt - target.altitude.degrees)
+    #     az_diff = abs(current_az - target.azimuthal.degrees)
+    #     angular_sep = calculate_angular_separation(alt_diff, az_diff)
 
-    # Calculate current differences with target for ALL aircraft
-    current_alt_diff = abs(current_alt - initial_target_alt)
-    current_az_diff = abs(current_az - initial_target_az)
-    current_angular_sep = calculate_angular_separation(current_alt_diff, current_az_diff)
+    #     min_angular_sep = angular_sep
 
-    # In test mode, check current position first (t=0, static aircraft)
-    if test_mode:
-        alt_diff = abs(current_alt - target.altitude.degrees)
-        az_diff = abs(current_az - target.azimuthal.degrees)
-        angular_sep = calculate_angular_separation(alt_diff, az_diff)
+    #     # Always record if aircraft is above horizon, regardless of separation
+    #     if current_alt > 0:
+    #         response = {
+    #             "id": flight["name"],
+    #             "aircraft_type": flight.get("aircraft_type", "N/A"),
+    #             "fa_flight_id": flight.get("fa_flight_id", ""),
+    #             "origin": flight["origin"],
+    #             "destination": flight["destination"],
+    #             "alt_diff": round(float(alt_diff), 3),
+    #             "az_diff": round(float(az_diff), 3),
+    #             "angular_separation": round(float(angular_sep), 3),
+    #             "time": 0.0,  # Current position
+    #             "target_alt": initial_target_alt,
+    #             "plane_alt": round(float(current_alt), 2),
+    #             "target_az": initial_target_az,
+    #             "plane_az": round(float(current_az), 2),
+    #             "is_possible_transit": 1 if angular_sep <= 6.0 else 0,
+    #             "possibility_level": get_possibility_level(angular_sep),
+    #             "elevation_change": CHANGE_ELEVATION.get(
+    #                 flight["elevation_change"], None
+    #             ),
+    #             "direction": flight["direction"],
+    #             "speed": flight["speed"],
+    #             "target": target.name,
+    #             "latitude": flight["latitude"],
+    #             "longitude": flight["longitude"],
+    #             "aircraft_elevation": flight.get("elevation", 0),  # Actual altitude in meters
+    #             "aircraft_elevation_feet": flight.get("elevation_feet", 0),  # Actual altitude in feet
+    #             "distance_nm": round(distance_nm, 1),  # Distance from observer in nautical miles
+    #         }
 
-        min_angular_sep = angular_sep
+    for idx, minute in enumerate(window_time):
+        # Get future position of plane
+        future_lat, future_lon = predict_position(
+            lat=flight["latitude"],
+            lon=flight["longitude"],
+            speed=flight["speed"],
+            direction=flight["direction"],
+            minutes=minute,
+        )
 
-        # Always record if aircraft is above horizon, regardless of separation
-        if current_alt > 0:
+        future_time = ref_datetime + timedelta(minutes=minute)
+
+        # Convert future position of plane to alt-azimuthal coordinates
+        future_alt, future_az = geographic_to_altaz(
+            future_lat,
+            future_lon,
+            flight["elevation"],
+            earth_ref,
+            my_position,
+            future_time,
+        )
+
+        if idx > 0 and idx % 30 == 0:
+            # Update target position every 30 data points (0.5 min)
+            target.update_position(future_time)
+
+        alt_diff = abs(future_alt - target.altitude.degrees)
+        az_diff = abs(future_az - target.azimuthal.degrees)
+
+        angular_sep = calculate_angular_separation(
+            alt_1=target.altitude.degrees,
+            az_1=target.azimuthal.degrees,
+            alt_2=future_alt,
+            az_2=future_az,
+        )
+
+        if angular_sep < min_angular_sep:
+            no_decreasing_count = 0
+            min_angular_sep = angular_sep
+            update_response = True
+        else:
+            no_decreasing_count += 1
+
+        if no_decreasing_count >= 120:
+            logger.info(f"Angular separation increasing, stop checking at min={round(minute, 2)}")
+            break
+
+        # Always track aircraft above horizon, will be classified by angular separation
+        if update_response:
+            possibility_level = get_possibility_level(angular_sep)
+
             response = {
                 "id": flight["name"],
                 "aircraft_type": flight.get("aircraft_type", "N/A"),
                 "fa_flight_id": flight.get("fa_flight_id", ""),
                 "origin": flight["origin"],
                 "destination": flight["destination"],
-                "alt_diff": round(float(alt_diff), 3),
-                "az_diff": round(float(az_diff), 3),
-                "angular_separation": round(float(angular_sep), 3),
-                "time": 0.0,  # Current position
-                "target_alt": initial_target_alt,
-                "plane_alt": round(float(current_alt), 2),
-                "target_az": initial_target_az,
-                "plane_az": round(float(current_az), 2),
-                "is_possible_transit": 1 if angular_sep <= 6.0 else 0,
-                "possibility_level": get_possibility_level(angular_sep),
+                "alt_diff": round(float(alt_diff), 2),
+                "az_diff": round(float(az_diff), 2),
+                "angular_separation": round(float(angular_sep), 2),
+                "time": round(float(minute), 2),
+                "target_alt": round(float(target.altitude.degrees), 2),
+                "plane_alt": round(float(future_alt), 2),
+                "target_az": round(float(target.azimuthal.degrees), 2),
+                "plane_az": round(float(future_az), 2),
+                "is_possible_transit": 1 if possibility_level in POSSIBLE_TRANSIT_LEVELS else 0,
+                "possibility_level": possibility_level,
                 "elevation_change": CHANGE_ELEVATION.get(
                     flight["elevation_change"], None
                 ),
@@ -196,120 +283,12 @@ def check_transit(
                 "aircraft_elevation_feet": flight.get("elevation_feet", 0),  # Actual altitude in feet
                 "distance_nm": round(distance_nm, 1),  # Distance from observer in nautical miles
             }
-
-    for idx, minute in enumerate(window_time):
-        # Get future position of plane
-        future_lat, future_lon = predict_position(
-            lat=flight["latitude"],
-            lon=flight["longitude"],
-            speed=flight["speed"],
-            direction=flight["direction"],
-            minutes=minute,
-        )
-
-        future_time = ref_datetime + timedelta(minutes=int(minute))
-
-        # Convert future position of plane to alt-azimuthal coordinates
-        future_alt, future_az = geographic_to_altaz(
-            future_lat,
-            future_lon,
-            flight["elevation"],
-            earth_ref,
-            my_position,
-            future_time,
-        )
-
-        if idx > 0 and idx % 60 == 0:
-            # Update target position every 60 data points (1 min)
-            target.update_position(future_time)
-
-        alt_diff = abs(future_alt - target.altitude.degrees)
-        az_diff = abs(future_az - target.azimuthal.degrees)
-        angular_sep = calculate_angular_separation(alt_diff, az_diff)
-
-        if no_decreasing_count >= 180:
-            logger.info(f"Angular separation increasing, stop checking at min={round(minute, 2)}")
-            break
-
-        if angular_sep < min_angular_sep:
-            no_decreasing_count = 0
-            min_angular_sep = angular_sep
-            update_response = True
-        else:
-            no_decreasing_count += 1
-
-        # Always track aircraft above horizon, will be classified by angular separation
-        if future_alt > 0:
-            if update_response:
-                response = {
-                    "id": flight["name"],
-                    "aircraft_type": flight.get("aircraft_type", "N/A"),
-                    "fa_flight_id": flight.get("fa_flight_id", ""),
-                    "origin": flight["origin"],
-                    "destination": flight["destination"],
-                    "alt_diff": round(float(alt_diff), 3),
-                    "az_diff": round(float(az_diff), 3),
-                    "angular_separation": round(float(angular_sep), 3),
-                    "time": round(float(minute), 3),
-                    "target_alt": initial_target_alt,
-                    "plane_alt": round(float(future_alt), 2),
-                    "target_az": initial_target_az,
-                    "plane_az": round(float(future_az), 2),
-                    "is_possible_transit": 1 if angular_sep <= 6.0 else 0,
-                    "possibility_level": get_possibility_level(angular_sep),
-                    "elevation_change": CHANGE_ELEVATION.get(
-                        flight["elevation_change"], None
-                    ),
-                    "direction": flight["direction"],
-                    "speed": flight["speed"],
-                    "target": target.name,
-                    "latitude": flight["latitude"],
-                    "longitude": flight["longitude"],
-                    "aircraft_elevation": flight.get("elevation", 0),  # Actual altitude in meters
-                    "aircraft_elevation_feet": flight.get("elevation_feet", 0),  # Actual altitude in feet
-                    "distance_nm": round(distance_nm, 1),  # Distance from observer in nautical miles
-                }
         update_response = False
 
-    # If response exists but is NOT a possible transit, override with current position
-    if response and response.get("is_possible_transit") == 0:
-        response["plane_alt"] = round(float(current_alt), 2)
-        response["plane_az"] = round(float(current_az), 2)
-        response["time"] = None  # No meaningful ETA for non-transits
-        response["alt_diff"] = round(float(current_alt_diff), 3)
-        response["az_diff"] = round(float(current_az_diff), 3)
-        response["angular_separation"] = round(float(current_angular_sep), 3)
-        return response
+    if not response:
+        raise Exception("No response was generated!")
 
-    if response:
-        return response
-
-    # No transit found - return current position with plane_alt and plane_az and current differences
-    return {
-        "id": flight["name"],
-        "aircraft_type": flight.get("aircraft_type", "N/A"),
-        "fa_flight_id": flight.get("fa_flight_id", ""),
-        "origin": flight["origin"],
-        "destination": flight["destination"],
-        "alt_diff": round(float(current_alt_diff), 3),
-        "az_diff": round(float(current_az_diff), 3),
-        "angular_separation": round(float(current_angular_sep), 3),
-        "time": None,
-        "target_alt": initial_target_alt,
-        "plane_alt": round(float(current_alt), 2),  # Show current position
-        "target_az": initial_target_az,
-        "plane_az": round(float(current_az), 2),  # Show current position
-        "is_possible_transit": 0,
-        "possibility_level": PossibilityLevel.UNLIKELY.value,
-        "elevation_change": CHANGE_ELEVATION.get(flight["elevation_change"], None),
-        "direction": flight["direction"],
-        "target": target.name,
-        "latitude": flight["latitude"],
-        "longitude": flight["longitude"],
-        "aircraft_elevation": flight.get("elevation", 0),  # Actual altitude in meters
-        "aircraft_elevation_feet": flight.get("elevation_feet", 0),  # Actual altitude in feet
-        "distance_nm": round(distance_nm, 1),  # Distance from observer in nautical miles
-    }
+    return response
 
 
 def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> dict:
