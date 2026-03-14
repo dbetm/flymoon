@@ -41,4 +41,12 @@ create-env:
 	@$(CMD_CHECK_ENV)
 
 
+run:
+	@( \
+		$(CMD_ACTIVATE_VENV) || exit 1; \
+		python3 app.py; \
+	)
+
+
+
 setup: create-env install
