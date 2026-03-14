@@ -75,7 +75,7 @@ Los Angeles→New York
 To keep the monitor running even when the terminal is closed:
 
 ```bash
-nohup ./start_monitor.sh > monitor.log 2>&1 &
+./start_monitor.sh > monitor.log 2>&1 &
 ```
 
 View the log:

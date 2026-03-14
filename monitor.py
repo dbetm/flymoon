@@ -8,7 +8,7 @@ import asyncio
 import os
 import subprocess
 import time
-from datetime import datetime
+from datetime import datetime, date
 
 from dotenv import load_dotenv
 
