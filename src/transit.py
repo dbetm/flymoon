@@ -161,7 +161,7 @@ def check_transit(
     POSSIBLE_TRANSIT_LEVELS = {PossibilityLevel.HIGH.value, PossibilityLevel.MEDIUM.value}
 
     # Calculate horizontal distance from observer to aircraft in nautical miles
-    distance_nm = haversine_distance(
+    distance_km = haversine_distance(
         observer_lat, observer_lon, flight["latitude"], flight["longitude"]
     )
 
@@ -201,7 +201,7 @@ def check_transit(
     #             "longitude": flight["longitude"],
     #             "aircraft_elevation": flight.get("elevation", 0),  # Actual altitude in meters
     #             "aircraft_elevation_feet": flight.get("elevation_feet", 0),  # Actual altitude in feet
-    #             "distance_nm": round(distance_nm, 1),  # Distance from observer in nautical miles
+    #             "distance_km": round(distance_km, 1),  # Distance from observer in km
     #         }
 
     for idx, minute in enumerate(window_time):
@@ -281,7 +281,7 @@ def check_transit(
                 "longitude": flight["longitude"],
                 "aircraft_elevation": flight.get("elevation", 0),  # Actual altitude in meters
                 "aircraft_elevation_feet": flight.get("elevation_feet", 0),  # Actual altitude in feet
-                "distance_nm": round(distance_nm, 1),  # Distance from observer in nautical miles
+                "distance_km": round(distance_km, 1), # Distance from observer in km
             }
         update_response = False
 
@@ -352,7 +352,7 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "longitude": lon,
         "aircraft_elevation": 10668,  # 35,000 ft in meters
         "aircraft_elevation_feet": 35000,  # 35,000 ft
-        "distance_nm": 8.1,  # 15 km = 8.1 nm from observer
+        "distance_km": 15,  # 15 km = 8.1 nm from observer
     })
 
     # MEDIUM - moderate alignment (≤2°)
@@ -381,7 +381,7 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "longitude": lon,
         "aircraft_elevation": 10972,  # 36,000 ft in meters
         "aircraft_elevation_feet": 36000,  # 36,000 ft
-        "distance_nm": 10.8,  # 20 km = 10.8 nm from observer
+        "distance_km": 20,  # 20 km = 10.8 nm from observer
     })
 
     # LOW - marginal alignment (≤6°)
@@ -410,7 +410,7 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "longitude": lon,
         "aircraft_elevation": 11277,  # 37,000 ft in meters
         "aircraft_elevation_feet": 37000,  # 37,000 ft
-        "distance_nm": 13.5,  # 25 km = 13.5 nm from observer
+        "distance_km": 25,  # 25 km = 13.5 nm from observer
     })
 
     # SUN TRANSITS
@@ -440,7 +440,7 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "longitude": lon,
         "aircraft_elevation": 10363,  # 34,000 ft in meters
         "aircraft_elevation_feet": 34000,  # 34,000 ft
-        "distance_nm": 8.1,  # 15 km = 8.1 nm from observer
+        "distance_km": 15,  # 15 km = 8.1 nm from observer
     })
 
     # MEDIUM - moderate alignment (≤2°)
@@ -469,7 +469,7 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "longitude": lon,
         "aircraft_elevation": 10058,  # 33,000 ft in meters
         "aircraft_elevation_feet": 33000,  # 33,000 ft
-        "distance_nm": 10.8,  # 20 km = 10.8 nm from observer
+        "distance_km": 20,  # 20 km = 10.8 nm from observer
     })
 
     # LOW - marginal alignment (≤6°)
@@ -498,7 +498,7 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "longitude": lon,
         "aircraft_elevation": 9754,  # 32,000 ft in meters
         "aircraft_elevation_feet": 32000,  # 32,000 ft
-        "distance_nm": 13.5,  # 25 km = 13.5 nm from observer
+        "distance_km": 25,  # 25 km = 13.5 nm from observer
     })
 
     # UNLIKELY - no transit (far from both targets, >6°)
@@ -530,7 +530,7 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "longitude": lon,
         "aircraft_elevation": 7620,  # 25,000 ft in meters
         "aircraft_elevation_feet": 25000,  # 25,000 ft
-        "distance_nm": 13.5,  # 25 km = 13.5 nm from observer
+        "distance_km": 25,  # 25 km = 13.5 nm from observer
     })
 
     lat, lon = position_at(180, 25)  # South, 25 km
@@ -561,7 +561,7 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "longitude": lon,
         "aircraft_elevation": 9144,  # 30,000 ft in meters
         "aircraft_elevation_feet": 30000,  # 30,000 ft
-        "distance_nm": 13.5,  # 25 km = 13.5 nm from observer
+        "distance_km": 25,  # 25 km = 13.5 nm from observer
     })
 
     lat, lon = position_at(270, 25)  # West, 25 km
@@ -592,7 +592,7 @@ def generate_mock_results(obs_lat: float, obs_lon: float, obs_elev: float) -> di
         "longitude": lon,
         "aircraft_elevation": 1524,  # 5,000 ft in meters (private plane)
         "aircraft_elevation_feet": 5000,  # 5,000 ft
-        "distance_nm": 13.5,  # 25 km = 13.5 nm from observer
+        "distance_km": 25,  # 25 km = 13.5 nm from observer
     })
 
     return {

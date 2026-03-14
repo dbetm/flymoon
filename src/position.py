@@ -60,9 +60,8 @@ def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
     a = sin(dlat / 2) ** 2 + cos(lat1_rad) * cos(lat2_rad) * sin(dlon / 2) ** 2
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
     distance_km = EARTH_RADIOUS * c
-    distance_nm = distance_km * KM_TO_NAUTICAL_MILES
 
-    return distance_nm
+    return distance_km
 
 
 def predict_position(

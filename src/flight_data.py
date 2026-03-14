@@ -46,7 +46,7 @@ def parse_fligh_data(flight_data: dict):
         "latitude": flight_data["last_position"]["latitude"],
         "longitude": flight_data["last_position"]["longitude"],
         "direction": flight_data["last_position"]["heading"],
-        "speed": int(flight_data["last_position"]["groundspeed"]) * 1.852,
+        "speed": int(flight_data["last_position"]["groundspeed"]) * 1.852, # km/h
         "elevation": int(flight_data["last_position"]["altitude"]) * 0.3048 * 100,  # hundreds of feet to meters (for calculations)
         "elevation_feet": int(flight_data["last_position"]["altitude"]) * 100,  # API returns hundreds of feet, multiply by 100
         "elevation_change": flight_data["last_position"]["altitude_change"],
