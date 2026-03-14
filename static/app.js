@@ -14,7 +14,7 @@ const COLUMN_NAMES = [
     "aircraft_elevation_feet",
     "direction",
     "speed",
-    "distance_nm",
+    "distance_km",
 ];
 const MS_IN_A_MIN = 60000;
 // Possibility levels
@@ -201,7 +201,7 @@ function updateFlightRow(row, flight) {
             } else {
                 cell.textContent = altitude.toLocaleString('en-US');
             }
-        } else if (column === "distance_nm") {
+        } else if (column === "distance_km") {
             cell.textContent = value.toFixed(1);
         } else if (column === "direction") {
             cell.textContent = Math.round(value) + "°";
@@ -676,13 +676,13 @@ function fetchFlights() {
                     } else {
                         val.textContent = altitude.toLocaleString('en-US');
                     }
-                } else if (column === "distance_nm") {
-                    // Show distance in nautical miles with one decimal place
+                } else if (column === "distance_km") {
+                    // Show distance in kilometers with one decimal place
                     val.textContent = value.toFixed(1);
                 } else if (column === "direction") {
                     val.textContent = Math.round(value) + "°";
                 } else if (column === "speed") {
-                    // Show speed in knots, rounded to whole number
+                    // Show speed in km/h, rounded to whole number
                     val.textContent = Math.round(value);
                 } else if (column === "alt_diff" || column === "az_diff" || column === "angular_separation") {
                     val.textContent = value + "º";
