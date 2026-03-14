@@ -65,22 +65,14 @@ This version builds upon the excellent foundation provided by dbetm with the fol
 - **Original Code**: Web-only interface
 - **Enhancement**: Three distribution formats
 
-### 6. Distribution System
-- **Added**: Automated build system (`build/build_all.sh`)
-- **Added**: PyInstaller configurations
-- **Feature**: Packaged distributions with installers
-- **Feature**: Setup scripts for all platforms
-- **Original Code**: Git clone + manual setup
-- **Enhancement**: One-click installation experience
-
-### 7. Test Data Generator
+### 6. Test Data Generator
 - **Added**: Configurable test scenarios (`data/test_data_generator.py`)
 - **Feature**: 6 pre-configured scenarios
 - **Feature**: Custom scenario creation
 - **Original Code**: Single example data file
 - **Enhancement**: Comprehensive testing capabilities
 
-### 8. Enhanced Documentation
+### 7. Enhanced Documentation
 - **Added**: Complete technical documentation suite
 - **Files**: DUAL_TRACKING_WEATHER.md, QUICKSTART_DUAL_TRACKING.md, DISTRIBUTION.md, TEST_RESULTS.md
 - **Original Code**: README.md only
