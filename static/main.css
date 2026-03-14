@@ -35,15 +35,20 @@ body {
     font-size: 0.9em;
 }
 
-.status-text {
+.status-text { 
     color: #888;
     font-size: 0.85em;
+}
+
+#trackingStatus {
+    flex: 1;
+    text-align: center;
 }
 
 .coords-text {
     color: #aaa;
     font-size: 0.8em;
-    margin: 2px 0 8px 0;
+    margin: 5px 0 !important;
 }
 
 /* Controls row */
@@ -53,6 +58,24 @@ body {
     justify-content: center;
     gap: 6px;
     flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.control-box {
+    display: inline-block;
+    text-align: center;
+}
+
+.control-label {
+    font-size: 0.7em;
+    color: #aaa;
+    margin-top: -2px;
+}
+
+#pauseWhenHidden {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
     margin-bottom: 10px;
 }
 
@@ -98,6 +121,32 @@ body {
 .separator {
     color: #444;
     margin: 0 4px;
+}
+
+#loadingSpinner {
+    display: none;
+    text-align: center;
+    padding: 20px;
+}
+
+#loadingSpinner > p {
+    margin-top: 10px;
+    color: #666;
+}
+
+#spinnerAnimation {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* Results table */
@@ -166,16 +215,28 @@ body {
     height: 500px;
     width: 100%;
     background: #ddd;
+    flex: 1 !important;
+    margin: 20px 0 !important;
 }
 
 #mapContainer {
     margin: 20px auto;
     max-width: 1200px;
+    display: none;
 }
 
 #mapLegend {
     border-radius: 4px;
     color: #333;
+    padding: 10px !important;
+    background: #f0f0f0;
+    margin-bottom: 10px !important;
+}
+
+#mapWithAlt {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
 }
 
 /* Ensure Leaflet container renders properly */
@@ -394,4 +455,40 @@ body {
     .altitude-tick {
         font-size: 0.5em;
     }
+}
+
+.legend-item {
+    margin-left: 10px;
+}
+
+#legendItemBbox {
+    display: inline-block;
+    width: 16px;
+    height: 12px;
+    border: 2px dashed red;
+    vertical-align: middle;
+}
+
+#legendItemMoon {
+    display: inline-block;
+    width: 20px;
+    height: 4px;
+    background: #FF4500;
+    vertical-align: middle;
+}
+
+#legendItemSun {
+    display: inline-block;
+    width: 20px;
+    height: 4px;
+    background: #4169E1;
+    vertical-align: middle;
+}
+
+#legendItemTrack {
+    display: inline-block;
+    width: 20px;
+    height: 3px;
+    background: #32CD32;
+    vertical-align: middle;
 }
