@@ -164,6 +164,7 @@ cython_debug/
 # data
 de421.bsp
 notes.txt
+dev-notes.txt
 data/possible-transits/*.csv
 data/possible-transits/log-backup.txt
 

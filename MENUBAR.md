@@ -107,7 +107,7 @@ To start the app automatically when you log in:
 
 1. Open **System Settings** → **General** → **Login Items**
 2. Click the **+** button
-3. Add a script that runs:
+3. Add a script that runs (example, change your project location):
    ```bash
    cd /Users/Tom/flymoon
    source .venv/bin/activate
