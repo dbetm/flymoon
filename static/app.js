@@ -485,10 +485,8 @@ function fetchFlights() {
 
     const bodyTable = document.getElementById('flightData');
     let alertNoResults = document.getElementById("noResults");
-    let alertTargetUnderHorizon = document.getElementById("targetUnderHorizon");
     bodyTable.innerHTML = '';
     alertNoResults.innerHTML = '';
-    alertTargetUnderHorizon = '';
 
     const minAltitude = document.getElementById("minAltitude").value || 15;
     let endpoint_url = (
