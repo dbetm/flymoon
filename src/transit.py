@@ -280,7 +280,8 @@ def check_transit(
                 "latitude": flight["latitude"],
                 "longitude": flight["longitude"],
                 "aircraft_elevation": flight.get("elevation", 0),  # Actual altitude in meters
-                "aircraft_elevation_feet": flight.get("elevation_feet", 0),  # Actual altitude in feet
+                "aircraft_elevation_km": round(flight.get("elevation", 0) / 1_000, 2), # Actual altitude in kilometers
+                "aircraft_elevation_feet": flight.get("elevation_feet", 0),  # Actual altitude in feet # TODO: deprecate
                 "distance_km": round(distance_km, 1), # Distance from observer in km
             }
         update_response = False
