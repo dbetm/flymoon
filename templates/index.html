@@ -21,7 +21,7 @@
     </div>
 
     <div class="controls-row">
-        <button id="goBtn" class="btn-primary" onclick="go();">Refresh</button>
+        <button id="goBtn" class="btn-primary" onclick="go();">Check</button>
         <button id="autoBtn" class="btn-primary" onclick="auto();">Auto</button>
         <span class="separator">|</span>
         <div class="control-box">
@@ -111,18 +111,18 @@
                     <th>origin</th>
                     <th>destination</th>
                     <th>ETA</th>
+                    <th>ang sep</th>
                     <th>target alt</th>
                     <th>plane alt</th>
                     <th>△alt</th>
                     <th>target az</th>
                     <th>plane az</th>
                     <th>△az</th>
-                    <th>ang sep</th>
                     <th>elev</th>
-                    <th>GPS alt (ft)</th>
-                    <th>hdg</th>
-                    <th>speed (km/h)</th>
-                    <th>dist (km)</th>
+                    <th>△elev</th>
+                    <th>dir</th>
+                    <th>speed</th>
+                    <th>dist</th>
                 </tr>
             </thead>
             <tbody id="flightData">
@@ -134,8 +134,8 @@
     <h3 class="alert" id="targetUnderHorizon"></h3>
 
     <footer class="attribution-footer">
-        <p><i>Created with deep appreciation for the idea and initial design by Davide Betancourt Montellano</i></p>
-        <p><i>Creado con profundo agradecimiento por la idea y el diseño inicial de Davide Betancourt Montellano.</i></p>
+        <p>Flymoon 2.0</p>
+        <p><i>Concept and initial design by David Betancourt Montellano. Flymoon 2.0 includes contributions from Tom Harnish, whose ideas and pull requests helped improve the release.</i></p>
     </footer>
 
     <audio id="alertSound" src="{{ url_for('static', filename='sounds/tissman-alert1-maximum-distortion.mp3') }}" preload="auto">

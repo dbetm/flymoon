@@ -23,11 +23,10 @@ async def send_notifications(flight_data: List[dict], target: str) -> None:
             PossibilityLevel.MEDIUM.value,
             PossibilityLevel.HIGH.value,
         ):
-            diff_sum = flight["alt_diff"] + flight["az_diff"]
             possible_transits_data.append(
                 f"{flight['id']} in {flight['time']} min."
                 f" {flight['origin']}->{flight['destination']}"
-                f" ∑△{diff_sum}"
+                f" ∑△{flight['angular_separation']}"
             )
 
         if len(possible_transits_data) >= MAX_NUM_ITEMS_TO_NOTIFY:

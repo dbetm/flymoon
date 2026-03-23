@@ -3,15 +3,15 @@ const COLUMN_NAMES = [
     "origin",
     "destination",
     "time",
+    "angular_separation",
     "target_alt",
     "plane_alt",
     "alt_diff",
     "target_az",
     "plane_az",
     "az_diff",
-    "angular_separation",
+    "aircraft_elevation_km",
     "elevation_change",
-    "aircraft_elevation_feet",
     "direction",
     "speed",
     "distance_km",
@@ -193,20 +193,14 @@ function updateFlightRow(row, flight) {
             const mins = Math.floor(totalSeconds / 60);
             const secs = totalSeconds % 60;
             cell.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
-        } else if (column === "aircraft_elevation_feet") {
-            const altitude = Math.round(value);
-            if (altitude > 18000) {
-                const flightLevel = Math.round(altitude / 100);
-                cell.textContent = `FL${flightLevel}`;
-            } else {
-                cell.textContent = altitude.toLocaleString('en-US');
-            }
+        } else if (column === "aircraft_elevation_km") {
+            cell.textContent = value.toLocaleString('en-US') + " km";
         } else if (column === "distance_km") {
-            cell.textContent = value.toFixed(1);
+            cell.textContent = value.toFixed(1) + " km";
         } else if (column === "direction") {
             cell.textContent = Math.round(value) + "°";
         } else if (column === "speed") {
-            cell.textContent = Math.round(value);
+            cell.textContent = Math.round(value) + " km/h";
         } else if (column === "alt_diff" || column === "az_diff") {
             const roundedValue = Math.round(value);
             cell.textContent = roundedValue + "º";
@@ -665,23 +659,17 @@ function fetchFlights() {
                     const mins = Math.floor(totalSeconds / 60);
                     const secs = totalSeconds % 60;
                     val.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
-                } else if (column === "aircraft_elevation_feet") {
-                    // Show GPS altitude in feet with comma formatting, or as flight level if > 18000
-                    const altitude = Math.round(value);
-                    if (altitude > 18000) {
-                        const flightLevel = Math.round(altitude / 100);
-                        val.textContent = `FL${flightLevel}`;
-                    } else {
-                        val.textContent = altitude.toLocaleString('en-US');
-                    }
+                } else if (column === "aircraft_elevation_km") {
+                    // Show GPS altitude in km with comma formatting
+                    val.textContent = value.toLocaleString('en-US') + " km";
                 } else if (column === "distance_km") {
                     // Show distance in kilometers with one decimal place
-                    val.textContent = value.toFixed(1);
+                    val.textContent = value.toFixed(1) + " km";
                 } else if (column === "direction") {
                     val.textContent = Math.round(value) + "°";
                 } else if (column === "speed") {
                     // Show speed in km/h, rounded to whole number
-                    val.textContent = Math.round(value);
+                    val.textContent = Math.round(value) + " km/h";
                 } else if (column === "alt_diff" || column === "az_diff" || column === "angular_separation") {
                     val.textContent = value + "º";
                     // Color code large angle differences
@@ -768,12 +756,12 @@ function updateAltitudeDisplay(flights) {
     // Clear existing lines
     barsContainer.innerHTML = "";
 
-    // Maximum altitude for scale (FL450 = 45,000 ft)
-    const MAX_ALTITUDE = 45000;
+    // Maximum altitude for scale (FL450 = 45,000 ft, 13.716 km)
+    const MAX_ALTITUDE = 13.716;
 
     // Create a thin line for each aircraft
     flights.forEach(flight => {
-        const altitude = flight.aircraft_elevation_feet || 0;
+        const altitude = flight.aircraft_elevation_km || 0;
 
         // Skip if altitude is invalid or above max
         if (altitude > MAX_ALTITUDE) return;

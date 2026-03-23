@@ -269,8 +269,8 @@ Expected results:
 - Try browser zoom (panel is fixed position)
 
 **Aircraft missing?**
-- Altitude must be 0 < alt ≤ 45,000 ft
-- Check `aircraft_elevation_feet` field in data
+- Altitude must be 0 < alt ≤ 45,000 ft (13.716 km)
+- Check `aircraft_elevation_km` field in data
 
 **Wrong colors?**
 - Colors based on `possibility_level` field
