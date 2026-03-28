@@ -308,16 +308,16 @@ def get_config():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Flymoon Transit Monitor")
-    parser.add_argument("--test", action="store_true", help="Use test data (deprecated, use --demo)")
-    parser.add_argument("--demo", action="store_true", help="Use mock demonstration data with guaranteed classifications")
+    parser.add_argument("--test", action="store_true", help="Use test generated flights data with some possible transits")
+    #parser.add_argument("--demo", action="store_true", help="Use mock demonstration data with guaranteed classifications")
     args = parser.parse_args()
 
     global test_mode
-    test_mode = args.test or args.demo
+    #test_mode = args.test or args.demo
+    test_mode = args.test
 
     if test_mode:
-        mode = "DEMO" if args.demo else "TEST"
-        logger.info(f"🎭 Starting in {mode} mode - using mock data")
+        logger.info(f"🧪 Starting in test mode - using generated flight data")
 
     port = 8000
     app.run(host="0.0.0.0", port=port, debug=True)

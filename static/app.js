@@ -30,7 +30,7 @@ displayTarget();
 
 // App configuration from server
 var appConfig = {
-    autoRefreshIntervalMinutes: 6  // Default, will be loaded from server
+    autoRefreshIntervalMinutes: 10  // Default, will be loaded from server
 };
 
 // Load configuration from server
@@ -515,86 +515,27 @@ function fetchFlights() {
             alertNoResults.innerHTML = "No flights!"
         }
 
-        // LINE 1: Tracking status - Sun and Moon with weather
-        let trackingParts = [];
+        // Display tracking status - Sun and Moon with weather
+        renderTrackingStatus(data);
 
-        // Always show Sun status
-        if(data.targetCoordinates && data.targetCoordinates.sun) {
-            let isTracking = data.trackingTargets && data.trackingTargets.includes('sun');
-            let status = isTracking ? "Tracking" : "Not tracking";
-            trackingParts.push(`☀️ ${status}`);
-        }
-
-        // Always show Moon status
-        if(data.targetCoordinates && data.targetCoordinates.moon) {
-            let isTracking = data.trackingTargets && data.trackingTargets.includes('moon');
-            let status = isTracking ? "Tracking" : "Not tracking";
-            trackingParts.push(`🌙 ${status}`);
-        }
-
-        // Weather
-        if(data.weather && data.weather.cloud_cover !== null) {
-            trackingParts.push(`☁️ ${data.weather.cloud_cover}% clouds`);
-        }
-
-        document.getElementById("trackingStatus").innerHTML = trackingParts.join("&nbsp;&nbsp;&nbsp;&nbsp;");
-
-        // LINE 3: Target coordinates - Sun and Moon alt/az
-        let coordParts = [];
-
-        // Always show Sun coordinates
-        if(data.targetCoordinates && data.targetCoordinates.sun) {
-            let coords = data.targetCoordinates.sun;
-            let altStr = coords.altitude !== null && coords.altitude !== undefined ? coords.altitude.toFixed(1) : "—";
-            let azStr = coords.azimuthal !== null && coords.azimuthal !== undefined ? coords.azimuthal.toFixed(1) : "—";
-            coordParts.push(`☀️ Alt: ${altStr}° Az: ${azStr}°`);
-        }
-
-        // Always show Moon coordinates
-        if(data.targetCoordinates && data.targetCoordinates.moon) {
-            let coords = data.targetCoordinates.moon;
-            let altStr = coords.altitude !== null && coords.altitude !== undefined ? coords.altitude.toFixed(1) : "—";
-            let azStr = coords.azimuthal !== null && coords.azimuthal !== undefined ? coords.azimuthal.toFixed(1) : "—";
-            coordParts.push(`🌙 Alt: ${altStr}° Az: ${azStr}°`);
-        }
-
-        document.getElementById("targetCoordinates").innerHTML = coordParts.join("&nbsp;&nbsp;&nbsp;&nbsp;");
-
+        // Display coordinates for targets (alt/az)
+        renderTargetCoordinates(data.targetCoordinates);
 
         // Check if any targets are trackable
         if(data.trackingTargets && data.trackingTargets.length === 0) {
             alertNoResults.innerHTML = "No targets available for tracking (below horizon or weather)";
         }
 
-        // Deduplicate flights by ID for display (keep highest possibility level)
-        const seenFlights = {};
-        data.flights.forEach(flight => {
-            // Normalize ID (trim whitespace, consistent case)
-            const id = String(flight.id).trim().toUpperCase();
-            if (!seenFlights[id]) {
-                seenFlights[id] = flight;
-            }
-            else {
-                // Keep the one with higher possibility (transit > non-transit, higher level wins)
-                const existing = seenFlights[id];
-                if (flight.is_possible_transit > existing.is_possible_transit) {
-                    seenFlights[id] = flight;
-                }
-                else if (flight.is_possible_transit === existing.is_possible_transit) {
-                    if (parseInt(flight.possibility_level || 0) > parseInt(existing.possibility_level || 0)) {
-                        seenFlights[id] = flight;
-                    }
-                }
-            }
-        });
-        const uniqueFlights = Object.values(seenFlights);
+        // Deduplicate flights by ID for display (keep the ones with lower angular separation considering both targets)
+        const uniqueFlights = deduplicateFlights(data.flights);
         console.log(`Dedupe: ${data.flights.length} flights -> ${uniqueFlights.length} unique`);
+
         // Debug: show final dedupe results
-        uniqueFlights.forEach(f => {
-            if (f.is_possible_transit) {
-                console.log(`  ${f.id} (${f.target}): level=${f.possibility_level}, is_transit=${f.is_possible_transit}`);
-            }
-        });
+        // uniqueFlights.forEach(f => {
+        //     if (f.is_possible_transit) {
+        //         console.log(`  ${f.id} (${f.target}): level=${f.possibility_level}, is_transit=${f.is_possible_transit}`);
+        //     }
+        // });
 
         uniqueFlights.forEach(item => {
             const row = document.createElement('tr');
@@ -713,7 +654,6 @@ function fetchFlights() {
             bodyTable.appendChild(row);
         });
 
-        // renderTargetCoordinates(data.targetCoordinates); // Disabled - now using inline display above
         if(autoMode == true && hasVeryPossibleTransits == true) soundAlert();
 
         // Always update map visualization when data is fetched (use deduplicated flights)
@@ -737,6 +677,80 @@ function fetchFlights() {
         alert("Error getting flight data. Check console for details.");
         console.error("Error:", error);
     });
+}
+
+function renderTrackingStatus(data) {
+    let trackingParts = [];
+
+    // Show Sun status
+    if(data.targetCoordinates && data.targetCoordinates.sun) {
+        let isTracking = data.trackingTargets && data.trackingTargets.includes('sun');
+        let status = isTracking ? "Tracking" : "Not tracking";
+        trackingParts.push(`☀️ ${status}`);
+    }
+
+    // Show Moon status
+    if(data.targetCoordinates && data.targetCoordinates.moon) {
+        let isTracking = data.trackingTargets && data.trackingTargets.includes('moon');
+        let status = isTracking ? "Tracking" : "Not tracking";
+        trackingParts.push(`🌙 ${status}`);
+    }
+
+    // Weather status
+    if(data.weather && data.weather.cloud_cover !== null) {
+        trackingParts.push(`☁️ ${data.weather.cloud_cover}% clouds`);
+    }
+
+    document.getElementById("trackingStatus").innerHTML = trackingParts.join("&nbsp;&nbsp;&nbsp;&nbsp;");
+}
+
+function renderTargetCoordinates(targetCoordinates) {
+    let time_ = (new Date()).toLocaleTimeString();
+    let coordParts = [];
+
+    // Always show Sun coordinates
+    if(targetCoordinates && targetCoordinates.sun) {
+        let coords = targetCoordinates.sun;
+        let altStr = coords.altitude !== null && coords.altitude !== undefined ? coords.altitude.toFixed(1) : "—";
+        let azStr = coords.azimuthal !== null && coords.azimuthal !== undefined ? coords.azimuthal.toFixed(1) : "—";
+        coordParts.push(`☀️ Alt: ${altStr}° Az: ${azStr}°`);
+    }
+
+    // Always show Moon coordinates
+    if(targetCoordinates && targetCoordinates.moon) {
+        let coords = targetCoordinates.moon;
+        let altStr = coords.altitude !== null && coords.altitude !== undefined ? coords.altitude.toFixed(1) : "—";
+        let azStr = coords.azimuthal !== null && coords.azimuthal !== undefined ? coords.azimuthal.toFixed(1) : "—";
+        coordParts.push(`🌙 Alt: ${altStr}° Az: ${azStr}°`);
+    }
+
+    // Display time when the coordinates where checked
+    if(coordParts.length > 0) {
+        coordParts.push(`⏰ ${time_}`);
+    }
+
+    document.getElementById("targetCoordinates").innerHTML = coordParts.join("&nbsp;&nbsp;&nbsp;&nbsp;");
+}
+
+function deduplicateFlights(flights) {
+    const seenFlights = {};
+
+    flights.forEach(flight => {
+        // Normalize ID (trim whitespace, consistent case)
+        const id = String(flight.id).trim().toUpperCase();
+        if (!seenFlights[id]) {
+            seenFlights[id] = flight;
+        }
+        else {
+            // Keep the one with lower angular separation
+            const existing = seenFlights[id];
+            if (flight.angular_separation < existing.angular_separation) {
+                seenFlights[id] = flight;
+            }
+        }
+    });
+
+    return Object.values(seenFlights);
 }
 
 function highlightPossibleTransit(possibilityLevel, row) {
@@ -826,27 +840,6 @@ function toggleTarget() {
     displayTarget();
 
     resetResultsTable();
-}
-
-function renderTargetCoordinates(coordinates) {
-    let time_ = (new Date()).toLocaleTimeString();
-    let coordinates_str;
-
-    // Check if coordinates is nested (auto mode) or direct (single target mode)
-    if (coordinates.altitude !== undefined && coordinates.azimuthal !== undefined) {
-        // Single target mode
-        coordinates_str = "altitude: " + coordinates.altitude + "° azimuthal: " + coordinates.azimuthal + "° (" + time_ + ")";
-    } else {
-        // Auto mode - coordinates is an object with target names as keys
-        let parts = [];
-        for (let [targetName, coords] of Object.entries(coordinates)) {
-            let icon = targetName === "moon" ? "🌙" : "☀️";
-            parts.push(`${icon} alt: ${coords.altitude}° az: ${coords.azimuthal}°`);
-        }
-        coordinates_str = parts.join(" | ") + " (" + time_ + ")";
-    }
-
-    document.getElementById("targetCoordinates").innerHTML = coordinates_str;
 }
 
 function displayTarget() {

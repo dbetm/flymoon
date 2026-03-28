@@ -39,7 +39,7 @@ _weather_cache = WeatherCache()
 
 
 def get_weather_condition(
-    latitude: float, longitude: float, api_key: str
+    latitude: float, longitude: float, api_key: str, return_default_response: bool = False
 ) -> Tuple[bool, dict]:
     """Fetch weather conditions from OpenWeatherMap API.
 
@@ -51,6 +51,8 @@ def get_weather_condition(
         Observer's longitude
     api_key : str
         OpenWeatherMap API key
+    return_default_response: bool
+        Flag to return default response, the same response when there's no API Key
 
     Returns
     -------
@@ -70,15 +72,24 @@ def get_weather_condition(
     if cached_data:
         return cached_data["is_clear"], cached_data["info"]
 
-    if not api_key:
-        logger.warning("No OpenWeatherMap API key provided")
-        return True, {
+    default_response = (
+        True, 
+        {
             "cloud_cover": None,
             "condition": "unknown",
             "icon": WEATHER_ICONS["unknown"],
             "description": "Weather API not configured",
             "api_success": False,
         }
+    )
+
+    if return_default_response:
+        logger.warning("Returning default weather response")
+        return default_response
+
+    if not api_key:
+        logger.warning("No OpenWeatherMap API key provided")
+        return default_response
 
     try:
         params = {"lat": latitude, "lon": longitude, "appid": api_key, "units": "metric"}

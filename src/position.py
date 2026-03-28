@@ -37,7 +37,7 @@ def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
     Returns
     -------
     float
-        Distance between the two points in nautical miles.
+        Distance between the two points in kilometers.
 
     Notes
     -----
