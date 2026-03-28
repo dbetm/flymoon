@@ -38,7 +38,7 @@
         </div>
         <div class="control-box">
             <input type="number" id="minAltitude" placeholder="Min°" autocomplete="on" title="Minimum horizon altitude (degrees)" style="width:50px;">
-            <div class="control-label">Min angle (°)</div>
+            <div class="control-label">Min altitude (°)</div>
         </div>
         <div class="control-box">
             <button class="btn-sm" onclick="savePosition()" title="Save position">💾</button>
@@ -58,11 +58,21 @@
             <div class="control-label">Alerts</div>
         </div>
     </div>
-    <!-- Button for optional hidden feature -->
-    <span class="separator">|</span>
-    <div class="control-box">
-        <input type="checkbox" id="pauseWhenHidden" onchange="togglePauseWhenHidden()" title="Pause auto-refresh when page is hidden">
-        <div class="control-label">Pause Hidden</div>
+
+    <div class="controls-row">
+        <!-- Button for optional hidden feature -->
+        <div class="control-box">
+            <input type="checkbox" id="pauseWhenHidden" onchange="togglePauseWhenHidden()" title="Pause auto-refresh when page is hidden">
+            <div class="control-label">Pause Hidden</div>
+        </div>
+        <span class="separator">|</span>
+        <div class="control-box">
+            <label for="cars">ADSB provider:</label>
+            <select name="asdb" id="adsbProvider">
+                <option value="flightaware-aeroapi">FligtAware AeroAPI</option>
+                <option value="airlabs">AirLabs</option>
+            </select>
+        </div>
     </div>
 
     <!-- Loading spinner -->

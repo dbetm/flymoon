@@ -28,6 +28,7 @@ WEATHER_ICONS = {
 }
 
 # Flight data
+# FlightAware AeroAPI
 AEROAPI_BASE_URL = "https://aeroapi.flightaware.com/aeroapi"
 FLIGHTS_SEARCH_URL = f"{AEROAPI_BASE_URL}/flights/search"
 FLIGHT_ROUTE_URL = f"{AEROAPI_BASE_URL}/flights/{{}}/route"  # Use .format(fa_flight_id)

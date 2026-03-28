@@ -196,7 +196,7 @@ Enter coordinates (e.g., lat: 23, lon: -103, elev: 0)
 
 ### Notification Testing (Pushbullet)
 1. Set `PUSH_BULLET_API_KEY` in `.env`
-2. Enable Auto mode with `send-notification=true`
+2. Enable Auto mode with `send_notification=true`
 3. MEDIUM/HIGH transits will trigger notifications
 
 ## Troubleshooting
