@@ -12,14 +12,13 @@ from src.astro import CelestialObject
 from src.constants import (
     ASTRO_EPHEMERIS,
     CHANGE_ELEVATION,
-    FLIGHTS_SEARCH_URL,
     INTERVAL_IN_SECS,
     NUM_SECONDS_PER_MIN,
     TOP_MINUTE,
     PossibilityLevel,
 )
-from src.demo import generate_test_flightaware_data
-from src.flight_data import get_flight_data, parse_fligh_data
+from src.demo import generate_test_flightaware_data, generate_test_flightaware_data2
+from src.flight_data import FlightAwareAeroAPIClient, AirLabsClient
 from src.position import (
     AreaBoundingBox,
     geographic_to_altaz,
@@ -257,6 +256,7 @@ def get_transits(
     test_mode: bool = False,
     min_altitude: float = None,
     custom_bbox: dict = None,
+    adsb_provider: str = "flightaware-aeroapi"
 ) -> dict:
     """Get transit predictions for celestial targets.
 
@@ -270,8 +270,9 @@ def get_transits(
         If True, return mock results for demonstration
     custom_bbox : dict
         Optional custom bounding box with keys: lat_lower_left, lon_lower_left, lat_upper_right, lon_upper_right
+    adsb_provider: str:
+        Optional ADSB provider name to use. You must set the API Key for the choosen one. Default: `flightaware-aeroapi`.
     """
-    API_KEY = os.getenv("AEROAPI_API_KEY")
     WEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
     MIN_ALTITUDE = min_altitude if min_altitude is not None else float(os.getenv("MIN_TARGET_ALTITUDE", 15))
     OBSERVER_POSITION = get_my_pos(
@@ -337,17 +338,29 @@ def get_transits(
     else:
         search_bbox = area_bbox
 
+    # Instanciate the ADSB provider client
+    if adsb_provider == "flightaware-aeroapi":
+        adsb_client = FlightAwareAeroAPIClient(search_bbox, os.getenv("AEROAPI_API_KEY"))
+    elif adsb_provider == "airlabs":
+        adsb_client = AirLabsClient(search_bbox, os.getenv("AIRLABS_API_KEY"))
+    else:
+        raise ValueError("Pass a valid ADSB provider name, allowed values: flightaware-aeroapi, airlabs")
+
     if targets_to_check:
         # Fetch flight data once
         if test_mode:
             logger.info("🧪 TEST MODE: generating test flight data...")
             raw_flight_data = generate_test_flightaware_data(OBSERVER_POSITION, targets_to_check, target_coordinates)
         else:
-            raw_flight_data = get_flight_data(search_bbox, FLIGHTS_SEARCH_URL, API_KEY)
+            raw_flight_data = adsb_client.get_flight_data()
 
         flight_data = list()
         for flight in raw_flight_data["flights"]:
-            flight_data.append(parse_fligh_data(flight))
+            #flight_data.append(parse_fligh_data(flight))
+            parsed_data_flight = adsb_client.parse(flight)
+
+            if parsed_data_flight:
+                flight_data.append(parsed_data_flight)
 
         logger.info(f"there are {len(flight_data)} flights near")
 

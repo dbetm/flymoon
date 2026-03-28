@@ -125,6 +125,7 @@ function updateTrackedFlight() {
     let longitude = document.getElementById("longitude").value;
     let elevation = document.getElementById("elevation").value;
     const minAltitude = document.getElementById("minAltitude").value || 15;
+    let adsbProvider = document.getElementById("adsbProvider").value;
 
     let endpoint_url = (
         `/flights?target=${encodeURIComponent(target)}`
@@ -132,7 +133,8 @@ function updateTrackedFlight() {
         + `&longitude=${encodeURIComponent(longitude)}`
         + `&elevation=${encodeURIComponent(elevation)}`
         + `&min_altitude=${encodeURIComponent(minAltitude)}`
-        + `&send-notification=false`
+        + `&send_notification=false`
+        + `&adsb_provider=${adsbProvider}`
     );
 
     if (window.lastBoundingBox) {
@@ -474,6 +476,7 @@ function fetchFlights() {
     let latitude = document.getElementById("latitude").value;
     let longitude = document.getElementById("longitude").value;
     let elevation = document.getElementById("elevation").value;
+    let adsbProvider = document.getElementById("adsbProvider").value;
 
     let hasVeryPossibleTransits = false;
 
@@ -489,7 +492,8 @@ function fetchFlights() {
         + `&longitude=${encodeURIComponent(longitude)}`
         + `&elevation=${encodeURIComponent(elevation)}`
         + `&min_altitude=${encodeURIComponent(minAltitude)}`
-        + `&send-notification=${autoMode}`
+        + `&send_notification=${autoMode}`
+        + `&adsb_provider=${adsbProvider}`
     );
 
     // Add custom bounding box if user has edited it

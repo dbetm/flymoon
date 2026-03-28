@@ -56,7 +56,8 @@ def get_all_flights():
     longitude = float(request.args["longitude"])
     elevation = float(request.args["elevation"])
     min_altitude = float(request.args.get("min_altitude", 15))
-    has_send_notification = request.args["send-notification"] == "true"
+    has_send_notification = request.args["send_notification"] == "true"
+    adsb_provider = request.args["adsb_provider"]
 
     # Check for custom bounding box from user
     custom_bbox = None
@@ -69,7 +70,9 @@ def get_all_flights():
         }
         logger.info(f"Using custom bounding box: {custom_bbox}")
 
-    data: dict = get_transits(latitude, longitude, elevation, target, test_mode, min_altitude, custom_bbox)
+    data: dict = get_transits(
+        latitude, longitude, elevation, target, test_mode, min_altitude, custom_bbox, adsb_provider
+    )
     data["flights"] = sort_results(data["flights"])
 
     end_time = time.time()
@@ -101,6 +104,15 @@ def get_all_flights():
 @app.route("/flights/<fa_flight_id>/route")
 def get_flight_route(fa_flight_id):
     """Get the filed route for a specific flight."""
+    adsb_provider = request.args["adsb_provider"]
+    if adsb_provider == "airlabs": 
+        return (
+            jsonify(
+                {"error": "Endpoint currently not supported for the choosen ADSB provider"}
+            ),
+            HTTPStatus.METHOD_NOT_ALLOWED
+        )
+
     API_KEY = os.getenv("AEROAPI_API_KEY")
     url = FLIGHT_ROUTE_URL.format(fa_flight_id)
     headers = {"Accept": "application/json; charset=UTF-8", "x-apikey": API_KEY}
@@ -119,6 +131,15 @@ def get_flight_route(fa_flight_id):
 @app.route("/flights/<fa_flight_id>/track")
 def get_flight_track(fa_flight_id):
     """Get the historical track positions for a specific flight."""
+    adsb_provider = request.args["adsb_provider"]
+    if adsb_provider == "airlabs": 
+        return (
+            jsonify(
+                {"error": "Endpoint currently not supported for the choosen ADSB provider"}
+            ),
+            HTTPStatus.METHOD_NOT_ALLOWED
+        )
+
     API_KEY = os.getenv("AEROAPI_API_KEY")
     url = FLIGHT_TRACK_URL.format(fa_flight_id)
     headers = {"Accept": "application/json; charset=UTF-8", "x-apikey": API_KEY}

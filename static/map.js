@@ -398,11 +398,13 @@ async function toggleFlightRouteTrack(faFlightId, flightId) {
         return;
     }
 
+    let adsbProvider = document.getElementById("adsbProvider").value;
+
     // Fetch route and track
     try {
         const [routeResponse, trackResponse] = await Promise.all([
-            fetch(`/flights/${faFlightId}/route`).then(r => r.json()).catch(e => ({ error: e.message })),
-            fetch(`/flights/${faFlightId}/track`).then(r => r.json()).catch(e => ({ error: e.message }))
+            fetch(`/flights/${faFlightId}/route?adsb_provider=${adsbProvider}`).then(r => r.json()).catch(e => ({ error: e.message })),
+            fetch(`/flights/${faFlightId}/track?adsb_provider=${adsbProvider}`).then(r => r.json()).catch(e => ({ error: e.message }))
         ]);
 
         // Cache the data
