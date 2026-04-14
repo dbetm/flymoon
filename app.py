@@ -61,14 +61,15 @@ def get_all_flights():
 
     # Check for custom bounding box from user
     custom_bbox = None
-    if all(key in request.args for key in ["bbox_lat_ll", "bbox_lon_ll", "bbox_lat_ur", "bbox_lon_ur"]):
+    bbox_args = ["bbox_lat_lower_left", "bbox_lon_lower_left", "bbox_lat_upper_right", "bbox_lon_upper_right"]
+    if all(key in request.args for key in bbox_args):
         custom_bbox = {
-            "lat_lower_left": float(request.args["bbox_lat_ll"]),
-            "lon_lower_left": float(request.args["bbox_lon_ll"]),
-            "lat_upper_right": float(request.args["bbox_lat_ur"]),
-            "lon_upper_right": float(request.args["bbox_lon_ur"]),
+            "lat_lower_left": float(request.args["bbox_lat_lower_left"]),
+            "lon_lower_left": float(request.args["bbox_lon_lower_left"]),
+            "lat_upper_right": float(request.args["bbox_lat_upper_right"]),
+            "lon_upper_right": float(request.args["bbox_lon_upper_right"]),
         }
-        logger.info(f"Using custom bounding box: {custom_bbox}")
+        logger.info(f"Given bounding box: {custom_bbox}")
 
     data: dict = get_transits(
         latitude, longitude, elevation, target, test_mode, min_altitude, custom_bbox, adsb_provider

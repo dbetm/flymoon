@@ -155,7 +155,8 @@ function updateBoundingBox(latLowerLeft, lonLowerLeft, latUpperRight, lonUpperRi
                 latUpperRight: bounds.getNorth(),
                 lonUpperRight: bounds.getEast()
             };
-            window.lastBoundingBox = newBoundingBox;
+            window.boundingBox = newBoundingBox;
+            localStorage.setItem("boundingBox", JSON.stringify(window.boundingBox));
             console.log("Bounding box updated:", newBoundingBox);
         });
     }
@@ -577,7 +578,7 @@ function toggleMap() {
 }
 
 // Update map with all data from API response
-function updateMapVisualization(data, observerLat, observerLon, observerElev) {
+function updateMapVisualization(data, observerLat, observerLon, observerElev, bbox) {
     if (!map || !mapInitialized) {
         initializeMap(observerLat, observerLon);
     }
@@ -585,7 +586,7 @@ function updateMapVisualization(data, observerLat, observerLon, observerElev) {
     updateObserverMarker(observerLat, observerLon, observerElev);
 
     // Update bounding box if provided
-    if (data.boundingBox) {
+    if (bbox) {
         updateBoundingBox(
             data.boundingBox.latLowerLeft,
             data.boundingBox.lonLowerLeft,

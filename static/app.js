@@ -137,11 +137,11 @@ function updateTrackedFlight() {
         + `&adsb_provider=${adsbProvider}`
     );
 
-    if (window.lastBoundingBox) {
-        endpoint_url += `&bbox_lat_ll=${encodeURIComponent(window.lastBoundingBox.latLowerLeft)}`;
-        endpoint_url += `&bbox_lon_ll=${encodeURIComponent(window.lastBoundingBox.lonLowerLeft)}`;
-        endpoint_url += `&bbox_lat_ur=${encodeURIComponent(window.lastBoundingBox.latUpperRight)}`;
-        endpoint_url += `&bbox_lon_ur=${encodeURIComponent(window.lastBoundingBox.lonUpperRight)}`;
+    if (window.boundingBox) {
+        endpoint_url += `&bbox_lat_lower_left=${encodeURIComponent(window.boundingBox.latLowerLeft)}`;
+        endpoint_url += `&bbox_lon_lower_left=${encodeURIComponent(window.boundingBox.lonLowerLeft)}`;
+        endpoint_url += `&bbox_lat_upper_right=${encodeURIComponent(window.boundingBox.latUpperRight)}`;
+        endpoint_url += `&bbox_lon_upper_right=${encodeURIComponent(window.boundingBox.lonUpperRight)}`;
     }
 
     fetch(endpoint_url)
@@ -314,14 +314,14 @@ function savePosition() {
     localStorage.setItem("minAltitude", minAltitude);
 
     // Save bounding box if user has edited it
-    if (window.lastBoundingBox) {
-        localStorage.setItem("boundingBox", JSON.stringify(window.lastBoundingBox));
-    }
+    // if (window.lastBoundingBox) {
+    //     localStorage.setItem("boundingBox", JSON.stringify(window.lastBoundingBox));
+    // }
 
     alert("Position saved in local storage!");
 }
 
-function loadPosition() {
+function loadPositionAndBbox() {
     const savedLat = localStorage.getItem("latitude");
     const savedLon = localStorage.getItem("longitude");
     const savedElev = localStorage.getItem("elevation");
@@ -342,9 +342,10 @@ function loadPosition() {
     // Load saved bounding box
     if (savedBoundingBox) {
         try {
-            window.lastBoundingBox = JSON.parse(savedBoundingBox);
-            console.log("Bounding box loaded from local storage:", window.lastBoundingBox);
-        } catch (e) {
+            window.boundingBox = JSON.parse(savedBoundingBox);
+            console.log("Bounding box loaded from local storage:", window.boundingBox);
+        }
+        catch (e) {
             console.error("Error parsing saved bounding box:", e);
         }
     }
@@ -364,6 +365,9 @@ function clearPosition() {
     document.getElementById("longitude").value = "";
     document.getElementById("elevation").value = "";
     document.getElementById("minAltitude").value = "15";
+
+    // reset bounding box
+    window.boundingBox = null;
 }
 
 function go() {
@@ -497,11 +501,11 @@ function fetchFlights() {
     );
 
     // Add custom bounding box if user has edited it
-    if (window.lastBoundingBox) {
-        endpoint_url += `&bbox_lat_ll=${encodeURIComponent(window.lastBoundingBox.latLowerLeft)}`;
-        endpoint_url += `&bbox_lon_ll=${encodeURIComponent(window.lastBoundingBox.lonLowerLeft)}`;
-        endpoint_url += `&bbox_lat_ur=${encodeURIComponent(window.lastBoundingBox.latUpperRight)}`;
-        endpoint_url += `&bbox_lon_ur=${encodeURIComponent(window.lastBoundingBox.lonUpperRight)}`;
+    if (window.boundingBox) {
+        endpoint_url += `&bbox_lat_lower_left=${encodeURIComponent(window.boundingBox.latLowerLeft)}`;
+        endpoint_url += `&bbox_lon_lower_left=${encodeURIComponent(window.boundingBox.lonLowerLeft)}`;
+        endpoint_url += `&bbox_lat_upper_right=${encodeURIComponent(window.boundingBox.latUpperRight)}`;
+        endpoint_url += `&bbox_lon_upper_right=${encodeURIComponent(window.boundingBox.lonUpperRight)}`;
     }
 
     // Show loading spinner
@@ -533,13 +537,6 @@ function fetchFlights() {
         // Deduplicate flights by ID for display (keep the ones with lower angular separation considering both targets)
         const uniqueFlights = deduplicateFlights(data.flights);
         console.log(`Dedupe: ${data.flights.length} flights -> ${uniqueFlights.length} unique`);
-
-        // Debug: show final dedupe results
-        // uniqueFlights.forEach(f => {
-        //     if (f.is_possible_transit) {
-        //         console.log(`  ${f.id} (${f.target}): level=${f.possibility_level}, is_transit=${f.is_possible_transit}`);
-        //     }
-        // });
 
         uniqueFlights.forEach(item => {
             const row = document.createElement('tr');
@@ -660,19 +657,22 @@ function fetchFlights() {
 
         if(autoMode == true && hasVeryPossibleTransits == true) soundAlert();
 
+        // Save bounding box if previously there's no bbox
+        if(!window.boundingBox) {
+            window.boundingBox = data.boundingBox;
+            localStorage.setItem("boundingBox", JSON.stringify(window.boundingBox));
+        }
+
         // Always update map visualization when data is fetched (use deduplicated flights)
         if(mapVisible) {
             const mapData = {...data, flights: uniqueFlights};
-            updateMapVisualization(mapData, parseFloat(latitude), parseFloat(longitude), parseFloat(elevation));
+            updateMapVisualization(
+                mapData, parseFloat(latitude), parseFloat(longitude), parseFloat(elevation), window.boundingBox
+            );
         }
 
         // Update altitude display
         updateAltitudeDisplay(data.flights);
-
-        // Save bounding box for next time
-        if(data.boundingBox) {
-            window.lastBoundingBox = data.boundingBox;
-        }
     })
     .catch(error => {
         // Hide loading spinner on error

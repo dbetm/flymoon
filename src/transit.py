@@ -30,7 +30,8 @@ from src.weather import get_weather_condition
 
 EARTH = ASTRO_EPHEMERIS["earth"]
 
-area_bbox = AreaBoundingBox(
+# TODO: compute from current user position
+AREA_BBOX_FROM_ENV = AreaBoundingBox(
     lat_lower_left=os.getenv("LAT_LOWER_LEFT"),
     long_lower_left=os.getenv("LONG_LOWER_LEFT"),
     lat_upper_right=os.getenv("LAT_UPPER_RIGHT"),
@@ -334,9 +335,9 @@ def get_transits(
             lat_upper_right=custom_bbox["lat_upper_right"],
             long_upper_right=custom_bbox["lon_upper_right"],
         )
-        logger.info(f"Using custom search area: {search_bbox}")
     else:
-        search_bbox = area_bbox
+        search_bbox = AREA_BBOX_FROM_ENV
+        logger.info(f"Using bounding box as search area from ENV: {search_bbox}")
 
     # Instanciate the ADSB provider client
     if adsb_provider == "flightaware-aeroapi":
@@ -383,19 +384,16 @@ def get_transits(
                 data.append(transit_result)
                 logger.info(transit_result)
 
-    # Determine which bounding box to return
-    response_bbox = search_bbox if custom_bbox else area_bbox
-
     return {
         "flights": data,
         "targetCoordinates": target_coordinates,
         "trackingTargets": tracking_targets,
         "weather": weather_info,
         "boundingBox": {
-            "latLowerLeft": float(response_bbox.lat_lower_left),
-            "lonLowerLeft": float(response_bbox.long_lower_left),
-            "latUpperRight": float(response_bbox.lat_upper_right),
-            "lonUpperRight": float(response_bbox.long_upper_right),
+            "latLowerLeft": float(search_bbox.lat_lower_left),
+            "lonLowerLeft": float(search_bbox.long_lower_left),
+            "latUpperRight": float(search_bbox.lat_upper_right),
+            "lonUpperRight": float(search_bbox.long_upper_right),
         },
         "observerPosition": {
             "latitude": latitude,
