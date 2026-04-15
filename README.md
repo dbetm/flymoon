@@ -141,6 +141,7 @@ Click the 🗺️ button to see an interactive map showing:
 **Weather filtering**
 
 If you configure an OpenWeatherMap API key, the app will check cloud cover and skip checking for transits when conditions are poor. Set `OPENWEATHER_API_KEY` in your `.env` file and adjust `CLOUD_COVER_THRESHOLD` (default 30%).
+You can get your API key for free from: https://openweathermap.org/api
 
 
 --------

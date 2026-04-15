@@ -15,6 +15,7 @@ from src.constants import (
     INTERVAL_IN_SECS,
     NUM_SECONDS_PER_MIN,
     TOP_MINUTE,
+    WEATHER_API_KEY,
     PossibilityLevel,
 )
 from src.demo import generate_test_flightaware_data, generate_test_flightaware_data2
@@ -274,7 +275,6 @@ def get_transits(
     adsb_provider: str:
         Optional ADSB provider name to use. You must set the API Key for the choosen one. Default: `flightaware-aeroapi`.
     """
-    WEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
     MIN_ALTITUDE = min_altitude if min_altitude is not None else float(os.getenv("MIN_TARGET_ALTITUDE", 15))
     OBSERVER_POSITION = get_my_pos(
         lat=latitude,
@@ -289,10 +289,6 @@ def get_transits(
     # if test_mode:
     #     logger.info("🎭 MOCK MODE: Returning demonstration results")
     #     return generate_demo_flight_data(latitude, longitude, elevation, target_name)
-
-    # Check weather conditions
-    is_clear, weather_info = get_weather_condition(latitude, longitude, WEATHER_API_KEY, test_mode)
-    logger.info(f"Weather check: clear={is_clear}, {weather_info}")
 
     window_time = np.linspace(
         0, TOP_MINUTE, TOP_MINUTE * (NUM_SECONDS_PER_MIN // INTERVAL_IN_SECS)
@@ -347,7 +343,16 @@ def get_transits(
     else:
         raise ValueError("Pass a valid ADSB provider name, allowed values: flightaware-aeroapi, airlabs")
 
+    # Check weather conditions
     if targets_to_check:
+        is_clear, weather_info = get_weather_condition(latitude, longitude, WEATHER_API_KEY, test_mode)
+        logger.info(f"Weather check: clear={is_clear}, {weather_info}")
+    else:
+        is_clear, weather_info = get_weather_condition(
+            latitude, longitude, WEATHER_API_KEY, return_default_response=True
+        )
+
+    if targets_to_check and is_clear:
         # Fetch flight data once
         if test_mode:
             logger.info("🧪 TEST MODE: generating test flight data...")
