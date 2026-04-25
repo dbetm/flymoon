@@ -283,15 +283,10 @@ function updateAircraftMarkers(flights, observerLat, observerLon) {
         const isTransit = flight.is_possible_transit === 1;
         const rotation = (flight.direction - 45);
 
-        // Debug: Log heading and rotation for verification
-        // if (!isTransit && flight.direction) {
-        //     console.log(`Aircraft ${flightId}: heading=${flight.direction}°, rotation=${rotation}°, isTransit=${isTransit}`);
-        // }
-
         const aircraftIcon = L.divIcon({
             html: isTransit
-                ? `<div style="font-size: 36px; color: ${color}; text-shadow: 0 0 3px black, 0 0 3px black, 0 0 8px ${color}, 1px 1px 0 black, -1px -1px 0 black, 1px -1px 0 black, -1px 1px 0 black; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; line-height: 1;">◆</div>`
-                : `<div style="transform: rotate(${rotation}deg); font-size: 20px;">✈️</div>`,
+                ? `<div title='${flightId}' style="font-size: 36px; color: ${color}; text-shadow: 0 0 3px black, 0 0 3px black, 0 0 8px ${color}, 1px 1px 0 black, -1px -1px 0 black, 1px -1px 0 black, -1px 1px 0 black; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; line-height: 1;">◆</div>`
+                : `<div title='${flightId}' style="transform: rotate(${rotation}deg); font-size: 20px;">✈️</div>`,
             iconSize: [36, 36],
             iconAnchor: [18, 18],  // Center the icon on coordinates
             className: 'aircraft-icon'
