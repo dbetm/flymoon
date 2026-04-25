@@ -15,6 +15,7 @@ async def send_notifications(flight_data: List[dict], target: str) -> None:
 
     if not API_TOKEN:
         logger.warning("No API token to send notifications, skipping...")
+        return
 
     possible_transits_data = list()
 

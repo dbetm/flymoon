@@ -1,5 +1,6 @@
 import math
 import random
+from datetime import datetime
 from typing import List
 
 from src.constants import EARTH_RADIOUS
@@ -109,6 +110,7 @@ def generate_test_flightaware_data(observer_position, target_names: List[str], t
 
         flights.append({
             "ident": id,
+            "flight_icao": id,
             "aircraft_type": aircraft_type,
             "fa_flight_id": f"{id}-demo-test",
             "origin": {"city": origin},
@@ -120,6 +122,7 @@ def generate_test_flightaware_data(observer_position, target_names: List[str], t
                 "groundspeed": speed_knots,
                 "altitude": alt_hundreds_ft,
                 "altitude_change": "-",
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             },
         })
 
