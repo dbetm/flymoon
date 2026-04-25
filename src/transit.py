@@ -258,7 +258,7 @@ def get_transits(
     test_mode: bool = False,
     min_altitude: float = None,
     custom_bbox: dict = None,
-    adsb_provider: str = "flightaware-aeroapi"
+    adsb_provider: str = "flightaware-aeroapi",
 ) -> dict:
     """Get transit predictions for celestial targets.
 
@@ -285,11 +285,6 @@ def get_transits(
 
     logger.info(f"{latitude=}, {longitude=}, {elevation=}, {target_name=}")
 
-    # MOCK MODE - return hardcoded demo results
-    # if test_mode:
-    #     logger.info("🎭 MOCK MODE: Returning demonstration results")
-    #     return generate_demo_flight_data(latitude, longitude, elevation, target_name)
-
     window_time = np.linspace(
         0, TOP_MINUTE, TOP_MINUTE * (NUM_SECONDS_PER_MIN // INTERVAL_IN_SECS)
     )
@@ -313,7 +308,7 @@ def get_transits(
 
         target_coordinates[target] = coords
 
-        if coords["altitude"] >= MIN_ALTITUDE and is_clear:
+        if coords["altitude"] >= MIN_ALTITUDE:
             targets_to_check.append(target)
             logger.info(f"{target} at {coords['altitude']}° az {coords['azimuthal']}° - tracking enabled")
         else:
@@ -334,6 +329,8 @@ def get_transits(
     else:
         search_bbox = AREA_BBOX_FROM_ENV
         logger.info(f"Using bounding box as search area from ENV: {search_bbox}")
+
+    logger.info(f"{adsb_provider=}")
 
     # Instanciate the ADSB provider client
     if adsb_provider == "flightaware-aeroapi":

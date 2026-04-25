@@ -64,15 +64,15 @@ INTERVAL_IN_SECS = 1
 
 
 # Transit
-class Altitude(Enum):
-    LOW = lambda x: x <= 15  # less or equal
-    MEDIUM = lambda x: x <= 30  # less or equal
-    MEDIUM_HIGH = lambda x: x <= 60  # less or equal
-    HIGH = lambda x: x > 60  # greater than
-
-
 class PossibilityLevel(Enum):
     UNLIKELY = 0
     LOW = 1
     MEDIUM = 2
     HIGH = 3
+
+
+POSIBILITY_LEVEL_TO_COLOR = {
+    PossibilityLevel.HIGH.value: "🟢",
+    PossibilityLevel.MEDIUM.value: "🟠",
+    PossibilityLevel.LOW.value: "🟡",
+}
