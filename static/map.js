@@ -254,14 +254,18 @@ function updateSingleAircraftMarker(flight) {
     }
 }
 
-function updateAircraftMarkers(flights, observerLat, observerLon) {
-    if (!map) return;
-
-    // Clear existing aircraft markers
+function clearExistingAircraftMarkers() {
     Object.values(aircraftMarkers).forEach(marker => {
         map.removeLayer(marker);
     });
     aircraftMarkers = {};
+}
+
+
+function updateAircraftMarkers(flights, observerLat, observerLon) {
+    if (!map) return;
+
+    clearExistingAircraftMarkers();
 
     // Add new aircraft markers
     flights.forEach(flight => {
@@ -313,63 +317,6 @@ function updateAircraftMarkers(flights, observerLat, observerLon) {
 
             aircraftMarkers[normalizedId] = marker;
         }
-    });
-}
-
-function updateAltitudeOverlay(flights) {
-    const container = document.getElementById('altitudeBars');
-    if (!container) return;
-
-    container.innerHTML = '';
-
-    // Sort by aircraft elevation descending
-    const sortedFlights = [...flights].sort((a, b) =>
-        (b.aircraft_elevation || 0) - (a.aircraft_elevation || 0)
-    );
-
-    const MAX_ALT = 45000; // feet
-
-    sortedFlights.forEach(flight => {
-        const altMeters = flight.aircraft_elevation || 0;
-        if (altMeters <= 0) return; // Skip if no altitude data
-
-        const altFeet = Math.round(altMeters * 3.28084); // meters to feet
-        const barWidthPercent = (altFeet / MAX_ALT) * 100;
-
-        // Determine color
-        let color = '#808080'; // Gray default
-        if (flight.is_possible_transit === 1) {
-            const level = parseInt(flight.possibility_level);
-            if (level === 3) color = '#32CD32'; // GREEN
-            else if (level === 2) color = '#FF8C00'; // ORANGE
-            else if (level === 1) color = '#FFD700'; // YELLOW
-        }
-
-        const bar = document.createElement('div');
-        bar.className = 'altitude-bar';
-        bar.style.background = color;
-        bar.style.width = `${Math.max(barWidthPercent, 20)}%`; // Minimum 20% visible
-
-        const idLabel = document.createElement('span');
-        idLabel.className = 'altitude-bar-id';
-        idLabel.textContent = flight.id;
-
-        const altLabel = document.createElement('span');
-        altLabel.className = 'altitude-bar-value';
-        altLabel.textContent = `${(altFeet/1000).toFixed(1)}k`;
-
-        bar.appendChild(idLabel);
-        bar.appendChild(altLabel);
-
-        // Click to flash on map
-        bar.addEventListener('click', () => {
-            const normalizedId = String(flight.id).trim().toUpperCase();
-            if (typeof flashAircraftMarker === 'function') {
-                flashAircraftMarker(normalizedId);
-            }
-        });
-
-        container.appendChild(bar);
     });
 }
 
@@ -608,6 +555,5 @@ function updateMapVisualization(data, observerLat, observerLon, observerElev, bb
     // Update aircraft markers
     if (data.flights && data.flights.length > 0) {
         updateAircraftMarkers(data.flights, observerLat, observerLon);
-        updateAltitudeOverlay(data.flights);
     }
 }

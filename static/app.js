@@ -520,7 +520,9 @@ function fetchFlights() {
         document.getElementById("results").style.display = "block";
 
         if(data.flights.length == 0) {
-            alertNoResults.innerHTML = "No flights!"
+            alertNoResults.innerHTML = "No flights!";
+
+            if(mapVisible) clearExistingAircraftMarkers();
         }
 
         // Display tracking status - Sun and Moon with weather
@@ -775,19 +777,19 @@ function updateAltitudeDisplay(flights) {
     barsContainer.innerHTML = "";
 
     // Maximum altitude for scale (FL450 = 45,000 ft, 13.716 km)
-    const MAX_ALTITUDE = 13.716;
+    const MAX_ALTITUDE_KM = 15;
 
     // Create a thin line for each aircraft
     flights.forEach(flight => {
         const altitude = flight.aircraft_elevation_km || 0;
 
         // Skip if altitude is invalid or above max
-        if (altitude > MAX_ALTITUDE) return;
+        if (altitude > MAX_ALTITUDE_KM) return;
 
         // Calculate position from bottom (0 = ground, 100% = FL450)
         // Clamp negative altitudes to 0% (bottom)
         const clampedAltitude = Math.max(0, altitude);
-        const percentFromBottom = (clampedAltitude / MAX_ALTITUDE) * 100;
+        const percentFromBottom = (clampedAltitude / MAX_ALTITUDE_KM) * 100;
 
         // Create line element
         const line = document.createElement("div");
@@ -798,6 +800,7 @@ function updateAltitudeDisplay(flights) {
         line.style.height = "2px";
         line.style.cursor = "pointer";
         line.style.transition = "height 0.2s, opacity 0.2s";
+        line.title = flight.id;
 
         // Color based on possibility level
         let color = "#666"; // Default gray for unlikely

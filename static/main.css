@@ -379,16 +379,6 @@ body {
     align-self: flex-start;
 }
 
-.altitude-header {
-    color: #ccc;
-    font-size: 0.6em;
-    font-weight: bold;
-    margin-bottom: 5px;
-    text-align: center;
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
-}
-
 .altitude-scale {
     position: absolute;
     left: 3px;
@@ -407,9 +397,11 @@ body {
 }
 
 #altitudeBars {
-    margin-left: 25px;
-    position: relative;
-    height: calc(100% - 30px);
+    position: absolute;
+    top: 30px;
+    bottom: 10px;
+    left: 25px;
+    right: 0;
 }
 
 .altitude-bar {
