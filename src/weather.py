@@ -126,7 +126,7 @@ def get_weather_condition(
             icon = WEATHER_ICONS["unknown"]
             condition = "unknown"
 
-        cloud_threshold = int(os.getenv("CLOUD_COVER_THRESHOLD", 30))
+        cloud_threshold = int(os.getenv("CLOUD_COVER_THRESHOLD", 85))
         is_clear = cloud_cover < cloud_threshold
 
         weather_info = {
