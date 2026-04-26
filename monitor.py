@@ -35,6 +35,7 @@ class TransitClient:
         interval_min: int,
         send_app_notification: bool = False,
         adsb_provider: str = "flightaware-aeroapi",
+        min_altitude: float = 15,
         test_mode: bool = False,
     ):
         self.target = target
@@ -42,6 +43,7 @@ class TransitClient:
         self.longitude = long
         self.elevation = elevation
         self.interval = interval_min
+        self.min_altitude = min_altitude
         self.test_mode = test_mode
         self.send_app_notification = send_app_notification
         self.total_transits = 0
@@ -68,14 +70,12 @@ class TransitClient:
                 for _ in range(num_times_play_sound):
                     winsound.Beep(440, 500)  # 440 Hz for 500 ms
                     time.sleep(time_between_sounds)
-
         elif system == "Darwin":  # macOS
             ruta = filepath or "/System/Library/Sounds/Glass.aiff"
 
             for _ in range(num_times_play_sound):
                 subprocess.run(["afplay", ruta], check=True)
                 time.sleep(time_between_sounds)
-
         elif system == "Linux":
             if filepath:
                 # try aplay first, then paplay as fallback
@@ -97,7 +97,6 @@ class TransitClient:
                 for _ in range(num_times_play_sound):
                     print("\a", end="", flush=True)
                     time.sleep(time_between_sounds)
-
         else:
             logger.warning(f"Not supported system: {system}")
             for _ in range(num_times_play_sound):
@@ -121,6 +120,7 @@ class TransitClient:
             self.elevation,
             self.target,
             self.test_mode,
+            min_altitude=self.min_altitude,
             adsb_provider=self.adsb_provider,
         )
 
@@ -142,7 +142,7 @@ class TransitClient:
 
         # Check if any targets are trackable
         if not tracking_targets:
-            logger.info("No targets trackable (below horizon or weather)")
+            logger.info("No targets trackable (below horizon, threshold or weather)")
             self.current_transits = []
             return
 
@@ -195,7 +195,7 @@ class TransitClient:
 
         self.total_transits += num_possible_transits
         logger.info(
-            f"Found {num_possible_transits} possible {transit_word}. Total this session: {self.total_transits}"
+            f"Found {num_possible_transits} possible {transit_word}. Session total: {self.total_transits}"
         )
 
         if self.send_app_notification and not self.test_mode:
@@ -218,10 +218,12 @@ def main():
         "--adsb", choices=["flightaware-aeroapi", "airlabs"], default="flightaware-aeroapi"
     )
     parser.add_argument("--interval", type=int, default=12, help="Check interval in minutes")
-    parser.add_argument("--notify", type=bool, default=True, help="Send push notification")
-    parser.add_argument("--test", type=bool, default=False, help="Use test mode")
+    parser.add_argument("--notify", action="store_true", help="Send push notification")
+    parser.add_argument("--min-alt", type=float, default=15, help="Minimum altitude for targets")
+    parser.add_argument("--test", action="store_true", help="Use test mode")
 
     args = parser.parse_args()
+    logger.info(args)
 
     app = TransitClient(
         args.target,
@@ -230,8 +232,9 @@ def main():
         args.elev,
         args.interval,
         args.notify,
-        args.adsb,
-        args.test,
+        adsb_provider=args.adsb,
+        min_altitude=args.min_alt,
+        test_mode=args.test,
     )
 
     app.run()

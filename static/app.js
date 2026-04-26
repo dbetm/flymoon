@@ -17,6 +17,7 @@ const COLUMN_NAMES = [
     "distance_km",
 ];
 const MS_IN_A_MIN = 60000;
+const DEFAULT_MIN_ALT = 15;
 // Possibility levels
 const LOW_LEVEL = 1, MEDIUM_LEVEL = 2, HIGH_LEVEL = 3;
 var autoMode = false;
@@ -124,7 +125,7 @@ function updateTrackedFlight() {
     let latitude = document.getElementById("latitude").value;
     let longitude = document.getElementById("longitude").value;
     let elevation = document.getElementById("elevation").value;
-    const minAltitude = document.getElementById("minAltitude").value || 15;
+    const minAltitude = document.getElementById("minAltitude").value || DEFAULT_MIN_ALT;
     let adsbProvider = document.getElementById("adsbProvider").value;
 
     let endpoint_url = (
@@ -301,7 +302,7 @@ function savePosition() {
     let elev = document.getElementById("elevation");
     let elevation = parseFloat(elev.value);
     let minAlt = document.getElementById("minAltitude");
-    let minAltitude = parseFloat(minAlt.value) || 15;
+    let minAltitude = parseFloat(minAlt.value) || DEFAULT_MIN_ALT;
 
     if(isNaN(latitude) || isNaN(longitude) || isNaN(elevation)) {
         alert("Please, type all your coordinates. Use MAPS.ie or Google Earth");
@@ -312,11 +313,6 @@ function savePosition() {
     localStorage.setItem("longitude", longitude);
     localStorage.setItem("elevation", elevation);
     localStorage.setItem("minAltitude", minAltitude);
-
-    // Save bounding box if user has edited it
-    // if (window.lastBoundingBox) {
-    //     localStorage.setItem("boundingBox", JSON.stringify(window.lastBoundingBox));
-    // }
 
     alert("Position saved in local storage!");
 }
@@ -330,14 +326,14 @@ function loadPositionAndBbox() {
 
     if (savedLat === null || savedLat === "" || savedLat === "null") {
         console.log("No position saved in local storage");
-        document.getElementById("minAltitude").value = 15; // Default
+        document.getElementById("minAltitude").value = DEFAULT_MIN_ALT; // Default
         return;
     }
 
     document.getElementById("latitude").value = savedLat;
     document.getElementById("longitude").value = savedLon;
     document.getElementById("elevation").value = savedElev;
-    document.getElementById("minAltitude").value = savedMinAlt || 15;
+    document.getElementById("minAltitude").value = savedMinAlt || DEFAULT_MIN_ALT;
 
     // Load saved bounding box
     if (savedBoundingBox) {
@@ -364,7 +360,7 @@ function clearPosition() {
     document.getElementById("latitude").value = "";
     document.getElementById("longitude").value = "";
     document.getElementById("elevation").value = "";
-    document.getElementById("minAltitude").value = "15";
+    document.getElementById("minAltitude").value = DEFAULT_MIN_ALT.toString();
 
     // reset bounding box
     window.boundingBox = null;
@@ -489,7 +485,7 @@ function fetchFlights() {
     bodyTable.innerHTML = '';
     alertNoResults.innerHTML = '';
 
-    const minAltitude = document.getElementById("minAltitude").value || 15;
+    const minAltitude = document.getElementById("minAltitude").value || DEFAULT_MIN_ALT;
     let endpoint_url = (
         `/flights?target=${encodeURIComponent(target)}`
         + `&latitude=${encodeURIComponent(latitude)}`

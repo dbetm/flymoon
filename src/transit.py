@@ -256,7 +256,7 @@ def get_transits(
     elevation: float,
     target_name: str = "auto",
     test_mode: bool = False,
-    min_altitude: float = None,
+    min_altitude: float = 15,
     custom_bbox: dict = None,
     adsb_provider: str = "flightaware-aeroapi",
 ) -> dict:
@@ -267,7 +267,7 @@ def get_transits(
     target_name : str
         'moon', 'sun', or 'auto' (checks both if conditions permit)
     min_altitude : float
-        Minimum altitude in degrees for target to be tracked (default from env or 15)
+        Minimum altitude in degrees for target to be tracked (default 15)
     test_mode : bool
         If True, return mock results for demonstration
     custom_bbox : dict
@@ -275,13 +275,16 @@ def get_transits(
     adsb_provider: str:
         Optional ADSB provider name to use. You must set the API Key for the choosen one. Default: `flightaware-aeroapi`.
     """
-    MIN_ALTITUDE = min_altitude if min_altitude is not None else float(os.getenv("MIN_TARGET_ALTITUDE", 15))
     OBSERVER_POSITION = get_my_pos(
         lat=latitude,
         lon=longitude,
         elevation=elevation,
         base_ref=EARTH,
     )
+
+    if min_altitude < 0:
+        min_altitude = 0
+        logger.warning("Min altitude was changed to 0, no below horizon is tracking possible")
 
     logger.info(f"{latitude=}, {longitude=}, {elevation=}, {target_name=}")
 
@@ -308,11 +311,11 @@ def get_transits(
 
         target_coordinates[target] = coords
 
-        if coords["altitude"] >= MIN_ALTITUDE:
+        if coords["altitude"] >= min_altitude:
             targets_to_check.append(target)
             logger.info(f"{target} at {coords['altitude']}° az {coords['azimuthal']}° - tracking enabled")
         else:
-            reason = "below horizon" if coords["altitude"] < MIN_ALTITUDE else "weather"
+            reason = "below horizon or threshold" if coords["altitude"] < min_altitude else "weather"
             logger.info(f"{target} at {coords['altitude']}° - skipped ({reason})")
 
     data = list()
