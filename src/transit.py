@@ -31,14 +31,6 @@ from src.weather import get_weather_condition
 
 EARTH = ASTRO_EPHEMERIS["earth"]
 
-# TODO: compute from current user position
-AREA_BBOX_FROM_ENV = AreaBoundingBox(
-    lat_lower_left=os.getenv("LAT_LOWER_LEFT"),
-    long_lower_left=os.getenv("LONG_LOWER_LEFT"),
-    lat_upper_right=os.getenv("LAT_UPPER_RIGHT"),
-    long_upper_right=os.getenv("LONG_UPPER_RIGHT"),
-)
-
 
 def calculate_angular_separation(alt_1: float, az_1: float, alt_2: float, az_2: float) -> float:
     """Calculate great-circle angular separation in alt-az space.
@@ -275,6 +267,14 @@ def get_transits(
     adsb_provider: str:
         Optional ADSB provider name to use. You must set the API Key for the choosen one. Default: `flightaware-aeroapi`.
     """
+    # TODO: compute from current user position
+    AREA_BBOX_FROM_ENV = AreaBoundingBox(
+        lat_lower_left=float(os.getenv("LAT_LOWER_LEFT")),
+        long_lower_left=float(os.getenv("LONG_LOWER_LEFT")),
+        lat_upper_right=float(os.getenv("LAT_UPPER_RIGHT")),
+        long_upper_right=float(os.getenv("LONG_UPPER_RIGHT")),
+    )
+
     OBSERVER_POSITION = get_my_pos(
         lat=latitude,
         lon=longitude,
@@ -345,7 +345,7 @@ def get_transits(
 
     # Check weather conditions
     if targets_to_check:
-        is_clear, weather_info = get_weather_condition(latitude, longitude, WEATHER_API_KEY, test_mode)
+        is_clear, weather_info = get_weather_condition(latitude, longitude, WEATHER_API_KEY, True) #test_mode)
         logger.info(f"Weather check: clear={is_clear}, {weather_info}")
     else:
         is_clear, weather_info = get_weather_condition(

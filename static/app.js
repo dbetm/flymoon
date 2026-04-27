@@ -18,6 +18,7 @@ const COLUMN_NAMES = [
 ];
 const MS_IN_A_MIN = 60000;
 const DEFAULT_MIN_ALT = 15;
+const DEFAULT_INTERVAL_MINUTES = 10;
 // Possibility levels
 const LOW_LEVEL = 1, MEDIUM_LEVEL = 2, HIGH_LEVEL = 3;
 var autoMode = false;
@@ -29,21 +30,6 @@ clearInterval(autoGoInterval);
 clearInterval(refreshTimerLabelInterval);
 displayTarget();
 
-// App configuration from server
-var appConfig = {
-    autoRefreshIntervalMinutes: 10  // Default, will be loaded from server
-};
-
-// Load configuration from server
-fetch('/config')
-    .then(response => response.json())
-    .then(config => {
-        appConfig = config;
-        console.log('Loaded config:', appConfig);
-    })
-    .catch(error => {
-        console.error('Error loading config:', error);
-    });
 
 // Page visibility detection - optionally pause polling when page is hidden
 document.addEventListener('visibilitychange', function() {
@@ -56,7 +42,7 @@ document.addEventListener('visibilitychange', function() {
     }
     else if (!document.hidden && autoMode && pauseWhenHidden) {
         console.log('Page visible - resuming auto-refresh');
-        const freq = parseInt(localStorage.getItem("frequency")) || appConfig.autoRefreshIntervalMinutes;
+        const freq = parseInt(localStorage.getItem("frequency")) || DEFAULT_INTERVAL_MINUTES;
         autoGoInterval = setInterval(goFetch, MS_IN_A_MIN * freq);
         refreshTimerLabelInterval = setInterval(refreshTimer, MS_IN_A_MIN);
     }
@@ -422,16 +408,13 @@ function auto() {
         clearInterval(refreshTimerLabelInterval);
     }
     else {
-        // Get configured default from server or use saved frequency
-        const savedFreq = localStorage.getItem("frequency");
-        const defaultFreq = appConfig.autoRefreshIntervalMinutes || 6;
-        const suggestedFreq = savedFreq || defaultFreq;
+        // Get saved frequency or choose default value
+        const savedFreq = localStorage.getItem("frequency") || DEFAULT_INTERVAL_MINUTES;
 
         let freq = prompt(
             `Enter refresh interval in minutes\n` +
-            `Default: ${defaultFreq} min (configured)\n` +
-            `Recommended: 5-10 min for continuous monitoring`,
-            suggestedFreq
+            `Recommended: 6-10 min for continuous monitoring`,
+            savedFreq
         );
 
         // User cancelled
