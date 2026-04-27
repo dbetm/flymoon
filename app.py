@@ -22,13 +22,6 @@ from src.flight_data import save_possible_transits, sort_results
 from src.notify import send_notifications
 from src.transit import get_transits
 
-# Validate configuration on startup
-wizard = ConfigWizard()
-if not wizard.validate(interactive=False):
-    print("\n⚠️  Configuration issues detected:")
-    print(wizard.get_status_report())
-    print("\n💡 Run 'python3 src/config_wizard.py --setup' to configure\n")
-
 app = Flask(__name__)
 
 # Gallery configuration
@@ -40,6 +33,21 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB limit
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def check_config():
+    """Validate configuration from .env"""
+    wizard = ConfigWizard()
+    is_valid = wizard.validate(interactive=False)
+    print(wizard.get_status_report())
+
+    if not is_valid:
+        logger.error("\n🚨  Critical issues detected:")
+        print(
+            "\n💡 Please run 'python3 src/config_wizard.py --setup' to configure"
+            " or manuallu add the required values to .env\n"
+        )
+        exit(1)
 
 
 @app.route("/")
@@ -319,15 +327,6 @@ def update_gallery_metadata(filepath):
         return jsonify({"error": str(e)}), HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-@app.route("/config")
-def get_config():
-    """Get client configuration settings."""
-    auto_refresh_interval = int(os.getenv("AUTO_REFRESH_INTERVAL_MINUTES", "6"))
-    return jsonify({
-        "autoRefreshIntervalMinutes": auto_refresh_interval
-    })
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Flymoon Transit Monitor")
     parser.add_argument("--test", action="store_true", help="Use test generated flights data with some possible transits")
@@ -340,6 +339,8 @@ if __name__ == "__main__":
 
     if test_mode:
         logger.info(f"🧪 Starting in test mode - using generated flight data")
+
+    check_config()
 
     port = 8000
     app.run(host="0.0.0.0", port=port, debug=True)

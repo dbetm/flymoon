@@ -101,7 +101,11 @@ class AirLabsClient(ADSBProviderClient):
 
     def parse(self, flight: dict) -> Optional[dict]:
         v_speed = flight.get("v_speed", 0)
-        print("*"*30, f"{flight.get('v_speed')=}")
+
+        # check that exists essential data
+        for col in ["speed", "lat", "lng", "dir", "alt"]:
+            if not flight.get(col):
+                return None
 
         return {
             "name": flight["flight_icao"],
