@@ -110,59 +110,6 @@ def get_all_flights():
     return jsonify(data)
 
 
-@app.route("/flights/<fa_flight_id>/route")
-def get_flight_route(fa_flight_id):
-    """Get the filed route for a specific flight."""
-    adsb_provider = request.args["adsb_provider"]
-    if adsb_provider == "airlabs": 
-        return (
-            jsonify(
-                {"error": "Endpoint currently not supported for the choosen ADSB provider"}
-            ),
-            HTTPStatus.METHOD_NOT_ALLOWED
-        )
-
-    API_KEY = os.getenv("AEROAPI_API_KEY")
-    url = FLIGHT_ROUTE_URL.format(fa_flight_id)
-    headers = {"Accept": "application/json; charset=UTF-8", "x-apikey": API_KEY}
-
-    try:
-        response = requests.get(url=url, headers=headers, timeout=10)
-        if response.status_code == HTTPStatus.OK:
-            return jsonify(response.json())
-        else:
-            return jsonify({"error": f"API returned status {response.status_code}"}), response.status_code
-    except Exception as e:
-        logger.error(f"Error fetching route for {fa_flight_id}: {str(e)}")
-        return jsonify({"error": str(e)}), HTTPStatus.INTERNAL_SERVER_ERROR
-
-
-@app.route("/flights/<fa_flight_id>/track")
-def get_flight_track(fa_flight_id):
-    """Get the historical track positions for a specific flight."""
-    adsb_provider = request.args["adsb_provider"]
-    if adsb_provider == "airlabs": 
-        return (
-            jsonify(
-                {"error": "Endpoint currently not supported for the choosen ADSB provider"}
-            ),
-            HTTPStatus.METHOD_NOT_ALLOWED
-        )
-
-    API_KEY = os.getenv("AEROAPI_API_KEY")
-    url = FLIGHT_TRACK_URL.format(fa_flight_id)
-    headers = {"Accept": "application/json; charset=UTF-8", "x-apikey": API_KEY}
-
-    try:
-        response = requests.get(url=url, headers=headers, timeout=10)
-        if response.status_code == HTTPStatus.OK:
-            return jsonify(response.json())
-        else:
-            return jsonify({"error": f"API returned status {response.status_code}"}), response.status_code
-    except Exception as e:
-        logger.error(f"Error fetching track for {fa_flight_id}: {str(e)}")
-        return jsonify({"error": str(e)}), HTTPStatus.INTERNAL_SERVER_ERROR
-
 
 @app.route("/gallery")
 def gallery():

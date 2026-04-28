@@ -112,180 +112,6 @@ function playTrackOffSound() {
     osc.stop(now + 0.12);
 }
 
-function updateTrackedFlight() {
-    if (!trackingFlightId) return;
-
-    let latitude = document.getElementById("latitude").value;
-    let longitude = document.getElementById("longitude").value;
-    let elevation = document.getElementById("elevation").value;
-    const minAltitude = document.getElementById("minAltitude").value || DEFAULT_MIN_ALT;
-    let adsbProvider = document.getElementById("adsbProvider").value;
-
-    let endpoint_url = (
-        `/flights?target=${encodeURIComponent(target)}`
-        + `&latitude=${encodeURIComponent(latitude)}`
-        + `&longitude=${encodeURIComponent(longitude)}`
-        + `&elevation=${encodeURIComponent(elevation)}`
-        + `&min_altitude=${encodeURIComponent(minAltitude)}`
-        + `&send_notification=false`
-        + `&adsb_provider=${adsbProvider}`
-    );
-
-    if (window.boundingBox) {
-        endpoint_url += `&bbox_lat_lower_left=${encodeURIComponent(window.boundingBox.latLowerLeft)}`;
-        endpoint_url += `&bbox_lon_lower_left=${encodeURIComponent(window.boundingBox.lonLowerLeft)}`;
-        endpoint_url += `&bbox_lat_upper_right=${encodeURIComponent(window.boundingBox.latUpperRight)}`;
-        endpoint_url += `&bbox_lon_upper_right=${encodeURIComponent(window.boundingBox.lonUpperRight)}`;
-    }
-
-    fetch(endpoint_url)
-    .then(response => response.json())
-    .then(data => {
-        // Find the tracked flight in the response
-        const trackedFlight = data.flights.find(f =>
-            String(f.id).trim().toUpperCase() === trackingFlightId
-        );
-
-        if (!trackedFlight) {
-            console.log(`Track mode: flight ${trackingFlightId} no longer in range`);
-            stopTracking();
-            return;
-        }
-
-        // Update only the tracked flight's row
-        const row = document.querySelector(`tr[data-flight-id="${trackingFlightId}"]`);
-        if (row) {
-            updateFlightRow(row, trackedFlight);
-        }
-
-        // Update the marker on the map
-        if (typeof updateSingleAircraftMarker === 'function') {
-            updateSingleAircraftMarker(trackedFlight);
-        }
-    })
-    .catch(error => {
-        console.error('Track mode update error:', error);
-    });
-}
-
-function updateFlightRow(row, flight) {
-    // Update all cells except the first (target emoji)
-    const cells = row.querySelectorAll('td');
-    let cellIndex = 1; // Skip target emoji column
-
-    COLUMN_NAMES.forEach(column => {
-        const cell = cells[cellIndex++];
-        if (!cell) return;
-
-        const value = flight[column];
-
-        if (value === null || value === undefined) {
-            cell.textContent = "";
-        } else if (column === "id") {
-            const aircraftType = flight.aircraft_type || "";
-            cell.textContent = aircraftType && aircraftType !== "N/A" ? `${value} (${aircraftType})` : value;
-        } else if (column === "time") {
-            const totalSeconds = Math.round(value * 60);
-            const mins = Math.floor(totalSeconds / 60);
-            const secs = totalSeconds % 60;
-            cell.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
-        } else if (column === "aircraft_elevation_km") {
-            cell.textContent = value.toLocaleString('en-US') + " km";
-        } else if (column === "distance_km") {
-            cell.textContent = value.toFixed(1) + " km";
-        } else if (column === "direction") {
-            cell.textContent = Math.round(value) + "°";
-        } else if (column === "speed") {
-            cell.textContent = Math.round(value) + " km/h";
-        } else if (column === "alt_diff" || column === "az_diff") {
-            const roundedValue = Math.round(value);
-            cell.textContent = roundedValue + "º";
-            cell.style.color = Math.abs(roundedValue) > 10 ? "#888" : "";
-        } else if (column === "target_alt" || column === "target_az") {
-            const numValue = value.toFixed(1);
-            cell.textContent = numValue + "º";
-            if (value < 0) {
-                cell.style.color = "#888";
-                cell.style.fontStyle = "italic";
-            } else {
-                cell.style.color = "";
-                cell.style.fontStyle = "";
-            }
-        } else if (column === "plane_alt" || column === "plane_az") {
-            const numValue = value.toFixed(1);
-            cell.textContent = numValue + "º";
-            if (value < 0) {
-                cell.style.color = "#888";
-                cell.style.fontStyle = "italic";
-            } else {
-                cell.style.color = "";
-                cell.style.fontStyle = "";
-            }
-        } else if (column === "angular_separation") {
-            cell.textContent = value.toFixed(2) + "º";
-        } else {
-            cell.textContent = value;
-        }
-    });
-}
-
-function startTracking(flightId) {
-    // Stop any existing tracking
-    stopTracking();
-
-    trackingFlightId = flightId;
-    console.log(`Track mode: started for ${flightId}`);
-    playTrackOnSound();
-
-    // Visual indicator
-    updateTrackingIndicator();
-
-    // Start polling - use updateTrackedFlight instead of fetchFlights
-    trackingInterval = setInterval(updateTrackedFlight, TRACK_INTERVAL_MS);
-
-    // Auto-stop after 3 minutes
-    trackingTimeout = setTimeout(() => {
-        console.log('Track mode: 3 minute timeout');
-        stopTracking();
-    }, TRACK_TIMEOUT_MS);
-
-    // Immediate update
-    updateTrackedFlight();
-}
-
-function stopTracking() {
-    if (trackingInterval) {
-        clearInterval(trackingInterval);
-        trackingInterval = null;
-    }
-    if (trackingTimeout) {
-        clearTimeout(trackingTimeout);
-        trackingTimeout = null;
-    }
-    if (trackingFlightId) {
-        console.log(`Track mode: stopped for ${trackingFlightId}`);
-        trackingFlightId = null;
-        playTrackOffSound();
-    }
-    updateTrackingIndicator();
-}
-
-function updateTrackingIndicator() {
-    // Remove previous tracking highlight
-    document.querySelectorAll('.tracking-row').forEach(row => {
-        row.classList.remove('tracking-row');
-    });
-
-    // Add highlight to tracked row
-    if (trackingFlightId) {
-        const row = document.querySelector(`tr[data-flight-id="${trackingFlightId}"]`);
-        if (row) {
-            row.classList.add('tracking-row');
-        }
-        document.getElementById("trackingStatus").innerHTML += ` | 🎯 Tracking ${trackingFlightId}`;
-    }
-}
-
 
 function savePosition() {
     let lat = document.getElementById("latitude");
@@ -537,32 +363,9 @@ function fetchFlights() {
 
             // Click handler: normal click flashes, Cmd/Ctrl+click toggles tracking
             row.addEventListener('click', function(e) {
-                if ((e.metaKey || e.ctrlKey) && e.altKey) {
-                    // Cmd/Ctrl+Option: test sounds only
-                    playTrackOnSound();
-                    setTimeout(playTrackOffSound, 500);
-                } else if (e.metaKey || e.ctrlKey) {
-                    // Cmd/Ctrl+click: toggle track mode
-                    if (trackingFlightId === normalizedId) {
-                        stopTracking();
-                    } else {
-                        // Safety check: only track medium or high probability
-                        if (possibilityLevel < MEDIUM_LEVEL) {
-                            alert('Track Mode requires medium or high probability transit.\n\nThis flight has ' +
-                                (possibilityLevel === LOW_LEVEL ? 'low' : 'no') +
-                                ' probability of transit.');
-                            return;
-                        }
-                        startTracking(normalizedId);
-                    }
-                } else {
-                    // Normal click: flash aircraft on map and show route/track
-                    if (typeof flashAircraftMarker === 'function') {
-                        flashAircraftMarker(normalizedId);
-                    }
-                    if (typeof toggleFlightRouteTrack === 'function') {
-                        toggleFlightRouteTrack(item.fa_flight_id, normalizedId);
-                    }
+                // flash aircraft on map 
+                if (typeof flashAircraftMarker === 'function') {
+                    flashAircraftMarker(normalizedId);
                 }
             });
 
@@ -657,10 +460,10 @@ function fetchFlights() {
             updateMapVisualization(
                 mapData, parseFloat(latitude), parseFloat(longitude), parseFloat(elevation), window.boundingBox
             );
-        }
 
-        // Update altitude display
-        updateAltitudeDisplay(data.flights);
+            // Update altitude display
+            updateAltitudeDisplay(data.flights);
+        }
     })
     .catch(error => {
         // Hide loading spinner on error
