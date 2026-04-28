@@ -48,6 +48,13 @@ document.addEventListener('visibilitychange', function() {
     }
 });
 
+// While loading the page, play silently as answer to any click (Hack for Safari)
+document.addEventListener('click', function unlockAudio() {
+    const audio = document.getElementById('alertSound');
+    audio.play().then(() => audio.pause());
+    document.removeEventListener('click', unlockAudio);
+}, { once: true });
+
 // State tracking for toggles
 var resultsVisible = false;
 var mapVisible = false;
@@ -848,76 +855,6 @@ function resetResultsTable() {
 function soundAlert() {
     const audio = document.getElementById('alertSound');
     audio.play();
-    
-    // Also show desktop notification if permitted
-    showDesktopNotification();
-}
-
-function showDesktopNotification() {
-    // Check if browser supports notifications
-    if (!('Notification' in window)) {
-        console.log('Browser does not support desktop notifications');
-        return;
-    }
-    
-    // Check permission
-    if (Notification.permission === 'granted') {
-        createNotification();
-    } else if (Notification.permission !== 'denied') {
-        // Request permission
-        Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-                createNotification();
-            }
-        });
-    }
-}
-
-function createNotification() {
-    const targetIcon = target === 'auto' ? '🌙☀️' : (target === 'moon' ? '🌙' : '☀️');
-    const title = `Transit Alert! ${targetIcon}`;
-    const body = 'Possible aircraft transit detected. Check the results table for details.';
-    
-    const notification = new Notification(title, {
-        body: body,
-        icon: '/static/images/favicon.ico',
-        badge: '/static/images/favicon.ico',
-        tag: 'flymoon-transit',
-        requireInteraction: false
-    });
-    
-    notification.onclick = function() {
-        window.focus();
-        this.close();
-    };
-    
-    // Auto-close after 10 seconds
-    setTimeout(() => notification.close(), 10000);
-}
-
-function requestNotificationPermission() {
-    if (!('Notification' in window)) {
-        alert('Your browser does not support desktop notifications');
-        return;
-    }
-
-    if (Notification.permission === 'granted') {
-        alert('Alerts are already enabled!');
-        return;
-    }
-
-    if (Notification.permission === 'denied') {
-        alert('Alerts were previously denied. Please enable them in your browser settings.');
-        return;
-    }
-
-    Notification.requestPermission().then(permission => {
-        if (permission === 'granted') {
-            alert('Alerts enabled successfully!');
-        } else {
-            alert('Alerts were not enabled.');
-        }
-    });
 }
 
 // Pause when hidden preference
