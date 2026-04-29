@@ -33,8 +33,6 @@ WEATHER_ICONS = {
 # FlightAware AeroAPI
 AEROAPI_BASE_URL = "https://aeroapi.flightaware.com/aeroapi"
 FLIGHTS_SEARCH_URL = f"{AEROAPI_BASE_URL}/flights/search"
-FLIGHT_ROUTE_URL = f"{AEROAPI_BASE_URL}/flights/{{}}/route"  # Use .format(fa_flight_id)
-FLIGHT_TRACK_URL = f"{AEROAPI_BASE_URL}/flights/{{}}/track"  # Use .format(fa_flight_id)
 
 CHANGE_ELEVATION = {
     "C": "climbing",

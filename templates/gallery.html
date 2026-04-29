@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Flymoon — Gallery</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='gallery.css') }}">
+</head>
+<body>
+    <div class="header-row">
+        <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Flymoon Transit Tracker" class="logo" />
+        <span class="status-text">Transit Image Gallery</span>
+        <!-- <a href="/" class="btn-sm" title="Back to tracker">← Back</a> -->
+        <button class="btn-primary" onclick="openUploadModal()">+ Upload</button>
+    </div>
+
+    <div class="controls-row">
+        <div class="control-box">
+            <select id="filterTarget" onchange="renderGallery()">
+                <option value="">All targets</option>
+                <option value="moon">🌙 Moon</option>
+                <option value="sun">☀️ Sun</option>
+            </select>
+            <div class="control-label">Filter target</div>
+        </div>
+        <div class="control-box">
+            <select id="sortOrder" onchange="renderGallery()">
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+            </select>
+            <div class="control-label">Sort</div>
+        </div>
+        <span class="separator">|</span>
+        <span id="imageCount" class="status-text"></span>
+    </div>
+
+    <div id="loadingSpinner">
+        <div id="spinnerAnimation"></div>
+        <p>Loading gallery...</p>
+    </div>
+
+    <p id="emptyState" class="gallery-empty" style="display:none;">No transit images yet. Upload your first one!</p>
+
+    <div id="galleryGrid" class="gallery-grid"></div>
+
+    <!-- Lightbox -->
+    <div id="lightbox" class="lightbox" onclick="closeLightbox(event)">
+        <div class="lightbox-content" onclick="event.stopPropagation()">
+            <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+            <img id="lightboxImg" src="" alt="" />
+            <div class="lightbox-meta">
+                <div id="lightboxMetaView">
+                    <table class="meta-table" id="lightboxMetaTable"></table>
+                    <div class="lightbox-actions">
+                        <button class="btn-sm" onclick="openEditMode()">✏️ Edit</button>
+                        <button class="btn-sm btn-danger" onclick="confirmDelete()">🗑️ Delete</button>
+                    </div>
+                </div>
+                <div id="lightboxMetaEdit" style="display:none;">
+                    <form id="editForm" class="edit-form" onsubmit="submitEdit(event)">
+                        <label>Flight ID<input type="text" name="flight_id" /></label>
+                        <label>Aircraft type<input type="text" name="aircraft_type" /></label>
+                        <label>Target
+                            <select name="target">
+                                <option value="">—</option>
+                                <option value="moon">Moon</option>
+                                <option value="sun">Sun</option>
+                            </select>
+                        </label>
+                        <label>Caption<input type="text" name="caption" /></label>
+                        <label>Equipment<input type="text" name="equipment" /></label>
+                        <label>Transit date<input type="date" name="transit_date" /></label>
+                        <div class="lightbox-actions">
+                            <button type="submit" class="btn-primary">Save</button>
+                            <button type="button" class="btn-sm" onclick="closeEditMode()">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload modal -->
+    <div id="uploadModal" class="lightbox" onclick="closeUploadModal(event)">
+        <div class="lightbox-content" onclick="event.stopPropagation()">
+            <button class="lightbox-close" onclick="closeUploadModal()">&times;</button>
+            <h3 style="margin-top:0;">Upload Transit Image</h3>
+            <form id="uploadForm" class="edit-form" onsubmit="submitUpload(event)">
+                <label>Image file *
+                    <input type="file" id="uploadFile" name="file" accept=".png,.jpg,.jpeg,.gif" required />
+                </label>
+                <div id="uploadPreviewWrap" style="display:none;">
+                    <img id="uploadPreview" src="" alt="Preview" class="upload-preview" />
+                </div>
+                <label>Flight ID<input type="text" name="flight_id" placeholder="e.g. AA123" /></label>
+                <label>Aircraft type<input type="text" name="aircraft_type" placeholder="e.g. B738" /></label>
+                <label>Target
+                    <select name="target">
+                        <option value="">—</option>
+                        <option value="moon">Moon</option>
+                        <option value="sun">Sun</option>
+                    </select>
+                </label>
+                <label>Caption<input type="text" name="caption" placeholder="Brief description" /></label>
+                <label>Equipment<input type="text" name="equipment" placeholder="e.g. Sony A7IV + 800mm" /></label>
+                <label>Transit date<input type="date" id="uploadTransitDate" name="transit_date" /></label>
+                <div id="uploadError" class="upload-error" style="display:none;"></div>
+                <div class="lightbox-actions">
+                    <button type="submit" class="btn-primary" id="uploadBtn">Upload</button>
+                    <button type="button" class="btn-sm" onclick="closeUploadModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="attribution-footer">
+        <p>Flymoon 2.0</p>
+        <a class="whiteLink" href="https://github.com/dbetm/flymoon/issues/21" target="_blank">Upload your photo to GitHub</a>
+    </footer>
+
+    <script src="{{ url_for('static', filename='gallery.js') }}" charset="utf-8"></script>
+</body>
+</html>

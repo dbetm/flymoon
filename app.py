@@ -6,12 +6,11 @@ import time
 from datetime import date, datetime
 from http import HTTPStatus
 
-import requests
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
 from werkzeug.utils import secure_filename
 
-from src.constants import FLIGHT_ROUTE_URL, FLIGHT_TRACK_URL, POSSIBLE_TRANSITS_LOGFILENAME
+from src.constants import POSSIBLE_TRANSITS_LOGFILENAME
 
 # SETUP
 load_dotenv()
@@ -128,17 +127,22 @@ def upload_transit_image():
         return jsonify({"error": "No file selected"}), HTTPStatus.BAD_REQUEST
 
     if file and allowed_file(file.filename):
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        transit_date_str = request.form.get('transit_date', '')
+        try:
+            transit_dt = datetime.strptime(transit_date_str, "%Y-%m-%d") if transit_date_str else datetime.now()
+        except ValueError:
+            transit_dt = datetime.now()
+
         flight_id = request.form.get('flight_id', 'UNKNOWN').replace('/', '_')
         ext = file.filename.rsplit('.', 1)[1].lower()
 
-        # Create year/month directories
-        now = datetime.now()
-        year_month_path = os.path.join(app.config['UPLOAD_FOLDER'], str(now.year), f"{now.month:02d}")
+        # Create year/month directories based on transit date
+        year_month_path = os.path.join(app.config['UPLOAD_FOLDER'], str(transit_dt.year), f"{transit_dt.month:02d}")
         os.makedirs(year_month_path, exist_ok=True)
 
         # Save image
-        filename = secure_filename(f"{timestamp}_{flight_id}.{ext}")
+        date_prefix = transit_dt.strftime("%Y%m%d")
+        filename = secure_filename(f"{date_prefix}_{flight_id}.{ext}")
         filepath = os.path.join(year_month_path, filename)
         file.save(filepath)
 
@@ -146,12 +150,11 @@ def upload_transit_image():
         metadata = {
             "flight_id": request.form.get('flight_id', ''),
             "aircraft_type": request.form.get('aircraft_type', ''),
-            "timestamp": datetime.now().isoformat(),
+            "upload_date": datetime.now().isoformat(),
             "target": request.form.get('target', ''),
             "caption": request.form.get('caption', ''),
             "equipment": request.form.get('equipment', ''),
-            "observer_lat": request.form.get('observer_lat', ''),
-            "observer_lon": request.form.get('observer_lon', ''),
+            "transit_date": transit_dt.strftime("%Y-%m-%d"),
         }
 
         metadata_path = filepath.rsplit('.', 1)[0] + '.json'
@@ -259,8 +262,7 @@ def update_gallery_metadata(filepath):
             "target": request.form.get('target', metadata.get('target', '')),
             "caption": request.form.get('caption', metadata.get('caption', '')),
             "equipment": request.form.get('equipment', metadata.get('equipment', '')),
-            "observer_lat": request.form.get('observer_lat', metadata.get('observer_lat', '')),
-            "observer_lon": request.form.get('observer_lon', metadata.get('observer_lon', '')),
+            "transit_date": request.form.get('transit_date', metadata.get('transit_date', '')),
         })
 
         # Save updated metadata
