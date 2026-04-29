@@ -167,6 +167,7 @@ notes.txt
 dev-notes.txt
 data/possible-transits/*.csv
 data/possible-transits/log-backup.txt
+static/gallery/**/*
 
 # tests
 tests/test_results.json

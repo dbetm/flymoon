@@ -17,7 +17,7 @@
         <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Flymoon Transit Tracker" class="logo" />
         <span id="targetIcon" class="target-icon" onclick="toggleTarget();">-</span>
         <span id="trackingStatus" class="status-text"></span>
-        <a href="/gallery" class="btn-sm" title="View Transit Image Gallery">📸 Gallery</a>
+        <a href="/gallery" target="_blank" class="btn-sm" title="View Transit Image Gallery">📸 Gallery</a>
     </div>
 
     <div class="controls-row">
@@ -52,10 +52,6 @@
         <div class="control-box">
             <button class="btn-sm" onclick="toggleMap()" title="Toggle map">🗺️</button>
             <div class="control-label">Map</div>
-        </div>
-        <div class="control-box">
-            <button class="btn-sm" onclick="requestNotificationPermission()" title="Enable alerts">🔔</button>
-            <div class="control-label">Alerts</div>
         </div>
     </div>
 

@@ -18,6 +18,10 @@ body {
     margin-bottom: 4px;
 }
 
+.whiteLink {
+    color: white;
+}
+
 .logo {
     height: 40px;
     width: auto;
