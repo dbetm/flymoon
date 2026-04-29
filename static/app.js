@@ -496,6 +496,11 @@ function renderTrackingStatus(data) {
         trackingParts.push(`☁️ ${data.weather.cloud_cover}% clouds`);
     }
 
+    // test mode
+    if(data.isTestMode) {
+        trackingParts.push("🧪")
+    }
+
     document.getElementById("trackingStatus").innerHTML = trackingParts.join("&nbsp;&nbsp;&nbsp;&nbsp;");
 }
 
