@@ -18,7 +18,7 @@ from src.constants import (
     WEATHER_API_KEY,
     PossibilityLevel,
 )
-from src.demo import generate_test_flightaware_data, generate_test_flightaware_data2
+from src.demo import generate_test_flightaware_data
 from src.flight_data import FlightAwareAeroAPIClient, AirLabsClient
 from src.position import (
     AreaBoundingBox,
@@ -307,7 +307,7 @@ def get_transits(
     for target in target_names:
         obj = CelestialObject(name=target, observer_position=OBSERVER_POSITION)
         obj.update_position(ref_datetime=ref_datetime)
-        coords = obj.get_coordinates()
+        coords = obj.get_coordinates(precision=4)
 
         target_coordinates[target] = coords
 
@@ -345,7 +345,7 @@ def get_transits(
 
     # Check weather conditions
     if targets_to_check:
-        is_clear, weather_info = get_weather_condition(latitude, longitude, WEATHER_API_KEY, True) #test_mode)
+        is_clear, weather_info = get_weather_condition(latitude, longitude, WEATHER_API_KEY, test_mode)
         logger.info(f"Weather check: clear={is_clear}, {weather_info}")
     else:
         is_clear, weather_info = get_weather_condition(
@@ -405,4 +405,5 @@ def get_transits(
             "longitude": longitude,
             "elevation": elevation,
         },
+        "isTestMode": test_mode,
     }
