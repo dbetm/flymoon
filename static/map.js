@@ -8,7 +8,6 @@ let azimuthArrows = {};  // Store arrows by target name
 let aircraftMarkers = {};
 let mapInitialized = false;
 let boundingBoxUserEdited = false;
-let aircraftRouteCache = {};  // Cache fetched routes/tracks
 let currentRouteLayer = null;  // Currently displayed route/track
 
 // Arrow colors for each target
@@ -358,15 +357,6 @@ function displayRouteTrack(data, flightId) {
     layerGroup.addTo(map);
     layerGroup.flightId = flightId;
     currentRouteLayer = layerGroup;
-}
-
-function getPossibilityText(isPossible, level) {
-    if (isPossible !== 1) return 'No transit';
-    const levelInt = parseInt(level);
-    if (levelInt === 1) return 'Low probability';
-    if (levelInt === 2) return 'Medium probability';
-    if (levelInt === 3) return 'High probability';
-    return 'Unknown';
 }
 
 // Haversine formula to calculate destination point given start, bearing, and distance

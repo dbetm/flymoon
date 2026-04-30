@@ -34,11 +34,6 @@ body {
     cursor: pointer;
 }
 
-.target-label {
-    color: #aaa;
-    font-size: 0.9em;
-}
-
 .status-text { 
     color: #888;
     font-size: 0.85em;
