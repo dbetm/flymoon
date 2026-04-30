@@ -1,5 +1,5 @@
-import os
 import math
+import os
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -19,7 +19,7 @@ from src.constants import (
     PossibilityLevel,
 )
 from src.demo import generate_test_flightaware_data
-from src.flight_data import FlightAwareAeroAPIClient, AirLabsClient
+from src.flight_data import AirLabsClient, FlightAwareAeroAPIClient
 from src.position import (
     AreaBoundingBox,
     geographic_to_altaz,
@@ -32,7 +32,9 @@ from src.weather import get_weather_condition
 EARTH = ASTRO_EPHEMERIS["earth"]
 
 
-def calculate_angular_separation(alt_1: float, az_1: float, alt_2: float, az_2: float) -> float:
+def calculate_angular_separation(
+    alt_1: float, az_1: float, alt_2: float, az_2: float
+) -> float:
     """Calculate great-circle angular separation in alt-az space.
 
     Uses the spherical law of cosines, which is numerically stable
@@ -57,9 +59,9 @@ def calculate_angular_separation(alt_1: float, az_1: float, alt_2: float, az_2: 
 
     # Convert to radians
     alt_1_rad = math.radians(alt_1)
-    az_1_rad  = math.radians(az_1)
+    az_1_rad = math.radians(az_1)
     alt_2_rad = math.radians(alt_2)
-    az_2_rad  = math.radians(az_2)
+    az_2_rad = math.radians(az_2)
 
     ### Apply spheric cosines law ###
 
@@ -144,14 +146,17 @@ def check_transit(
     response = None
     no_decreasing_count = 0
     update_response = False
-    POSSIBLE_TRANSIT_LEVELS = {PossibilityLevel.HIGH.value, PossibilityLevel.MEDIUM.value}
+    POSSIBLE_TRANSIT_LEVELS = {
+        PossibilityLevel.HIGH.value,
+        PossibilityLevel.MEDIUM.value,
+    }
 
     # Calculate horizontal distance from observer to aircraft in kilometers
     distance_km = haversine_distance(
         float(observer_position.target.latitude.degrees),
         float(observer_position.target.longitude.degrees),
         flight["latitude"],
-        flight["longitude"]
+        flight["longitude"],
     )
 
     for idx, minute in enumerate(window_time):
@@ -198,7 +203,9 @@ def check_transit(
             no_decreasing_count += 1
 
         if no_decreasing_count >= 120:
-            logger.info(f"Angular separation increasing, stop checking at min={round(minute, 2)}")
+            logger.info(
+                f"Angular separation increasing, stop checking at min={round(minute, 2)}"
+            )
             break
 
         # Always track aircraft above horizon, will be classified by angular separation
@@ -219,7 +226,9 @@ def check_transit(
                 "plane_alt": round(float(future_alt), 2),
                 "target_az": round(float(target.azimuthal.degrees), 2),
                 "plane_az": round(float(future_az), 2),
-                "is_possible_transit": 1 if possibility_level in POSSIBLE_TRANSIT_LEVELS else 0,
+                "is_possible_transit": (
+                    1 if possibility_level in POSSIBLE_TRANSIT_LEVELS else 0
+                ),
                 "possibility_level": possibility_level,
                 "elevation_change": CHANGE_ELEVATION.get(
                     flight["elevation_change"], None
@@ -229,10 +238,16 @@ def check_transit(
                 "target": target.name,
                 "latitude": flight["latitude"],
                 "longitude": flight["longitude"],
-                "aircraft_elevation": flight.get("elevation", 0),  # Actual altitude in meters
-                "aircraft_elevation_km": round(flight.get("elevation", 0) / 1_000, 2), # Actual altitude in kilometers
-                "aircraft_elevation_feet": flight.get("elevation_feet", 0),  # Actual altitude in feet # TODO: deprecate
-                "distance_km": round(distance_km, 1), # Distance from observer in km
+                "aircraft_elevation": flight.get(
+                    "elevation", 0
+                ),  # Actual altitude in meters
+                "aircraft_elevation_km": round(
+                    flight.get("elevation", 0) / 1_000, 2
+                ),  # Actual altitude in kilometers
+                "aircraft_elevation_feet": flight.get(
+                    "elevation_feet", 0
+                ),  # Actual altitude in feet # TODO: deprecate
+                "distance_km": round(distance_km, 1),  # Distance from observer in km
             }
         update_response = False
 
@@ -287,7 +302,9 @@ def get_transits(
 
     if min_altitude < 0:
         min_altitude = 0
-        logger.warning("Min altitude was changed to 0, no below horizon is tracking possible")
+        logger.warning(
+            "Min altitude was changed to 0, no below horizon is tracking possible"
+        )
 
     logger.info(f"{latitude=}, {longitude=}, {elevation=}, {target_name=}")
 
@@ -316,13 +333,19 @@ def get_transits(
 
         if coords["altitude"] >= min_altitude:
             targets_to_check.append(target)
-            logger.info(f"{target} at {coords['altitude']}° az {coords['azimuthal']}° - tracking enabled")
+            logger.info(
+                f"{target} at {coords['altitude']}° az {coords['azimuthal']}° - tracking enabled"
+            )
         else:
-            reason = "below horizon or threshold" if coords["altitude"] < min_altitude else "weather"
+            reason = (
+                "below horizon or threshold"
+                if coords["altitude"] < min_altitude
+                else "weather"
+            )
             logger.info(f"{target} at {coords['altitude']}° - skipped ({reason})")
 
     data = list()
-    tracking_targets = targets_to_check.copy() # For response
+    tracking_targets = targets_to_check.copy()  # For response
 
     # Use custom bounding box if provided, otherwise use default
     if custom_bbox:
@@ -340,15 +363,21 @@ def get_transits(
 
     # Instanciate the ADSB provider client
     if adsb_provider == "flightaware-aeroapi":
-        adsb_client = FlightAwareAeroAPIClient(search_bbox, os.getenv("AEROAPI_API_KEY"))
+        adsb_client = FlightAwareAeroAPIClient(
+            search_bbox, os.getenv("AEROAPI_API_KEY")
+        )
     elif adsb_provider == "airlabs":
         adsb_client = AirLabsClient(search_bbox, os.getenv("AIRLABS_API_KEY"))
     else:
-        raise ValueError("Pass a valid ADSB provider name, allowed values: flightaware-aeroapi, airlabs")
+        raise ValueError(
+            "Pass a valid ADSB provider name, allowed values: flightaware-aeroapi, airlabs"
+        )
 
     # Check weather conditions
     if targets_to_check and check_weather:
-        is_clear, weather_info = get_weather_condition(latitude, longitude, WEATHER_API_KEY, test_mode)
+        is_clear, weather_info = get_weather_condition(
+            latitude, longitude, WEATHER_API_KEY, test_mode
+        )
         logger.info(f"Weather check: clear={is_clear}, {weather_info}")
     else:
         is_clear, weather_info = get_weather_condition(
@@ -359,13 +388,15 @@ def get_transits(
         # Fetch flight data once
         if test_mode:
             logger.info("🧪 TEST MODE: generating test flight data...")
-            raw_flight_data = generate_test_flightaware_data(OBSERVER_POSITION, targets_to_check, target_coordinates)
+            raw_flight_data = generate_test_flightaware_data(
+                OBSERVER_POSITION, targets_to_check, target_coordinates
+            )
         else:
             raw_flight_data = adsb_client.get_flight_data()
 
         flight_data = list()
         for flight in raw_flight_data["flights"]:
-            #flight_data.append(parse_fligh_data(flight))
+            # flight_data.append(parse_fligh_data(flight))
             parsed_data_flight = adsb_client.parse(flight)
 
             if parsed_data_flight:
@@ -375,8 +406,10 @@ def get_transits(
 
         # Check transits for each target
         for target in targets_to_check:
-            celestial_obj = CelestialObject(name=target, observer_position=OBSERVER_POSITION)
-            #celestial_obj.update_position(ref_datetime=ref_datetime)
+            celestial_obj = CelestialObject(
+                name=target, observer_position=OBSERVER_POSITION
+            )
+            # celestial_obj.update_position(ref_datetime=ref_datetime)
 
             for flight in flight_data:
                 celestial_obj.update_position(ref_datetime=ref_datetime)

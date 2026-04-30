@@ -10,7 +10,6 @@ import requests
 from src.position import AreaBoundingBox
 
 
-
 class ADSBProviderClient(ABC):
     def __init__(self, area_bbox: AreaBoundingBox, api_key: str) -> None:
         self.bbox = area_bbox
@@ -19,14 +18,11 @@ class ADSBProviderClient(ABC):
     @abstractmethod
     def get_flight_data(self) -> List[dict]:
         """Retrieve real time aircraft data. Last positions of planes inside the bounding box."""
-        pass
 
     @abstractmethod
     def parse(self, flight: dict) -> Optional[dict]:
         """Get useful fields from a raw flight data, convert to used units and normalize values
         between ADSB providers."""
-        pass
-
 
 
 class FlightAwareAeroAPIClient(ADSBProviderClient):
@@ -34,7 +30,10 @@ class FlightAwareAeroAPIClient(ADSBProviderClient):
 
     def get_flight_data(self) -> List[dict]:
         endpoint_url = f"{self.BASE_URL}/flights/search"
-        headers = {"Accept": "application/json; charset=UTF-8", "x-apikey": self.api_key}
+        headers = {
+            "Accept": "application/json; charset=UTF-8",
+            "x-apikey": self.api_key,
+        }
 
         # example: https://aeroapi.flightaware.com/aeroapi/flights/search?query=-latlong+%2221.305695+-104.458904+23.925834+-101.365481%22&max_pages=1
         url = (
@@ -49,7 +48,6 @@ class FlightAwareAeroAPIClient(ADSBProviderClient):
         else:
             # If not successful, raise exception with the status code and response text
             raise Exception(f"Error: {response.status_code}, {response.text}")
-    
 
     def parse(self, flight: dict) -> dict:
         has_destination = isinstance(flight.get("destination"), dict)
@@ -67,9 +65,12 @@ class FlightAwareAeroAPIClient(ADSBProviderClient):
             "latitude": flight["last_position"]["latitude"],
             "longitude": flight["last_position"]["longitude"],
             "direction": flight["last_position"]["heading"],
-            "speed": int(flight["last_position"]["groundspeed"]) * 1.852, # km/h
-            "elevation": int(flight["last_position"]["altitude"]) * 0.3048 * 100,  # hundreds of feet to meters (for calculations)
-            "elevation_feet": int(flight["last_position"]["altitude"]) * 100,  # API returns hundreds of feet, multiply by 100
+            "speed": int(flight["last_position"]["groundspeed"]) * 1.852,  # km/h
+            "elevation": int(flight["last_position"]["altitude"])
+            * 0.3048
+            * 100,  # hundreds of feet to meters (for calculations)
+            "elevation_feet": int(flight["last_position"]["altitude"])
+            * 100,  # API returns hundreds of feet, multiply by 100
             "elevation_change": flight["last_position"]["altitude_change"],
             "last_update": flight["last_position"]["timestamp"],
         }
@@ -98,7 +99,6 @@ class AirLabsClient(ADSBProviderClient):
             # If not successful, raise exception with the status code and response text
             raise Exception(f"Error: {response.status_code}, {response.text}")
 
-
     def parse(self, flight: dict) -> Optional[dict]:
         v_speed = flight.get("v_speed", 0)
 
@@ -116,11 +116,11 @@ class AirLabsClient(ADSBProviderClient):
             "latitude": flight["lat"],
             "longitude": flight["lng"],
             "direction": flight["dir"],
-            "speed": flight["speed"], # km/h
-            "elevation": flight["alt"], # meters
+            "speed": flight["speed"],  # km/h
+            "elevation": flight["alt"],  # meters
             "elevation_feet": flight["alt"] * 3.28084,
             "elevation_change": "-" if v_speed == 0 else ("C" if v_speed > 0 else "D"),
-            "last_update": convert_unix_timestamp_to_datetime_str(flight["updated"]), 
+            "last_update": convert_unix_timestamp_to_datetime_str(flight["updated"]),
         }
 
 

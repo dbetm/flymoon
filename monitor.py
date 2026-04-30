@@ -1,30 +1,32 @@
 import argparse
 import asyncio
 import os
-import subprocess
-import time
-from datetime import datetime, date, timedelta
-from typing import Optional
-
 import platform
 import subprocess
+import time
+from datetime import date, datetime, timedelta
+from typing import Optional
 
 from dotenv import load_dotenv
 
-load_dotenv() # noqa
+load_dotenv()  # noqa
 
 from src import logger
 from src.constants import (
-    PossibilityLevel, POSSIBLE_TRANSITS_LOGFILENAME, TARGET_TO_EMOJI, POSIBILITY_LEVEL_TO_COLOR
+    POSIBILITY_LEVEL_TO_COLOR,
+    POSSIBLE_TRANSITS_LOGFILENAME,
+    TARGET_TO_EMOJI,
+    PossibilityLevel,
 )
 from src.flight_data import save_possible_transits, sort_results
-from src.transit import get_transits
 from src.notify import send_notifications
-
+from src.transit import get_transits
 
 
 class TransitClient:
-    ALERT_SOUND_PATH = os.path.join("static", "sounds", "tissman-alert1-maximum-distortion.mp3")
+    ALERT_SOUND_PATH = os.path.join(
+        "static", "sounds", "tissman-alert1-maximum-distortion.mp3"
+    )
 
     def __init__(
         self,
@@ -49,7 +51,6 @@ class TransitClient:
         self.total_transits = 0
         self.adsb_provider = adsb_provider
 
-
     def __get_next_check_time(self) -> str:
         current_datetime = datetime.now()
 
@@ -64,6 +65,7 @@ class TransitClient:
 
         if system == "Windows":
             import winsound
+
             if filepath:
                 winsound.PlaySound(filepath, winsound.SND_FILENAME)
             else:
@@ -83,9 +85,10 @@ class TransitClient:
                     try:
                         for _ in range(num_times_play_sound):
                             subprocess.run(
-                                [cmd, filepath], check=True,
+                                [cmd, filepath],
+                                check=True,
                                 stdout=subprocess.DEVNULL,
-                                stderr=subprocess.DEVNULL
+                                stderr=subprocess.DEVNULL,
                             )
                             time.sleep(time_between_sounds)
                         return
@@ -109,7 +112,11 @@ class TransitClient:
             next_check_time = self.__get_next_check_time()
 
             for i in range(self.interval * 60, 0, -1):
-                print(f"\rNext check at ⏰ {next_check_time} ({i} seconds)", end="", flush=True)
+                print(
+                    f"\rNext check at ⏰ {next_check_time} ({i} seconds)",
+                    end="",
+                    flush=True,
+                )
                 time.sleep(1)
             print()
 
@@ -136,7 +143,9 @@ class TransitClient:
 
         # Log weather and tracking info
         if weather_info:
-            logger.info(f"Weather: {weather_info.get('description', 'unknown')} ({weather_info.get('cloud_cover', 'N/A')}% clouds)")
+            logger.info(
+                f"Weather: {weather_info.get('description', 'unknown')} ({weather_info.get('cloud_cover', 'N/A')}% clouds)"
+            )
         if tracking_targets:
             logger.info(f"Tracking: {', '.join(tracking_targets)}")
 
@@ -150,17 +159,16 @@ class TransitClient:
 
         # Filter for medium and high possibility transits
         possible_transits = [
-            f for f in flights
-            if f.get("possibility_level") in (
-                PossibilityLevel.MEDIUM.value,
-                PossibilityLevel.HIGH.value
-            )
+            f
+            for f in flights
+            if f.get("possibility_level")
+            in (PossibilityLevel.MEDIUM.value, PossibilityLevel.HIGH.value)
         ]
 
         if not possible_transits:
             logger.info("No possible transits found")
             return
-        
+
         # Save to CSV (only MEDIUM/HIGH)
         if not self.test_mode:
             try:
@@ -168,7 +176,7 @@ class TransitClient:
                 asyncio.run(
                     save_possible_transits(
                         possible_transits,
-                        POSSIBLE_TRANSITS_LOGFILENAME.format(date_=date_)
+                        POSSIBLE_TRANSITS_LOGFILENAME.format(date_=date_),
                     )
                 )
                 self.total_transits += len(possible_transits)
@@ -181,13 +189,15 @@ class TransitClient:
             transit_word = "transits" if num_possible_transits > 1 else "transit"
 
             msg = "\n\n".join(
-                ["-"*21] + [
+                ["-" * 21]
+                + [
                     f"{POSIBILITY_LEVEL_TO_COLOR[flight['possibility_level']]}"
                     f" {TARGET_TO_EMOJI[flight['target']]} {flight['id']} ({flight['aircraft_type']}) in {flight['time']} min."
                     f" {flight['origin']} -> {flight['destination']}."
                     f" Angular separation: {flight['angular_separation']}°"
                     for flight in possible_transits
-                ] + ["-"*42]
+                ]
+                + ["-" * 42]
             )
             logger.info(msg)
 
@@ -202,24 +212,36 @@ class TransitClient:
             try:
                 asyncio.run(send_notifications(data["flights"], self.target))
             except Exception as e:
-                logger.error(f"Error while trying to send push notification. Details:\n{str(e)}")
-
+                logger.error(
+                    f"Error while trying to send push notification. Details:\n{str(e)}"
+                )
 
 
 def main():
     parser = argparse.ArgumentParser(description="Flymoon for the Terminal")
     parser.add_argument("--lat", type=float, help="Observer latitude", required=True)
     parser.add_argument("--long", type=float, help="Observer longitude", required=True)
-    parser.add_argument("--elev", type=float, help="Observer elevation in meters", required=True)
     parser.add_argument(
-        "--target", choices=["moon", "sun", "auto"], default="auto", help="Target celestial object"
+        "--elev", type=float, help="Observer elevation in meters", required=True
     )
     parser.add_argument(
-        "--adsb", choices=["flightaware-aeroapi", "airlabs"], default="flightaware-aeroapi"
+        "--target",
+        choices=["moon", "sun", "auto"],
+        default="auto",
+        help="Target celestial object",
     )
-    parser.add_argument("--interval", type=int, default=12, help="Check interval in minutes")
+    parser.add_argument(
+        "--adsb",
+        choices=["flightaware-aeroapi", "airlabs"],
+        default="flightaware-aeroapi",
+    )
+    parser.add_argument(
+        "--interval", type=int, default=12, help="Check interval in minutes"
+    )
     parser.add_argument("--notify", action="store_true", help="Send push notification")
-    parser.add_argument("--min-alt", type=float, default=15, help="Minimum altitude for targets")
+    parser.add_argument(
+        "--min-alt", type=float, default=15, help="Minimum altitude for targets"
+    )
     parser.add_argument("--test", action="store_true", help="Use test mode")
 
     args = parser.parse_args()
