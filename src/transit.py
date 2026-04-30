@@ -251,6 +251,7 @@ def get_transits(
     min_altitude: float = 15,
     custom_bbox: dict = None,
     adsb_provider: str = "flightaware-aeroapi",
+    check_weather: bool = True,
 ) -> dict:
     """Get transit predictions for celestial targets.
 
@@ -266,6 +267,8 @@ def get_transits(
         Optional custom bounding box with keys: lat_lower_left, lon_lower_left, lat_upper_right, lon_upper_right
     adsb_provider: str:
         Optional ADSB provider name to use. You must set the API Key for the choosen one. Default: `flightaware-aeroapi`.
+    check_weather : bool
+        If True, check weather only if the API key was configured.
     """
     # TODO: compute from current user position
     AREA_BBOX_FROM_ENV = AreaBoundingBox(
@@ -344,7 +347,7 @@ def get_transits(
         raise ValueError("Pass a valid ADSB provider name, allowed values: flightaware-aeroapi, airlabs")
 
     # Check weather conditions
-    if targets_to_check:
+    if targets_to_check and check_weather:
         is_clear, weather_info = get_weather_condition(latitude, longitude, WEATHER_API_KEY, test_mode)
         logger.info(f"Weather check: clear={is_clear}, {weather_info}")
     else:

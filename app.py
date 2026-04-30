@@ -65,6 +65,7 @@ def get_all_flights():
     min_altitude = float(request.args.get("min_altitude", 15))
     has_send_notification = request.args["send_notification"] == "true"
     adsb_provider = request.args["adsb_provider"]
+    check_weather = request.args["check_weather"] == "true"
 
     # Check for custom bounding box from user
     custom_bbox = None
@@ -79,7 +80,7 @@ def get_all_flights():
         logger.info(f"Given bounding box: {custom_bbox}")
 
     data: dict = get_transits(
-        latitude, longitude, elevation, target, test_mode, min_altitude, custom_bbox, adsb_provider
+        latitude, longitude, elevation, target, test_mode, min_altitude, custom_bbox, adsb_provider, check_weather
     )
     data["flights"] = sort_results(data["flights"])
 
