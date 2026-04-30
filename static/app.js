@@ -31,23 +31,6 @@ clearInterval(refreshTimerLabelInterval);
 displayTarget();
 
 
-// Page visibility detection - optionally pause polling when page is hidden
-document.addEventListener('visibilitychange', function() {
-    const pauseWhenHidden = localStorage.getItem("pauseWhenHidden") === 'true'; // Default false
-
-    if (document.hidden && autoMode && pauseWhenHidden) {
-        console.log('Page hidden - pausing auto-refresh');
-        clearInterval(autoGoInterval);
-        clearInterval(refreshTimerLabelInterval);
-    }
-    else if (!document.hidden && autoMode && pauseWhenHidden) {
-        console.log('Page visible - resuming auto-refresh');
-        const freq = parseInt(localStorage.getItem("frequency")) || DEFAULT_INTERVAL_MINUTES;
-        autoGoInterval = setInterval(goFetch, MS_IN_A_MIN * freq);
-        refreshTimerLabelInterval = setInterval(refreshTimer, MS_IN_A_MIN);
-    }
-});
-
 // While loading the page, play silently as answer to any click (Hack for Safari)
 document.addEventListener('click', function unlockAudio() {
     const audio = document.getElementById('alertSound');
@@ -164,6 +147,11 @@ function loadPositionAndBbox() {
             console.error("Error parsing saved bounding box:", e);
         }
     }
+
+    // Load ignore weather check
+    const weatherCheckBox = document.getElementById('checkWeather');
+    const checkWeather = localStorage.getItem('checkWeather');
+    if (checkWeather === 'true') weatherCheckBox.checked = true;
 
     console.log("Position loaded from local storage:", savedLat, savedLon, savedElev, "minAlt:", savedMinAlt);
 }
@@ -300,6 +288,7 @@ function fetchFlights() {
     let alertNoResults = document.getElementById("noResults");
     bodyTable.innerHTML = '';
     alertNoResults.innerHTML = '';
+    let checkWeather = localStorage.getItem('checkWeather') === "true";
 
     const minAltitude = document.getElementById("minAltitude").value || DEFAULT_MIN_ALT;
     let endpoint_url = (
@@ -310,6 +299,7 @@ function fetchFlights() {
         + `&min_altitude=${encodeURIComponent(minAltitude)}`
         + `&send_notification=${autoMode}`
         + `&adsb_provider=${adsbProvider}`
+        + `&check_weather=${checkWeather}`
     );
 
     // Add custom bounding box if user has edited it
@@ -665,9 +655,9 @@ function soundAlert() {
     audio.play();
 }
 
-// Pause when hidden preference
-function togglePauseWhenHidden() {
-    const checkbox = document.getElementById('pauseWhenHidden');
-    localStorage.setItem('pauseWhenHidden', checkbox.checked);
-    console.log('Pause when hidden:', checkbox.checked);
+// Check weather preference
+function toggleCheckWeather() {
+    const checkbox = document.getElementById('checkWeather');
+    localStorage.setItem('checkWeather', checkbox.checked);
+    console.log('Check weather:', checkbox.checked);
 }

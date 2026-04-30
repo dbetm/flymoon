@@ -17,7 +17,7 @@ AZ_DIFF_THRESHOLD_TO_NOTIFY = 10.0
 
 # Weather
 WEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
-WEATHER_CACHE_DURATION_MINUTES = 60
+WEATHER_CACHE_DURATION_MINUTES = 10 # 6 requests per hour
 WEATHER_API_URL = "https://api.openweathermap.org/data/2.5/weather"
 WEATHER_ICONS = {
     "clear": "☀️",
