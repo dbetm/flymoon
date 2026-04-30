@@ -1,13 +1,13 @@
+import getpass
 import os
 import sys
-import getpass
 from pathlib import Path
 
-from dotenv import load_dotenv, set_key, find_dotenv
+from dotenv import find_dotenv, load_dotenv, set_key
 
 
 class ConfigWizard:
-    """Configuration wizard and validator for Flymoon. Handles first-run setup 
+    """Configuration wizard and validator for Flymoon. Handles first-run setup
     and configuration validation.
     """
 
@@ -42,34 +42,40 @@ class ConfigWizard:
         airlabs_key = os.getenv("AIRLABS_API_KEY")
 
         if not (aeroapi_key or airlabs_key):
-            self.errors.append({
-                "field": "ADSB API KEY",
-                "message": (
-                    "At least one ADSB API Key is required. FlightAware AeroAPI API Key"
-                    " or AirLabs API Key is required for live flight data."
-                ),
-                "severity": "ERROR",
-            })
+            self.errors.append(
+                {
+                    "field": "ADSB API KEY",
+                    "message": (
+                        "At least one ADSB API Key is required. FlightAware AeroAPI API Key"
+                        " or AirLabs API Key is required for live flight data."
+                    ),
+                    "severity": "ERROR",
+                }
+            )
 
     def _check_weather_key(self):
         """Check OpenWeather API key."""
         key = os.getenv("OPENWEATHER_API_KEY")
         if not key:
-            self.warnings.append({
-                "field": "OPENWEATHER_API_KEY",
-                "message": "OpenWeather API key missing (weather filtering disabled)",
-                "severity": "WARNING",
-            })
+            self.warnings.append(
+                {
+                    "field": "OPENWEATHER_API_KEY",
+                    "message": "OpenWeather API key missing (weather filtering disabled)",
+                    "severity": "WARNING",
+                }
+            )
 
     def _check_pushbullet_api_key(self):
         """Check optionally Pushbullet API KEY"""
         key = os.getenv("PUSH_BULLET_API_KEY")
         if not key:
-            self.warnings.append({
-                "field": "PUSH_BULLET_API_KEY",
-                "message": "Pushbullet API key missing (push notifications disabled)",
-                "severity": "WARNING",
-            })
+            self.warnings.append(
+                {
+                    "field": "PUSH_BULLET_API_KEY",
+                    "message": "Pushbullet API key missing (push notifications disabled)",
+                    "severity": "WARNING",
+                }
+            )
 
     # def _check_coordinates(self):
     #     """Check observer coordinates."""
@@ -107,16 +113,23 @@ class ConfigWizard:
 
     def _check_bounding_box(self):
         """Check flight search bounding box, set default if missing."""
-        fields = ["LAT_LOWER_LEFT", "LONG_LOWER_LEFT", "LAT_UPPER_RIGHT", "LONG_UPPER_RIGHT"]
+        fields = [
+            "LAT_LOWER_LEFT",
+            "LONG_LOWER_LEFT",
+            "LAT_UPPER_RIGHT",
+            "LONG_UPPER_RIGHT",
+        ]
         values = {f: os.getenv(f) for f in fields}
 
         missing = [f for f, v in values.items() if not v]
         if missing:
-            self.errors.append({
-                "field": "BOUNDING_BOX",
-                "message": f"Bounding box are required to search flights",
-                "severity": "ERROR",
-            })
+            self.errors.append(
+                {
+                    "field": "BOUNDING_BOX",
+                    "message": f"Bounding box are required to search flights",
+                    "severity": "ERROR",
+                }
+            )
 
     def _prompt(self, message, default=None, required=True):
         """Prompt user for input with optional default."""
@@ -170,17 +183,17 @@ class ConfigWizard:
             value = input(f"{message} [{default_str}]: ").strip().lower()
             if not value:
                 return default
-            if value in ('y', 'yes'):
+            if value in ("y", "yes"):
                 return True
-            if value in ('n', 'no'):
+            if value in ("n", "no"):
                 return False
             print("  Please enter 'y' or 'n'")
 
     def _run_interactive_setup(self):
         """Run interactive setup wizard."""
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("  Flymoon Configuration Wizard")
-        print("="*60)
+        print("=" * 60)
         print("\nThis wizard will help you configure Flymoon step by step.")
         print("You can press Ctrl+C at any time to cancel.\n")
 
@@ -194,9 +207,9 @@ class ConfigWizard:
             print("\n\nSetup cancelled.")
             return False
 
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("  Configuration Complete!")
-        print("="*60)
+        print("=" * 60)
         print(f"\nSettings saved to: {self.config_file}")
         print("\nTo start Flymoon:")
         print("  python3 app.py")
@@ -236,13 +249,19 @@ class ConfigWizard:
                 print(f"    Get a free key at: {provider['signup_url']}")
 
                 if current:
-                    if not self._prompt_yes_no(f"    Change {provider['prompt_label']}?", default=False):
+                    if not self._prompt_yes_no(
+                        f"    Change {provider['prompt_label']}?", default=False
+                    ):
                         continue
                 else:
-                    if not self._prompt_yes_no(f"    Set {provider['prompt_label']}?", default=True):
+                    if not self._prompt_yes_no(
+                        f"    Set {provider['prompt_label']}?", default=True
+                    ):
                         continue
 
-                key = self._prompt_secret(f"    Enter your {provider['prompt_label']}", required=True)
+                key = self._prompt_secret(
+                    f"    Enter your {provider['prompt_label']}", required=True
+                )
                 set_key(self.config_file, provider["env_key"], key)
                 # Reload so os.getenv reflects the new value
                 load_dotenv(self.config_file, override=True)
@@ -252,7 +271,9 @@ class ConfigWizard:
             if os.getenv("AEROAPI_API_KEY") or os.getenv("AIRLABS_API_KEY"):
                 break
 
-            print("\n  At least one ADSB API key is required. Please set at least one.\n")
+            print(
+                "\n  At least one ADSB API key is required. Please set at least one.\n"
+            )
 
     # def _setup_observer_location(self):
     #     """Setup observer location."""
@@ -293,7 +314,9 @@ class ConfigWizard:
         print("STEP 2: Flight Search Area")
         print("-" * 40)
         print("\nThe bounding box defines the area to search for flights.")
-        print("Recommended covering roughly a 15-minute flight radius from your location.")
+        print(
+            "Recommended covering roughly a 15-minute flight radius from your location."
+        )
 
         fields = [
             ("LAT_LOWER_LEFT", "Lower-left latitude", -90, 90),
@@ -307,8 +330,12 @@ class ConfigWizard:
 
         if all_set:
             print(f"\n  Current bounding box:")
-            print(f"    Lower-left:  ({current_values['LAT_LOWER_LEFT']}, {current_values['LONG_LOWER_LEFT']})")
-            print(f"    Upper-right: ({current_values['LAT_UPPER_RIGHT']}, {current_values['LONG_UPPER_RIGHT']})")
+            print(
+                f"    Lower-left:  ({current_values['LAT_LOWER_LEFT']}, {current_values['LONG_LOWER_LEFT']})"
+            )
+            print(
+                f"    Upper-right: ({current_values['LAT_UPPER_RIGHT']}, {current_values['LONG_UPPER_RIGHT']})"
+            )
             if not self._prompt_yes_no("  Change bounding box?", default=False):
                 return
 
@@ -318,7 +345,9 @@ class ConfigWizard:
         for key, label, min_val, max_val in fields:
             current = current_values[key]
             default = float(current) if current else None
-            value = self._prompt_float(f"  {label}", default=default, min_val=min_val, max_val=max_val)
+            value = self._prompt_float(
+                f"  {label}", default=default, min_val=min_val, max_val=max_val
+            )
             set_key(self.config_file, key, str(value))
 
         load_dotenv(self.config_file, override=True)
@@ -339,13 +368,17 @@ class ConfigWizard:
         if current:
             print(f"  Current: {current[:8]}...")
             if self._prompt_yes_no("  Change weather API key?", default=False):
-                key = self._prompt_secret("  Enter OpenWeatherMap API key", required=False)
+                key = self._prompt_secret(
+                    "  Enter OpenWeatherMap API key", required=False
+                )
                 if key:
                     set_key(self.config_file, "OPENWEATHER_API_KEY", key)
                     print("  Saved!")
         else:
             if self._prompt_yes_no("  Add weather API key?", default=False):
-                key = self._prompt_secret("  Enter OpenWeatherMap API key", required=False)
+                key = self._prompt_secret(
+                    "  Enter OpenWeatherMap API key", required=False
+                )
                 if key:
                     set_key(self.config_file, "OPENWEATHER_API_KEY", key)
                     print("  Saved!")
@@ -358,7 +391,9 @@ class ConfigWizard:
         print("STEP 3: Push Notifications (Optional)")
         print("-" * 40)
         print("\nPushbullet API key (optional)")
-        print("  In auto mode, receive smartphone notifications when a transit is detected.")
+        print(
+            "  In auto mode, receive smartphone notifications when a transit is detected."
+        )
         print("  To get your key:")
         print("    1. Create an account at: https://www.pushbullet.com/")
         print("    2. Install the Pushbullet app on your phone.")
@@ -368,14 +403,18 @@ class ConfigWizard:
         if current:
             print(f"  Current: {current[:8]}...")
             if self._prompt_yes_no("  Change Pushbullet API key?", default=False):
-                key = self._prompt_secret("  Enter your Pushbullet API key", required=False)
+                key = self._prompt_secret(
+                    "  Enter your Pushbullet API key", required=False
+                )
                 if key:
                     set_key(self.config_file, "PUSH_BULLET_API_KEY", key)
                     load_dotenv(self.config_file, override=True)
                     print("  Saved!")
         else:
             if self._prompt_yes_no("  Add Pushbullet API key?", default=False):
-                key = self._prompt_secret("  Enter your Pushbullet API key", required=False)
+                key = self._prompt_secret(
+                    "  Enter your Pushbullet API key", required=False
+                )
                 if key:
                     set_key(self.config_file, "PUSH_BULLET_API_KEY", key)
                     load_dotenv(self.config_file, override=True)
@@ -386,20 +425,20 @@ class ConfigWizard:
     def get_status_report(self):
         """Get human-readable status report."""
         report = []
-        
+
         if not self.errors and not self.warnings:
             report.append("✅ Configuration is valid")
-        
+
         if self.errors:
             report.append(f"\n❌ {len(self.errors)} Error(s):")
             for err in self.errors:
                 report.append(f"  • {err['field']}: {err['message']}")
-        
+
         if self.warnings:
             report.append(f"\n⚠️  {len(self.warnings)} Warning(s):")
             for warn in self.warnings:
                 report.append(f"  • {warn['field']}: {warn['message']}")
-        
+
         return "\n".join(report)
 
 
@@ -419,9 +458,13 @@ def quick_setup():
 def main():
     """CLI entry point for config wizard."""
     import argparse
-    
+
     parser = argparse.ArgumentParser(description="Flymoon Configuration Wizard")
-    parser.add_argument("--validate", action="store_true", help="Validate configuration without interactive setup")
+    parser.add_argument(
+        "--validate",
+        action="store_true",
+        help="Validate configuration without interactive setup",
+    )
     parser.add_argument("--setup", action="store_true", help="Run interactive setup")
     parser.add_argument("--config", help="Path to .env file")
 

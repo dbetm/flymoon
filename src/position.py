@@ -7,7 +7,6 @@ from skyfield.api import wgs84
 from src.constants import (
     EARTH_RADIOUS,
     EARTH_TIMESCALE,
-    KM_TO_NAUTICAL_MILES,
     NUM_MINUTES_PER_HOUR,
 )
 

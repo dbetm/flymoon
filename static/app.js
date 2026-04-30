@@ -19,12 +19,18 @@ const COLUMN_NAMES = [
 const MS_IN_A_MIN = 60000;
 const DEFAULT_MIN_ALT = 15;
 const DEFAULT_INTERVAL_MINUTES = 10;
+
+// State tracking for toggles
+var resultsVisible = false;
+var mapVisible = false;
+
 // Possibility levels
 const LOW_LEVEL = 1, MEDIUM_LEVEL = 2, HIGH_LEVEL = 3;
 var autoMode = false;
 var target = getLocalStorageItem("target", "auto");
 var autoGoInterval = setInterval(goFetch, 86400000);
 var refreshTimerLabelInterval = setInterval(refreshTimer, MS_IN_A_MIN);
+
 // By default disable auto go and refresh timer label
 clearInterval(autoGoInterval);
 clearInterval(refreshTimerLabelInterval);
@@ -37,10 +43,6 @@ document.addEventListener('click', function unlockAudio() {
     audio.play().then(() => audio.pause());
     document.removeEventListener('click', unlockAudio);
 }, { once: true });
-
-// State tracking for toggles
-var resultsVisible = false;
-var mapVisible = false;
 
 
 function savePosition() {
@@ -319,34 +321,42 @@ function fetchFlights() {
 
                 if (value === null || value === undefined) {
                     val.textContent = "";
-                } else if (column === "id") {
+                }
+                else if (column === "id") {
                     // Show "ID (TYPE)" format
                     const aircraftType = item.aircraft_type || "";
                     val.textContent = aircraftType && aircraftType !== "N/A" ? `${value} (${aircraftType})` : value;
-                } else if (column === "time") {
+                }
+                else if (column === "time") {
                     // Format ETA as mm:ss
                     const totalSeconds = Math.round(value * 60);
                     const mins = Math.floor(totalSeconds / 60);
                     const secs = totalSeconds % 60;
                     val.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
-                } else if (column === "aircraft_elevation_km") {
+                }
+                else if (column === "aircraft_elevation_km") {
                     // Show GPS altitude in km with comma formatting
                     val.textContent = value.toLocaleString('en-US') + " km";
-                } else if (column === "distance_km") {
+                }
+                else if (column === "distance_km") {
                     // Show distance in kilometers with one decimal place
                     val.textContent = value.toFixed(1) + " km";
-                } else if (column === "direction") {
+                }
+                else if (column === "direction") {
                     val.textContent = Math.round(value) + "°";
-                } else if (column === "speed") {
+                }
+                else if (column === "speed") {
                     // Show speed in km/h, rounded to whole number
                     val.textContent = Math.round(value) + " km/h";
-                } else if (column === "alt_diff" || column === "az_diff" || column === "angular_separation") {
+                }
+                else if (column === "alt_diff" || column === "az_diff" || column === "angular_separation") {
                     val.textContent = value + "º";
                     // Color code large angle differences
                     if (Math.abs(value) > 10) {
                         val.style.color = "#888"; // Gray for large differences
                     }
-                } else if (column === "target_alt" || column === "target_az") {
+                }
+                else if (column === "target_alt" || column === "target_az") {
                     // Always show target values, color code negative/invalid
                     const numValue = value.toFixed(1);
                     val.textContent = numValue + "º";
@@ -354,7 +364,8 @@ function fetchFlights() {
                         val.style.color = "#888"; // Gray for below horizon
                         val.style.fontStyle = "italic";
                     }
-                } else if (column === "plane_alt" || column === "plane_az") {
+                }
+                else if (column === "plane_alt" || column === "plane_az") {
                     // Always show plane values, color code negative/invalid
                     const numValue = value.toFixed(1);
                     val.textContent = numValue + "º";
@@ -362,9 +373,11 @@ function fetchFlights() {
                         val.style.color = "#888"; // Gray for negative angles
                         val.style.fontStyle = "italic";
                     }
-                } else if (value === "N/D") {
+                }
+                else if (value === "N/D") {
                     val.textContent = value + " ⚠️";
-                } else {
+                }
+                else {
                     val.textContent = value;
                 }
 
@@ -538,9 +551,11 @@ function updateAltitudeDisplay(flights) {
         const possibilityLevel = parseInt(flight.possibility_level || 0);
         if (possibilityLevel === HIGH_LEVEL) {
             color = "#32CD32"; // Green
-        } else if (possibilityLevel === MEDIUM_LEVEL) {
+        }
+        else if (possibilityLevel === MEDIUM_LEVEL) {
             color = "#FF8C00"; // Orange
-        } else if (possibilityLevel === LOW_LEVEL) {
+        }
+        else if (possibilityLevel === LOW_LEVEL) {
             color = "#FFD700"; // Yellow
         }
         line.style.background = color;

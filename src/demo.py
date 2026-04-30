@@ -6,8 +6,9 @@ from typing import List
 from src.constants import EARTH_RADIOUS
 
 
-
-def generate_test_flightaware_data(observer_position, target_names: List[str], target_coordinates: dict) -> dict:
+def generate_test_flightaware_data(
+    observer_position, target_names: List[str], target_coordinates: dict
+) -> dict:
     """Generate flight data, in which the last position is favorable to transits over the targets (Moon / Sun).
 
     + observer position is an object <class 'skyfield.vectorlib.VectorSum'>, you can get the latitude, longitude and elevation as follow:
@@ -19,18 +20,24 @@ def generate_test_flightaware_data(observer_position, target_names: List[str], t
     }
     """
     num_targets = len(target_names)
-    assert num_targets  > 0, "you should provide at least one target"
+    assert num_targets > 0, "you should provide at least one target"
 
     obs_lat = float(observer_position.target.latitude.degrees)
     obs_lon = float(observer_position.target.longitude.degrees)
 
     # Use the first available target to compute flight positions
-    target = target_names[0] if num_targets == 1 else target_names[random.randint(0, num_targets - 1)]
+    target = (
+        target_names[0]
+        if num_targets == 1
+        else target_names[random.randint(0, num_targets - 1)]
+    )
 
     target_alt = target_coordinates[target]["altitude"]
-    target_az  = target_coordinates[target]["azimuthal"]
+    target_az = target_coordinates[target]["azimuthal"]
 
-    def get_geo_pos_from_altaz(apparent_alt_deg: float, apparent_az_deg: float, elevation_m: float):
+    def get_geo_pos_from_altaz(
+        apparent_alt_deg: float, apparent_az_deg: float, elevation_m: float
+    ):
         """Return the lat/lon at which an aircraft flying at elevation_m
         would appear at (apparent_alt_deg, apparent_az_deg) from the observer.
 
@@ -56,7 +63,9 @@ def generate_test_flightaware_data(observer_position, target_names: List[str], t
 
         return round(math.degrees(lat2), 6), round(math.degrees(lon2), 6)
 
-    def pos_offset(lat_deg: float, lon_deg: float, bearing_deg: float, distance_km: float):
+    def pos_offset(
+        lat_deg: float, lon_deg: float, bearing_deg: float, distance_km: float
+    ):
         """Move a point (lat_deg, lon_deg) by distance_km along bearing_deg (direction)"""
         d_rad = distance_km / EARTH_RADIOUS
         brng = math.radians(bearing_deg % 360)
@@ -77,24 +86,80 @@ def generate_test_flightaware_data(observer_position, target_names: List[str], t
     # The closest-approach point is placed at (target_alt + Δalt, target_az + Δaz).
     configs = [
         # id       origin         destination    type   elev. Δalt.  Δaz.  eta
-        ("AMX190", "Mexico City", "Guadalajara", "B738", 350,  0.5,  1.0, 3.0),   # HIGH     sep <= 2°
-        ("VOI282", "Monterrey",   "Cancun",      "A320", 330,  2.5,  1.0, 5.0),   # MEDIUM   sep <= 4° (min sep 2.5°)
-        ("VIV415", "Guadalajara", "Tijuana",     "A320", 310,  3.0,  1.5, 4.0),   # MEDIUM   sep <= 4° (min sep 3.0°)
-        ("TAR031", "Mexico City", "Merida",      "B737", 280,  6.0,  4.0, 7.0),   # LOW      sep <= 12° (min sep 6.0°)
-        ("AMX541", "Hermosillo",  "Mexico City", "B39M", 250, 15.0, 10.0, 6.0),   # UNLIKELY sep > 12° (min sep 15.0°)
+        (
+            "AMX190",
+            "Mexico City",
+            "Guadalajara",
+            "B738",
+            350,
+            0.5,
+            1.0,
+            3.0,
+        ),  # HIGH     sep <= 2°
+        (
+            "VOI282",
+            "Monterrey",
+            "Cancun",
+            "A320",
+            330,
+            2.5,
+            1.0,
+            5.0,
+        ),  # MEDIUM   sep <= 4° (min sep 2.5°)
+        (
+            "VIV415",
+            "Guadalajara",
+            "Tijuana",
+            "A320",
+            310,
+            3.0,
+            1.5,
+            4.0,
+        ),  # MEDIUM   sep <= 4° (min sep 3.0°)
+        (
+            "TAR031",
+            "Mexico City",
+            "Merida",
+            "B737",
+            280,
+            6.0,
+            4.0,
+            7.0,
+        ),  # LOW      sep <= 12° (min sep 6.0°)
+        (
+            "AMX541",
+            "Hermosillo",
+            "Mexico City",
+            "B39M",
+            250,
+            15.0,
+            10.0,
+            6.0,
+        ),  # UNLIKELY sep > 12° (min sep 15.0°)
     ]
 
     speed_knots = 465
     speed_kmh = speed_knots * 1.852
 
     flights = []
-    for id, origin, dest, aircraft_type, alt_hundreds_ft, delta_alt, delta_az, eta_min in configs:
+    for (
+        id,
+        origin,
+        dest,
+        aircraft_type,
+        alt_hundreds_ft,
+        delta_alt,
+        delta_az,
+        eta_min,
+    ) in configs:
         elevation_m = alt_hundreds_ft * 100 * 0.3048
-        desired_alt = min(target_alt + delta_alt, 90.0)   # cap well below zenith
+        desired_alt = min(target_alt + delta_alt, 90.0)  # cap well below zenith
         desired_az = (target_az + delta_az) % 360
 
         # Closest-approach point in lat/lon
-        close_lat, close_lon = get_geo_pos_from_altaz(desired_alt, desired_az, elevation_m)
+        close_lat, close_lon = get_geo_pos_from_altaz(
+            desired_alt, desired_az, elevation_m
+        )
 
         # Back-project: place aircraft upstream so it reaches close_lat/lon at t=eta_min.
         # The aircraft flies toward desired_az, so it starts in the opposite direction.
@@ -103,24 +168,24 @@ def generate_test_flightaware_data(observer_position, target_names: List[str], t
         lat, lon = pos_offset(close_lat, close_lon, upstream_brng, d_km)
         heading = int(desired_az)
 
-        flights.append({
-            "ident": id,
-            "flight_icao": id,
-            "aircraft_type": aircraft_type,
-            "fa_flight_id": f"{id}-demo-test",
-            "origin": {"city": origin},
-            "destination": {"city": dest},
-            "last_position": {
-                "latitude": lat,
-                "longitude": lon,
-                "heading": heading,
-                "groundspeed": speed_knots,
-                "altitude": alt_hundreds_ft,
-                "altitude_change": "-",
-                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            },
-        })
+        flights.append(
+            {
+                "ident": id,
+                "flight_icao": id,
+                "aircraft_type": aircraft_type,
+                "fa_flight_id": f"{id}-demo-test",
+                "origin": {"city": origin},
+                "destination": {"city": dest},
+                "last_position": {
+                    "latitude": lat,
+                    "longitude": lon,
+                    "heading": heading,
+                    "groundspeed": speed_knots,
+                    "altitude": alt_hundreds_ft,
+                    "altitude_change": "-",
+                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                },
+            }
+        )
 
     return {"flights": flights}
-
-

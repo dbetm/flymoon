@@ -1,6 +1,5 @@
 // Map visualization for Flymoon
 // Shows observer location, bounding box, aircraft positions, and azimuth arrows
-
 let map = null;
 let observerMarker = null;
 let boundingBoxLayer = null;
@@ -296,15 +295,19 @@ function displayRouteTrack(data, flightId) {
                 });
                 layerGroup.addLayer(routeLine);
                 routeLine.bindPopup('📍 Planned Route (' + routePoints.length + ' waypoints)');
-            } else {
+            }
+            else {
                 console.log('Route has waypoints but no valid lat/lon coordinates');
             }
-        } else {
+        }
+        else {
             console.log('No waypoints in route data. Route may not be available for this flight.');
         }
-    } else if (data.route && data.route.error) {
+    }
+    else if (data.route && data.route.error) {
         console.log('Route error:', data.route.error);
-    } else {
+    }
+    else {
         console.log('No route data available');
     }
 
@@ -342,15 +345,19 @@ function displayRouteTrack(data, flightId) {
                         layerGroup.addLayer(dot);
                     }
                 });
-            } else {
+            }
+            else {
                 console.log('Track has positions but no valid lat/lon coordinates');
             }
-        } else {
+        }
+        else {
             console.log('No positions in track data');
         }
-    } else if (data.track && data.track.error) {
+    }
+    else if (data.track && data.track.error) {
         console.log('Track error:', data.track.error);
-    } else {
+    }
+    else {
         console.log('No track data available');
     }
 
@@ -405,13 +412,15 @@ function toggleMap() {
             setTimeout(() => {
                 if (map) map.invalidateSize();
             }, 100);
-        } else {
+        }
+        else {
             alert('Please enter your coordinates first');
             mapVisible = false;
             mapContainer.style.display = 'none';
             if (altOverlay) altOverlay.style.display = 'none';
         }
-    } else {
+    }
+    else {
         mapVisible = false;
         mapContainer.style.display = 'none';
         if (altOverlay) altOverlay.style.display = 'none';
@@ -446,7 +455,8 @@ function updateMapVisualization(data, observerLat, observerLon, observerElev, bb
                 updateAzimuthArrow(observerLat, observerLon, coords.azimuthal, coords.altitude, targetName);
             }
         });
-    } else if (data.targetCoordinates && data.targetCoordinates.azimuthal !== undefined) {
+    }
+    else if (data.targetCoordinates && data.targetCoordinates.azimuthal !== undefined) {
         // Single target mode (legacy)
         updateAzimuthArrow(observerLat, observerLon, data.targetCoordinates.azimuthal, data.targetCoordinates.altitude || 0, target);
     }
