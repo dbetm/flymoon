@@ -306,7 +306,7 @@ def get_transits(
             "Min altitude was changed to 0, no below horizon is tracking possible"
         )
 
-    logger.info(f"{latitude=}, {longitude=}, {elevation=}, {target_name=}")
+    logger.info(f"Starting transit computation for target={target_name}")
 
     window_time = np.linspace(
         0, TOP_MINUTE, TOP_MINUTE * (NUM_SECONDS_PER_MIN // INTERVAL_IN_SECS)

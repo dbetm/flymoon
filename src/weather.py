@@ -21,12 +21,12 @@ class WeatherCache:
 
         cache_age = datetime.now() - self._cache_time[key]
         if cache_age > timedelta(minutes=WEATHER_CACHE_DURATION_MINUTES):
-            logger.info(f"Weather cache expired for {key}")
+            logger.info("Weather cache expired")
             del self._cache[key]
             del self._cache_time[key]
             return None
 
-        logger.info(f"Using cached weather data for {key}")
+        logger.info("Using cached weather data")
         return self._cache[key]
 
     def set(self, key: str, value: dict):
