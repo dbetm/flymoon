@@ -296,7 +296,7 @@ function fetchFlights() {
 
             // Store normalized flight ID and possibility level for cross-referencing
             const normalizedId = String(item.id).trim().toUpperCase();
-            const possibilityLevel = item.is_possible_transit === 1 ? parseInt(item.possibility_level) : 0;
+            const possibilityLevel = parseInt(item.possibility_level);
             row.setAttribute('data-flight-id', normalizedId);
             row.setAttribute('data-possibility', possibilityLevel);
 
@@ -384,8 +384,7 @@ function fetchFlights() {
                 row.appendChild(val);
             });
 
-            if(item["is_possible_transit"] == 1) {
-                const possibilityLevel = parseInt(item["possibility_level"]);
+            if(possibilityLevel > 0) {
                 highlightPossibleTransit(possibilityLevel, row);
 
                 if(possibilityLevel == MEDIUM_LEVEL || possibilityLevel == HIGH_LEVEL) {
