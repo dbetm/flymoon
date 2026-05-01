@@ -38,6 +38,7 @@ class TransitClient:
         send_app_notification: bool = False,
         adsb_provider: str = "flightaware-aeroapi",
         min_altitude: float = 15,
+        check_weather: bool = False,
         test_mode: bool = False,
     ):
         self.target = target
@@ -50,6 +51,7 @@ class TransitClient:
         self.send_app_notification = send_app_notification
         self.total_transits = 0
         self.adsb_provider = adsb_provider
+        self.check_weather = check_weather
 
     def __get_next_check_time(self) -> str:
         current_datetime = datetime.now()
@@ -129,6 +131,7 @@ class TransitClient:
             self.test_mode,
             min_altitude=self.min_altitude,
             adsb_provider=self.adsb_provider,
+            check_weather=self.check_weather,
         )
 
         data["flights"] = sort_results(data["flights"])
@@ -242,6 +245,7 @@ def main():
     parser.add_argument(
         "--min-alt", type=float, default=15, help="Minimum altitude for targets"
     )
+    parser.add_argument("--weather", action="store_true", help="Check weather")
     parser.add_argument("--test", action="store_true", help="Use test mode")
 
     args = parser.parse_args()
