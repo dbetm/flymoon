@@ -34,7 +34,7 @@ The results show the future and minimum angular separation from aircraft and the
 
 ## ⚠️ Safety Warning
 
-> **Never look at the Sun directly or through any optical equipment (camera, telescope, binoculars) without certified solar filters (e.g. ISO 12312-2).** Solar radiation can cause permanent eye damage or blindness in fractions of a second. Always attach a full-aperture front filter **before** pointing equipment at the Sun.
+> **Never look at the Sun directly or through any optical equipment (camera, telescope, binoculars) without certified solar filters.** Solar radiation can cause permanent eye damage or blindness in fractions of a second. Always attach a full-aperture front filter **before** pointing equipment at the Sun.
 
 
 --------
@@ -110,14 +110,6 @@ python windows_monitor.py
 | `--notify` | off | Send push notifications |
 | `--weather` | off | Check weather before each run |
 | `--test` | off | Test mode |
-
-
---------
-
-
-## ⚠️ Safety Warning
-
-> **Never look at the Sun directly or through any optical equipment (camera, telescope, binoculars) without certified solar filters.** Solar radiation can cause permanent eye damage or blindness in fractions of a second. Always attach a full-aperture front filter **before** pointing equipment at the Sun.
 
 
 --------
