@@ -75,7 +75,7 @@ The wizard guides you through 4 steps:
 
 1. **ADSB Provider API key** — At least one is required for real-time flight data. You can set one or both:
    - [FlightAware AeroAPI](https://flightaware.com/aeroapi/signup/personal) *(recommended, 100 free requests/month)*
-   - [AirLabs](https://airlabs.co/register) *(1000 free requests/month)*
+   - [AirLabs](https://airlabs.co/) *(1000 free requests/month)*
 
 2. **Flight search area** — A bounding box covering roughly a 15-minute flight radius from your location. Use [MAPS.ie](https://www.maps.ie/coordinates.html) or Google Maps to find coordinates. You can also adjust it visually from the map view in the browser after launching the app.
 
@@ -104,7 +104,7 @@ Open the `.env` file with any text editor. You may need to enable hidden files v
 | Variable | Description |
 |---|---|
 | `AEROAPI_API_KEY` | [FlightAware AeroAPI](https://www.flightaware.com/aeroapi/signup/personal) key — recommended, 100 free requests/month |
-| `AIRLABS_API_KEY` | [AirLabs](https://airlabs.co/register) key — alternative, 1000 free requests/month |
+| `AIRLABS_API_KEY` | [AirLabs](https://airlabs.co/) key — alternative, 1000 free requests/month |
 | `LAT_LOWER_LEFT` / `LONG_LOWER_LEFT` | Southwest corner of the flight search area |
 | `LAT_UPPER_RIGHT` / `LONG_UPPER_RIGHT` | Northeast corner of the flight search area |
 

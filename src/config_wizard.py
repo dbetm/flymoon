@@ -212,7 +212,7 @@ class ConfigWizard:
         print("=" * 60)
         print(f"\nSettings saved to: {self.config_file}")
         print("\nTo start Flymoon:")
-        print("  python3 app.py")
+        print("  python3 app.py or python app.py for Windows")
         print("\nThen open: http://localhost:8000")
         print("")
 
@@ -236,7 +236,7 @@ class ConfigWizard:
             {
                 "label": "AirLabs",
                 "env_key": "AIRLABS_API_KEY",
-                "signup_url": "https://airlabs.co/register",
+                "signup_url": "https://airlabs.co/",
                 "prompt_label": "AirLabs API key",
             },
         ]
