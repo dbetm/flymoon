@@ -10,7 +10,7 @@ EARTH_RADIOUS = 6371
 KM_TO_NAUTICAL_MILES = 0.539957
 
 # Notifications
-TARGET_TO_EMOJI = {"moon": "🌙", "sun": "☀️", "both": "🌙☀️"}
+TARGET_TO_EMOJI = {"moon": "🌙", "sun": "☀️", "both": "🌙☀️", "auto": "🌙☀️"}
 MAX_NUM_ITEMS_TO_NOTIFY = 5
 ALT_DIFF_THRESHOLD_TO_NOTIFY = 5.0
 AZ_DIFF_THRESHOLD_TO_NOTIFY = 10.0

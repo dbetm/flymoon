@@ -2,7 +2,7 @@ const COLUMN_NAMES = [
     "id",
     "origin",
     "destination",
-    "time",
+    "eta",
     "angular_separation",
     "target_alt",
     "plane_alt",
@@ -10,7 +10,7 @@ const COLUMN_NAMES = [
     "target_az",
     "plane_az",
     "az_diff",
-    "aircraft_elevation_km",
+    "aircraft_elevation",
     "elevation_change",
     "direction",
     "speed",
@@ -102,7 +102,7 @@ function loadPositionAndBbox() {
     const checkWeather = localStorage.getItem('checkWeather');
     if (checkWeather === 'true') weatherCheckBox.checked = true;
 
-    console.log("Position loaded from local storage:", savedLat, savedLon, savedElev, "minAlt:", savedMinAlt);
+    console.log("Position loaded from local storage");
 }
 
 function getLocalStorageItem(key, defaultValue) {
@@ -327,14 +327,18 @@ function fetchFlights() {
                     const aircraftType = item.aircraft_type || "";
                     val.textContent = aircraftType && aircraftType !== "N/A" ? `${value} (${aircraftType})` : value;
                 }
-                else if (column === "time") {
+                else if (column === "eta") {
                     // Format ETA as mm:ss
                     const totalSeconds = Math.round(value * 60);
                     const mins = Math.floor(totalSeconds / 60);
                     const secs = totalSeconds % 60;
                     val.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+                    // Displat transit datetime (expected) when passing the cursor over the ETA
+                    if (item.transit_datetime != null) {
+                        val.title = item.transit_datetime;
+                    }
                 }
-                else if (column === "aircraft_elevation_km") {
+                else if (column === "aircraft_elevation") {
                     // Show GPS altitude in km with comma formatting
                     val.textContent = value.toLocaleString('en-US') + " km";
                 }
@@ -524,7 +528,7 @@ function updateAltitudeDisplay(flights) {
 
     // Create a thin line for each aircraft
     flights.forEach(flight => {
-        const altitude = flight.aircraft_elevation_km || 0;
+        const altitude = flight.aircraft_elevation || 0;
 
         // Skip if altitude is invalid or above max
         if (altitude > MAX_ALTITUDE_KM) return;

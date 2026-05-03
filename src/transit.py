@@ -107,6 +107,31 @@ def get_possibility_level(angular_separation: float) -> str:
         return PossibilityLevel.UNLIKELY.value
 
 
+def resolve_flight_ref_datetime(
+    default_ref_datetime: datetime, flight: dict
+) -> datetime:
+    """Use flight's last_update as the positional anchor when available, so the prediction
+    starts from the moment the position was actually recorded rather than the current time.
+    This reduces positional drift caused by processing lag."""
+    flight_ref_datetime = default_ref_datetime
+    last_update_str = flight.get("last_update")
+    if last_update_str:
+        try:
+            # Normalize "Z" suffix to "+00:00" for Python < 3.11 compatibility
+            normalized = str(last_update_str).replace("Z", "+00:00")
+            parsed = datetime.fromisoformat(normalized)
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=default_ref_datetime.tzinfo)
+            flight_ref_datetime = parsed
+        except (ValueError, TypeError):
+            logger.warning(
+                f"Could not parse last_update='{last_update_str}' for flight {flight.get('name')}, "
+                "falling back to ref_datetime"
+            )
+
+    return flight_ref_datetime
+
+
 def check_transit(
     flight: dict,
     window_time: list,
@@ -125,8 +150,8 @@ def check_transit(
     window_time : array_like
         Data points of time in minutes to compute ahead from reference datetime.
     ref_datetime: datetime
-        Reference datetime, deltas from window_time will be add to this reference to compute the future position
-        of plane and target.
+        Current datetime (timezone-aware). Used as the time origin for ETA reporting and as
+        fallback when flight.last_update is unavailable or unparseable.
     observer_position: Topos
         Object from skifield library which was instanced with current position of the observer (
         latitude, longitude and elevation).
@@ -141,7 +166,20 @@ def check_transit(
         Dictionary with the results data, completely filled when it's a possible transit. The data includes:
         id, origin, destination, time, target_alt, plane_alt, target_az, plane_az, alt_diff, az_diff,
         is_possible_transit, and change_elev.
+
+    Notes
+    -----
+    Position prediction is anchored to flight.last_update when available, which reduces positional
+    error caused by the lag between the data capture time and the moment this function runs.
+    The reported ``time`` (ETA) is always relative to ``ref_datetime`` (current time), regardless
+    of which anchor was used internally, so callers always receive a true ETA from now.
     """
+    flight_ref_datetime = resolve_flight_ref_datetime(ref_datetime, flight)
+
+    # Minutes elapsed between the flight's positional anchor and now.
+    # Subtracted from window_time offsets so the reported ETA is relative to ref_datetime.
+    lag_minutes = (ref_datetime - flight_ref_datetime).total_seconds() / 60.0
+
     min_angular_sep = float("inf")
     response = None
     no_decreasing_count = 0
@@ -169,7 +207,7 @@ def check_transit(
             minutes=minute,
         )
 
-        future_time = ref_datetime + timedelta(minutes=minute)
+        future_time = flight_ref_datetime + timedelta(minutes=minute)
 
         # Convert future position of plane to alt-azimuthal coordinates
         future_alt, future_az = geographic_to_altaz(
@@ -181,9 +219,9 @@ def check_transit(
             future_time,
         )
 
-        if idx > 0 and idx % 20 == 0:
-            # Update target position every 20 data points (0.3 min, 20s)
-            target.update_position(future_time)
+        if idx > 0 and idx % 5 == 0:
+            # Update target position every 5 data points (0.1 min, 5s)
+            target.update_position(future_time, use_cache=True)
 
         alt_diff = abs(future_alt - target.altitude.degrees)
         az_diff_raw = abs(future_az - target.azimuthal.degrees)
@@ -212,6 +250,10 @@ def check_transit(
         # Always track aircraft above horizon, will be classified by angular separation
         if update_response:
             possibility_level = get_possibility_level(angular_sep)
+            eta = max(0, float(minute - lag_minutes))
+            is_possible_transit = (
+                1 if possibility_level in POSSIBLE_TRANSIT_LEVELS else 0
+            )
 
             response = {
                 "id": flight["name"],
@@ -222,14 +264,17 @@ def check_transit(
                 "alt_diff": round(float(alt_diff), 2),
                 "az_diff": round(float(az_diff), 2),
                 "angular_separation": round(float(angular_sep), 2),
-                "time": round(float(minute), 2),
+                "eta": round(eta, 2),
+                "transit_datetime": (
+                    (ref_datetime + timedelta(minutes=eta)).strftime("%H:%M:%S")
+                    if is_possible_transit == 1
+                    else None
+                ),
                 "target_alt": round(float(target.altitude.degrees), 2),
                 "plane_alt": round(float(future_alt), 2),
                 "target_az": round(float(target.azimuthal.degrees), 2),
                 "plane_az": round(float(future_az), 2),
-                "is_possible_transit": (
-                    1 if possibility_level in POSSIBLE_TRANSIT_LEVELS else 0
-                ),
+                "is_possible_transit": is_possible_transit,
                 "possibility_level": possibility_level,
                 "elevation_change": CHANGE_ELEVATION.get(
                     flight["elevation_change"], None
@@ -239,16 +284,12 @@ def check_transit(
                 "target": target.name,
                 "latitude": flight["latitude"],
                 "longitude": flight["longitude"],
-                "aircraft_elevation": flight.get(
-                    "elevation", 0
-                ),  # Actual altitude in meters
-                "aircraft_elevation_km": round(
+                "aircraft_elevation": round(
                     flight.get("elevation", 0) / 1_000, 2
-                ),  # Actual altitude in kilometers
-                "aircraft_elevation_feet": flight.get(
-                    "elevation_feet", 0
-                ),  # Actual altitude in feet # TODO: deprecate
+                ),  # Current altitude in kilometers
                 "distance_km": round(distance_km, 1),  # Distance from observer in km
+                # "waypoints": flight.get("waypoints"),
+                "last_data_update": flight.get("last_update"),
             }
         update_response = False
 
@@ -307,12 +348,14 @@ def get_transits(
             "Min altitude was changed to 0, no below horizon is tracking possible"
         )
 
-    logger.info(f"Starting transit computation for target={target_name}")
+    logger.info(
+        f"Starting transit computation for {target_name} target, using {adsb_provider} ADS-B provider"
+    )
 
     window_time = np.linspace(
         0, TOP_MINUTE, TOP_MINUTE * (NUM_SECONDS_PER_MIN // INTERVAL_IN_SECS)
     )
-    logger.info(f"number of times to check for each flight: {len(window_time)}")
+    # logger.info(f"number of times to check for each flight: {len(window_time)}")
 
     # Get the local timezone using tzlocal
     local_timezone = get_localzone_name()
@@ -334,9 +377,6 @@ def get_transits(
 
         if coords["altitude"] >= min_altitude:
             targets_to_check.append(target)
-            logger.info(
-                f"{target} at {coords['altitude']}° az {coords['azimuthal']}° - tracking enabled"
-            )
         else:
             reason = (
                 "below horizon or threshold"
@@ -360,8 +400,6 @@ def get_transits(
         search_bbox = AREA_BBOX_FROM_ENV
         logger.info(f"Using bounding box as search area from ENV: {search_bbox}")
 
-    logger.info(f"{adsb_provider=}")
-
     # Instanciate the ADSB provider client
     if adsb_provider == "flightaware-aeroapi":
         adsb_client = FlightAwareAeroAPIClient(
@@ -379,7 +417,6 @@ def get_transits(
         is_clear, weather_info = get_weather_condition(
             latitude, longitude, WEATHER_API_KEY, test_mode
         )
-        logger.info(f"Weather check: clear={is_clear}, {weather_info}")
     else:
         is_clear, weather_info = get_weather_condition(
             latitude, longitude, WEATHER_API_KEY, return_default_response=True
@@ -410,8 +447,11 @@ def get_transits(
             celestial_obj = CelestialObject(
                 name=target, observer_position=OBSERVER_POSITION
             )
-            # celestial_obj.update_position(ref_datetime=ref_datetime)
 
+            naive_datetime_now = (
+                datetime.now()
+            )  # get again datetime as reference, must be updated as possible
+            ref_datetime = naive_datetime_now.replace(tzinfo=ZoneInfo(local_timezone))
             for flight in flight_data:
                 celestial_obj.update_position(ref_datetime=ref_datetime)
 
