@@ -154,7 +154,9 @@ class TransitClient:
 
         # Check if any targets are trackable
         if not tracking_targets:
-            logger.info("No targets trackable (below horizon, threshold or weather)")
+            logger.info(
+                "No targets trackable (below horizon, threshold alt. or weather)"
+            )
             self.current_transits = []
             return
 
@@ -195,7 +197,7 @@ class TransitClient:
                 ["-" * 21]
                 + [
                     f"{POSIBILITY_LEVEL_TO_COLOR[flight['possibility_level']]}"
-                    f" {TARGET_TO_EMOJI[flight['target']]} {flight['id']} ({flight['aircraft_type']}) in {flight['time']} min."
+                    f" {TARGET_TO_EMOJI[flight['target']]} {flight['id']} ({flight['aircraft_type']}) in {flight['eta']} min."
                     f" {flight['origin']} -> {flight['destination']}."
                     f" Angular separation: {flight['angular_separation']}°"
                     for flight in possible_transits

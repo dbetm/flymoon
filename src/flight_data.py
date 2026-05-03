@@ -69,9 +69,10 @@ class FlightAwareAeroAPIClient(ADSBProviderClient):
             "elevation": int(flight["last_position"]["altitude"])
             * 0.3048
             * 100,  # hundreds of feet to meters (for calculations)
-            "elevation_feet": int(flight["last_position"]["altitude"])
-            * 100,  # API returns hundreds of feet, multiply by 100
             "elevation_change": flight["last_position"]["altitude_change"],
+            "waypoints": (
+                flight["waypoints"] if len(flight.get("waypoints", [])) > 0 else None
+            ),
             "last_update": flight["last_position"]["timestamp"],
         }
 
@@ -118,8 +119,8 @@ class AirLabsClient(ADSBProviderClient):
             "direction": flight["dir"],
             "speed": flight["speed"],  # km/h
             "elevation": flight["alt"],  # meters
-            "elevation_feet": flight["alt"] * 3.28084,
             "elevation_change": "-" if v_speed == 0 else ("C" if v_speed > 0 else "D"),
+            "waypoints": None,
             "last_update": convert_unix_timestamp_to_datetime_str(flight["updated"]),
         }
 
@@ -139,7 +140,7 @@ def sort_results(data: List[dict]) -> List[dict]:
     """Sort data flight results considering if it's possible transit, angular separation, ETA and time."""
 
     def _custom_sort(a: dict) -> tuple:
-        return (a.get("angular_separation", 1000), a.get("time", 999))
+        return (a.get("angular_separation", 1000), a.get("eta", 999))
 
     return sorted(data, key=_custom_sort)
 
