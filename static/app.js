@@ -68,12 +68,13 @@ function savePosition() {
     alert("Position saved in local storage!");
 }
 
-function loadPositionAndBbox() {
+function loadParamsSaved() {
     const savedLat = localStorage.getItem("latitude");
     const savedLon = localStorage.getItem("longitude");
     const savedElev = localStorage.getItem("elevation");
     const savedMinAlt = localStorage.getItem("minAltitude");
     const savedBoundingBox = localStorage.getItem("boundingBox");
+    const adsbProvider = localStorage.getItem("adsbProvider");
 
     if (savedLat === null || savedLat === "" || savedLat === "null") {
         console.log("No position saved in local storage");
@@ -102,7 +103,10 @@ function loadPositionAndBbox() {
     const checkWeather = localStorage.getItem('checkWeather');
     if (checkWeather === 'true') weatherCheckBox.checked = true;
 
-    console.log("Position loaded from local storage");
+    // Load ASBD provider chosen
+    document.getElementById("adsbProvider").value = adsbProvider || "flightaware-aeroapi";
+
+    console.log("Conf. params loaded from local storage");
 }
 
 function getLocalStorageItem(key, defaultValue) {
@@ -625,4 +629,10 @@ function toggleCheckWeather() {
     const checkbox = document.getElementById('checkWeather');
     localStorage.setItem('checkWeather', checkbox.checked);
     console.log('Check weather:', checkbox.checked);
+}
+
+function updateChosenADSBProvider() {
+    let adsbProvider = document.getElementById("adsbProvider").value;
+    localStorage.setItem('adsbProvider', adsbProvider);
+    console.log("Chosen ADSB provider: ", adsbProvider);
 }

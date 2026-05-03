@@ -63,8 +63,8 @@
         </div>
         <span class="separator">|</span>
         <div class="control-box">
-            <label for="cars">ADSB provider:</label>
-            <select name="asdb" id="adsbProvider">
+            <label for="asdb">ADS-B provider:</label>
+            <select name="asdb" id="adsbProvider" onchange="updateChosenADSBProvider();">
                 <option value="flightaware-aeroapi">FligtAware AeroAPI</option>
                 <option value="airlabs">AirLabs</option>
             </select>
@@ -155,7 +155,7 @@
     <script src="{{ url_for('static', filename='app.js') }}" charset="utf-8"></script>
 
     <script>
-        loadPositionAndBbox();
+        loadParamsSaved();
     </script>
 </body>
 </html>
