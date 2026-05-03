@@ -3,6 +3,5 @@ Flask==3.0.3
 pushbullet.py==0.12.0
 python-dotenv==1.2.1
 requests==2.32.4
-rumps==0.4.0
 skyfield==1.49
 tzlocal==5.2
