@@ -1,14 +1,11 @@
 from dataclasses import dataclass
 from datetime import datetime
 from math import asin, atan2, cos, degrees, radians, sin, sqrt
+from typing import Tuple
 
 from skyfield.api import wgs84
 
-from src.constants import (
-    EARTH_RADIOUS,
-    EARTH_TIMESCALE,
-    NUM_MINUTES_PER_HOUR,
-)
+from src.constants import EARTH_RADIOUS, EARTH_TIMESCALE, NUM_MINUTES_PER_HOUR
 
 
 @dataclass
@@ -139,11 +136,16 @@ def predict_position(
 
 
 def geographic_to_altaz(
-    lat: float, lon: float, elevation, earth_ref, your_location, future_time: datetime
-):
+    lat: float,
+    lon: float,
+    elevation,
+    earth_ref,
+    observer_location,
+    future_time: datetime,
+) -> Tuple[float, float]:
     time_ = EARTH_TIMESCALE.from_datetime(future_time)
     plane_location = earth_ref + wgs84.latlon(lat, lon, elevation_m=elevation)
-    plane_alt, plane_az, _ = (plane_location - your_location).at(time_).altaz()
+    plane_alt, plane_az, _ = (plane_location - observer_location).at(time_).altaz()
 
     return plane_alt.degrees, plane_az.degrees
 

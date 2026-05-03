@@ -47,9 +47,9 @@ def calculate_angular_separation(
     az_1 : float
         Azimuth in degrees for the first object
     alt_2 : float
-        Altitude in degrees for the first object
+        Altitude in degrees for the second object
     az_2 : float
-        Azimuth in degrees for the first object
+        Azimuth in degrees for the second object
 
     Returns
     -------
@@ -181,12 +181,13 @@ def check_transit(
             future_time,
         )
 
-        if idx > 0 and idx % 30 == 0:
-            # Update target position every 30 data points (0.5 min)
+        if idx > 0 and idx % 20 == 0:
+            # Update target position every 20 data points (0.3 min, 20s)
             target.update_position(future_time)
 
         alt_diff = abs(future_alt - target.altitude.degrees)
-        az_diff = abs(future_az - target.azimuthal.degrees)
+        az_diff_raw = abs(future_az - target.azimuthal.degrees)
+        az_diff = min(az_diff_raw, 360.0 - az_diff_raw)
 
         angular_sep = calculate_angular_separation(
             alt_1=target.altitude.degrees,
