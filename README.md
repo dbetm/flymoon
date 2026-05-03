@@ -8,7 +8,9 @@ Get flight data from an existing ADSB provider API.
 
 You need to set coordinates for an area to check flights as a bounding box, input your position, choose a target (Moon, Sun or both), and then the app will compute future flight positions and check intersections with the target, which is called a transit.
 
-![](data/assets/flymoon2-0-0.png)
+![](data/assets/flymoon2-0-0-p1.png)
+
+![](data/assets/flymoon2-0-0-p2.png)
 
 The results show the future and minimum angular separation from aircraft and the chosen target. Typically, you can expect a likely transit when there's expected a lower angular separation, no change in elevation and the difference in altitude (alt diff) and azimuth (az diff, both not in all cases) is less than a few degrees for both. In such cases, the row of results will be highlighted:
 
@@ -27,6 +29,14 @@ The results show the future and minimum angular separation from aircraft and the
 5. Check weather, min altitude and targets above horizon before getting API flight data
 6. Personal gallery (you can organize your own collection of transits)
 7. Background monitor (run Flymoon in auto mode without a browser, only the Terminal is required)
+--------
+
+
+## ⚠️ Safety Warning
+
+> **Never look at the Sun directly or through any optical equipment (camera, telescope, binoculars) without certified solar filters (e.g. ISO 12312-2).** Solar radiation can cause permanent eye damage or blindness in fractions of a second. Always attach a full-aperture front filter **before** pointing equipment at the Sun.
+
+
 --------
 
 
@@ -104,6 +114,13 @@ python windows_monitor.py
 
 --------
 
+
+## ⚠️ Safety Warning
+
+> **Never look at the Sun directly or through any optical equipment (camera, telescope, binoculars) without certified solar filters.** Solar radiation can cause permanent eye damage or blindness in fractions of a second. Always attach a full-aperture front filter **before** pointing equipment at the Sun.
+
+
+--------
 
 ## Limitations
 
