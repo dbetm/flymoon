@@ -119,7 +119,8 @@ def get_all_flights():
             asyncio.run(send_notifications(data["flights"], target))
         except Exception as e:
             logger.error(
-                f"Error while trying to send push notification. Details:\n{str(e)}"
+                f"Error while trying to send push notification. Details:\n{str(e)}",
+                exc_info=True,
             )
 
     return jsonify(data)

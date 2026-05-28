@@ -25,7 +25,7 @@ async def send_notifications(flight_data: List[dict], target: str) -> None:
             PossibilityLevel.HIGH.value,
         ):
             possible_transits_data.append(
-                f"{flight['id']} in {flight['time']} min."
+                f"{flight['id']} in {flight['eta']} min."
                 f" {flight['origin']}->{flight['destination']}"
                 f" ∑△{flight['angular_separation']}"
             )
