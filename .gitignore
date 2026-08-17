@@ -174,7 +174,9 @@ tests/test_results.json
 
 # misc
 exp.ipynb
+*.DS_Stores
 *.DS_Store
+script.py
 
 # VSCode
 .vscode/*

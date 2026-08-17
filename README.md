@@ -8,7 +8,7 @@ Get flight data from an existing ADSB provider API.
 
 You need to set coordinates for an area to check flights as a bounding box, input your position, choose a target (Moon, Sun or both), and then the app will compute future flight positions and check intersections with the target, which is called a transit.
 
-![](data/assets/flymoon2-0-0-p1.png)
+![](data/assets/flymoon2-0-0-p1-v2.png)
 
 ![](data/assets/flymoon2-0-0-p2.png)
 
